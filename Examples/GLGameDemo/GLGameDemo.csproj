@@ -25,17 +25,20 @@
     <None Update="Assets\GroundTest.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\triangles.frag">
+    <None Update="Assets\Shaders\2D\rectangle.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\triangles.vert">
+    <None Update="Assets\Shaders\2D\rectangle.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\3D\triangles.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\3D\triangles.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Test.fbx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="triangles.frag">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="triangles.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

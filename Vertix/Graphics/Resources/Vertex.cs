@@ -16,4 +16,17 @@ public record struct Vertex
         new VertexArrayProperty<float>(3, 1),
         new VertexArrayProperty<float>(2, 2)
     ];
+
+    public struct InstanceTransform3D
+    {
+        public Matrix4X4<float> WorldMatirx;
+
+        public readonly static VertexArrayProperty[] DefaultProperties =
+        [
+            new VertexArrayProperty<float>(4, 3),
+            new VertexArrayProperty<float>(4, 4),
+            new VertexArrayProperty<float>(4, 5),
+            new VertexArrayProperty<float>(4, 6),
+        ];
+    }
 }
