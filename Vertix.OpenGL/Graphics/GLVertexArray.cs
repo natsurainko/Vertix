@@ -58,7 +58,7 @@ public record struct GLVertexArray : IVertexArray
             VertexAttribType? baseType = EnumHelper.GetVertexAttribType(property.TypeName)
                 ?? throw new InvalidOperationException();
 
-            _gL.VertexArrayAttribFormat(_handle, property.Location, property.Count, baseType.Value, false, offset);
+            _gL.VertexArrayAttribFormat(_handle, property.Location, property.Count, baseType.Value, property.Normalized, offset);
             _gL.VertexArrayAttribBinding(_handle, property.Location, 0);
             _gL.EnableVertexArrayAttrib(_handle, property.Location);
 
@@ -84,7 +84,7 @@ public record struct GLVertexArray : IVertexArray
             VertexAttribType? baseType = EnumHelper.GetVertexAttribType(property.TypeName)
                 ?? throw new InvalidOperationException();
 
-            _gL.VertexArrayAttribFormat(_handle, property.Location, property.Count, baseType.Value, false, offset);
+            _gL.VertexArrayAttribFormat(_handle, property.Location, property.Count, baseType.Value, property.Normalized, offset);
             _gL.VertexArrayAttribBinding(_handle, property.Location, bindingIndex);
             _gL.EnableVertexArrayAttrib(_handle, property.Location);
 

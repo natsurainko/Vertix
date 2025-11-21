@@ -13,17 +13,17 @@ using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 using PrimitiveType = Vertix.Graphics.PrimitiveType;
 
-namespace GLGameDemo;
+namespace GLGameDemo.Windows;
 
-internal class MainGameWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
+internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
 {
     static readonly (ShaderType, string)[] _gLSLSources =
     [
-        (ShaderType.VertexShader, "Assets/Shaders/triangles.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/triangles.frag"),
+        (ShaderType.VertexShader, "Assets/Shaders/3D/triangles.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/3D/triangles.frag"),
     ];
 
-    int blockCount = 10000;
+    const int blockCountAsix = 128;
 
     Model model;
     PerspectiveCamera Camera = new();
@@ -31,6 +31,7 @@ internal class MainGameWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
 
     protected unsafe override void OnLoaded()
     {
+        CoreWindow.Title = "Draw Instance Test Window";
         _gL.Enable(EnableCap.DepthTest);
 
         Camera.Position = new Vector3D<float>(-15f, 15f, 15f);
@@ -41,11 +42,11 @@ internal class MainGameWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
 
         Graphics.InitializeModelMeshesVertexArray(model);
 
-        Matrix4X4<float>[] instanceTransforms = new Matrix4X4<float>[blockCount];
+        Vertex.InstanceTransform3D[] instanceTransforms = new Vertex.InstanceTransform3D[blockCountAsix * blockCountAsix];
         float spacing = 1.5f;
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < blockCountAsix; i++)
         {
-            for (int j = 0; j < 100; j++)
+            for (int j = 0; j < blockCountAsix; j++)
             {
                 Matrix4X4<float> transform = Matrix4X4.CreateWorld
                 (
@@ -53,23 +54,15 @@ internal class MainGameWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
                     -Vector3D<float>.UnitZ,
                     Vector3D<float>.UnitY
                 );
-                instanceTransforms[i * 100 + j] = transform;
+                instanceTransforms[i * blockCountAsix + j].WorldMatirx = transform;
             }
         }
 
         IGraphicsBuffer instanceBuffer = Graphics.CreateGraphicsBuffer();
-        instanceBuffer.Initialize(blockCount, (uint)BufferStorageMask.None, instanceTransforms);
-
-        ReadOnlySpan<VertexArrayProperty> properties =
-        [
-            new VertexArrayProperty<float>(4, 2),
-            new VertexArrayProperty<float>(4, 3),
-            new VertexArrayProperty<float>(4, 4),
-            new VertexArrayProperty<float>(4, 5)
-        ];
+        instanceBuffer.Initialize(blockCountAsix * blockCountAsix, (uint)BufferStorageMask.None, instanceTransforms);
 
         for (int i = 0; i < model.Meshes.Length; i++)
-            model.Meshes[i].VertexArray?.AttachInstanceBuffer<Matrix4X4<float>>(instanceBuffer, properties);
+            model.Meshes[i].VertexArray?.AttachInstanceBuffer<Vertex.InstanceTransform3D>(instanceBuffer, Vertex.InstanceTransform3D.DefaultProperties);
 
         shader = Graphics.CreateShaderProgram();
         shader.LoadGLSLShadersFromFiles(_gLSLSources);
@@ -94,7 +87,7 @@ internal class MainGameWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
         {
             Mesh mesh = model.Meshes[i];
             Graphics.DrawVertexElementsArrayInstanced(in mesh.VertexArray!, PrimitiveType.Triangles,
-                (uint)mesh.Indices.Length, (uint)blockCount);
+                (uint)mesh.Indices.Length, blockCountAsix * blockCountAsix);
         }
     }
 

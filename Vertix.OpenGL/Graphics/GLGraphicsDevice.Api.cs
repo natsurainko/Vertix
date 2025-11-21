@@ -34,6 +34,9 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 
     public IShaderProgram CreateShaderProgram() => new GLShaderProgram(GL);
 
+    public IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 4096)
+        where TInstance : unmanaged => new GLGraphicsBatcher<TInstance>(this, vertexArray, properties, verticesOrIndicesCount, capacity);
+
     public void UseShaderProgram(IShaderProgram? shaderProgram)
     {
         if (shaderProgram == null)

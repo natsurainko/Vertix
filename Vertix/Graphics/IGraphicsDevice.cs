@@ -16,6 +16,9 @@ public interface IGraphicsDevice : IDisposable
 
     IGraphicsBuffer CreateGraphicsBuffer();
 
+    IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 128)
+        where TInstance : unmanaged;
+
     IVertexArray CreateVertexArray();
 
     void InitializeModelMeshesVertexArray(in Model model);
