@@ -12,6 +12,7 @@ uniform float zIndexInv = 1.0 / 1024.0;
 uniform vec2 screenSizeInv;
 
 out vec4 FragColor;
+out vec2 TexCoord;
 
 void main()
 {
@@ -21,6 +22,7 @@ void main()
 		pos = (vPositionTransform * 2.0 + vSizeTransform * (pos + 1.0)) * screenSizeInv - 1.0;
 	}
 
-	gl_Position = vec4(pos.x, -pos.y, vZIndex * zIndexInv, 1.0);
 	FragColor = vColor;
+	TexCoord = (vPosition + 1.0) / 2.0;
+	gl_Position = vec4(pos.x, -pos.y, vZIndex * zIndexInv, 1.0);
 }

@@ -12,14 +12,16 @@ public interface IGraphicsDevice : IDisposable
 
     IShaderProgram CreateShaderProgram();
 
-    void UseShaderProgram(IShaderProgram? shaderProgram);
+    IVertexArray CreateVertexArray();
 
     IGraphicsBuffer CreateGraphicsBuffer();
 
+    ITexture2D CreateTexture2D();
+
+    ITextureSampler CreateTexture2DSampler(ITexture2D texture2D);
+
     IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 128)
         where TInstance : unmanaged;
-
-    IVertexArray CreateVertexArray();
 
     void InitializeModelMeshesVertexArray(in Model model);
 
@@ -32,6 +34,8 @@ public interface IGraphicsDevice : IDisposable
 
     void DrawVertexElementsArrayInstanced(in IVertexArray vertexArray, PrimitiveType primitiveType,
         uint count, uint instanceCount);
+
+    void UseShaderProgram(IShaderProgram? shaderProgram);
 
     void Viewport(Vector2D<int> size);
 }

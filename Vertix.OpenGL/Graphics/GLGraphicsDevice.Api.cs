@@ -34,22 +34,22 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 
     public IShaderProgram CreateShaderProgram() => new GLShaderProgram(GL);
 
-    public IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 4096)
-        where TInstance : unmanaged => new GLGraphicsBatcher<TInstance>(this, vertexArray, properties, verticesOrIndicesCount, capacity);
+    public IVertexArray CreateVertexArray() => new GLVertexArray(GL);
 
-    public void UseShaderProgram(IShaderProgram? shaderProgram)
+    public IGraphicsBuffer CreateGraphicsBuffer() => new GLGraphicsBuffer(GL);
+
+    public ITexture2D CreateTexture2D() => new GLTexture2D(GL);
+
+    public ITextureSampler CreateTexture2DSampler(ITexture2D texture2D)
     {
-        if (shaderProgram == null)
-        {
-            GL.UseProgram(0);
-            return;
-        }
-
-        if (shaderProgram is not GLShaderProgram gLShaderProgram)
+        if (texture2D is not GLTexture2D gLTexture2D)
             throw new InvalidOperationException();
 
-        gLShaderProgram.Use();
+        return new GLTextureSampler(GL, gLTexture2D);
     }
+
+    public IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 4096)
+        where TInstance : unmanaged => new GLGraphicsBatcher<TInstance>(this, vertexArray, properties, verticesOrIndicesCount, capacity);
 
     public unsafe void InitializeModelMeshesVertexArray(in Model model)
     {
@@ -74,10 +74,6 @@ public partial class GLGraphicsDevice : IGraphicsDevice
             model.Meshes[i].VertexArray = vertexArray;
         }
     }
-
-    public IGraphicsBuffer CreateGraphicsBuffer() => new GLGraphicsBuffer(GL);
-
-    public IVertexArray CreateVertexArray() => new GLVertexArray(GL);
 
     public void DrawVertexArray(in IVertexArray vertexArray, PrimitiveType primitiveType, int start, uint count)
     {
@@ -105,6 +101,20 @@ public partial class GLGraphicsDevice : IGraphicsDevice
         vertexArray.Bind();
         GL.DrawElementsInstanced(EnumHelper.ToGLEnum(primitiveType), count, DrawElementsType.UnsignedInt, (void*)0, instanceCount);
         GL.BindVertexArray(0);
+    }
+
+    public void UseShaderProgram(IShaderProgram? shaderProgram)
+    {
+        if (shaderProgram == null)
+        {
+            GL.UseProgram(0);
+            return;
+        }
+
+        if (shaderProgram is not GLShaderProgram gLShaderProgram)
+            throw new InvalidOperationException();
+
+        gLShaderProgram.Use();
     }
 
     public void Viewport(Vector2D<int> size) => GL.Viewport(size);
