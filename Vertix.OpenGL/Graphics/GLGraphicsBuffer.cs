@@ -4,7 +4,7 @@ using Vertix.Graphics;
 
 namespace Vertix.OpenGL.Graphics;
 
-public struct GLGraphicsBuffer : IGraphicsBuffer
+public partial struct GLGraphicsBuffer : IGraphicsBuffer
 {
     private readonly GL _gL;
     private readonly uint _handle;
@@ -45,5 +45,16 @@ public struct GLGraphicsBuffer : IGraphicsBuffer
     public void Dispose()
     {
         _gL.DeleteBuffer(_handle);
+    }
+}
+
+public partial struct GLGraphicsBuffer
+{
+    public unsafe void Initialize<T>(int length, BufferStorageMask flags, ReadOnlySpan<T> data) where T : unmanaged
+    {
+        _storageFlags = flags;
+        _gL.NamedBufferStorage(_handle, (nuint)(length * sizeof(T)), data, _storageFlags);
+
+        this.Initialized = true;
     }
 }

@@ -1,18 +1,20 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using SkiaSharp;
 using System.Drawing;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
 using Vertix.OpenGL.Extensions;
+using Vertix.OpenGL.Graphics;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLGameDemo.Windows;
 
-internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
+internal class Texture2DTestWindow(IWindow w) : GLGameWindow(w)
 {
     static readonly (ShaderType, string)[] _gLSLSources =
     [
@@ -28,39 +30,43 @@ internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
         new() { Position = new(1, 1), ZIndex = 0, Color = Color.Red.ToVector4() },
         new() { Position = new(1, -1), ZIndex = 0, Color = Color.Red.ToVector4() },
     ];
-    static readonly Vertex2D.InstanceTransform2D[] _instanceTransforms =
-    [
-        new() { Position = new(10, 10), Size = new(50, 50), ZIndex = 0, Color = Color.Red.ToVector4() },
-        new() { Position = new(40, 40), Size = new(50, 50), ZIndex = 1, Color = Color.Green.ToVector4() },
-        new() { Position = new(10, 20), Size = new(75, 75), ZIndex = 2, Color = Color.Blue.ToVector4() },
-        new() { Position = new(30, 5), Size = new(50, 50), ZIndex = 0, Color = Color.Yellow.ToVector4() },
-        new() { Position = new(120, 120), Size = new(50, 50), ZIndex = 4, Color = Color.Cyan.ToVector4() },
-        new() { Position = new(240, 240), Size = new(50, 50), ZIndex = 5, Color = Color.Magenta.ToVector4() },
-        new() { Position = new(180, 180), Size = new(50, 50), ZIndex = 6, Color = Color.Orange.ToVector4() },
-        new() { Position = new(160, 160), Size = new(100, 100), ZIndex = 7, Color = Color.Purple.ToVector4() },
-        new() { Position = new(120, 240), Size = new(50, 50), ZIndex = 8, Color = Color.Lime.ToVector4() },
-    ];
 
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
 
     protected unsafe override void OnLoaded()
     {
-        CoreWindow.Title = "Graphics Batcher 2D Test Window";
+        CoreWindow.Title = "Texture2D Test Window";
+
         _gL.Enable(EnableCap.DepthTest);
+        _gL.Enable(EnableCap.Blend);
+        _gL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         IVertexArray vertexArray = Graphics.CreateVertexArray();
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        ITexture2D texture2D = Graphics.CreateTexture2D();
-        texture2D.Initialize(Vector2D<uint>.One, (uint)InternalFormat.Rgba8);
-        texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, (uint)PixelFormat.Rgba, (uint)PixelType.UnsignedByte, stackalloc byte[] { 255, 255, 255, 255 });
-        texture2D.BindTexture(0);
+        ITexture2D texture = Graphics.CreateTexture2D();
 
         vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
         indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
+
+        using (var bitmap = SKBitmap.Decode("Assets/Shed..png")) 
+        {
+            Vector2D<uint> size = new((uint)bitmap.Width, (uint)bitmap.Height);
+
+            texture.Initialize(size, (uint)InternalFormat.Rgba8);
+            texture.SetData(size, Vector2D<int>.Zero, (uint)PixelFormat.Bgra, (uint)PixelType.UnsignedByte, bitmap.GetPixelSpan());
+            ((GLTexture2D)texture).BindTexture(0);
+        }
+
+        ITextureSampler textureSampler = Graphics.CreateTexture2DSampler(texture);
+        textureSampler.MinFilter = TextureFilter.Nearest;
+        textureSampler.MagFilter = TextureFilter.Nearest;
+        textureSampler.AddressU = TextureAddressMode.ClampToEdge;
+        textureSampler.AddressV = TextureAddressMode.ClampToEdge;
+        textureSampler.AddressW = TextureAddressMode.ClampToEdge;
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray, Vertex2D.InstanceTransform2D.DefaultProperties, (uint)_indices.Length);
 
@@ -86,8 +92,13 @@ internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
     {
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
 
-        for (int i = 0; i < _instanceTransforms.Length; i++)
-            graphicsBatcher?.DrawInstance(_instanceTransforms[i]);
+        graphicsBatcher?.DrawInstance(new Vertex2D.InstanceTransform2D()
+        {
+            Color = Color.White.ToVector4(),
+            ZIndex = 0,
+            Position = new Vector2D<float>(100, 100),
+            Size = new Vector2D<float>(224, 256),
+        });
 
         graphicsBatcher?.Flush();
     }
