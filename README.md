@@ -4,12 +4,12 @@
 A lightweight 3D game development framework for multiple graphics platforms, built on .NET 10 with Silk.NET bindings.  
 
 ### Features
-+ [x] OpenGL 4.6 basic implementation
-+ [x] Assimp-based 3D model importer
++ [x] OpenGL 4.6 basic implementation  
++ [x] Assimp-based 3D model importer  
++ [x] Basic texture sampler interfaces  
 
 ### In Progress
 + 🔄 Freetype font rendering
-+ 🔄 ITexture interfaces
 
 ## Quick Start
 Create your game application class by inheriting from `Vertix.Host.GameApplication` and create a window class that inherits from the graphics platform's base window class. For example, when using OpenGL, inherit from `GLGameWindow`.
