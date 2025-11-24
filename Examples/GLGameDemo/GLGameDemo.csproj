@@ -23,6 +23,9 @@
     <None Update="Assets\block.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\chicken.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\GroundTest.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
