@@ -1,34 +1,33 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using SkiaSharp;
 using System.Drawing;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
+using Vertix.Graphics.Text.Extensions;
 using Vertix.OpenGL.Extensions;
-using Vertix.OpenGL.Graphics;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLGameDemo.Windows;
 
-internal class Texture2DTestWindow(IWindow w) : GLGameWindow(w)
+internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
 {
     static readonly (ShaderType, string)[] _gLSLSources =
     [
-        (ShaderType.VertexShader, "Assets/Shaders/2D/rectangle.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/2D/rectangle.frag"),
+        (ShaderType.VertexShader, "Assets/Shaders/2D/sdf_font.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/2D/sdf_font.frag"),
     ];
 
     static readonly uint[] _indices = [0, 1, 3, 1, 2, 3];
     static readonly Vertex2D[] _vertices =
     [
-        new() { Position = new(-1, -1), ZIndex = 0, Color = Color.Red.ToVector4() },
-        new() { Position = new(-1, 1), ZIndex = 0, Color = Color.Red.ToVector4() },
-        new() { Position = new(1, 1), ZIndex = 0, Color = Color.Red.ToVector4() },
-        new() { Position = new(1, -1), ZIndex = 0, Color = Color.Red.ToVector4() },
+        new() { Position = new(-1, -1) },
+        new() { Position = new(-1, 1) },
+        new() { Position = new(1, 1) },
+        new() { Position = new(1, -1) },
     ];
 
     IShaderProgram? shader;
@@ -36,7 +35,7 @@ internal class Texture2DTestWindow(IWindow w) : GLGameWindow(w)
 
     protected unsafe override void OnLoaded()
     {
-        CoreWindow.Title = "Texture2D Test Window";
+        CoreWindow.Title = "Font Rendering Test";
 
         _gL.Enable(EnableCap.DepthTest);
         _gL.Enable(EnableCap.Blend);
@@ -46,27 +45,9 @@ internal class Texture2DTestWindow(IWindow w) : GLGameWindow(w)
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        ITexture2D texture = Graphics.CreateTexture2D();
-
         vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
         indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
-
-        using (var bitmap = SKBitmap.Decode("Assets/Shed..png")) 
-        {
-            Vector2D<uint> size = new((uint)bitmap.Width, (uint)bitmap.Height);
-
-            texture.Initialize(size, TextureFormat.Bgra8);
-            texture.SetData(size, Vector2D<int>.Zero, bitmap.GetPixelSpan());
-            texture.BindTexture(0);
-        }
-
-        ITextureSampler textureSampler = Graphics.CreateTexture2DSampler(texture);
-        textureSampler.MinFilter = TextureFilter.Nearest;
-        textureSampler.MagFilter = TextureFilter.Nearest;
-        textureSampler.AddressU = TextureAddressMode.ClampToEdge;
-        textureSampler.AddressV = TextureAddressMode.ClampToEdge;
-        textureSampler.AddressW = TextureAddressMode.ClampToEdge;
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray, Vertex2D.InstanceTransform2D.DefaultProperties, (uint)_indices.Length);
 
@@ -92,16 +73,14 @@ internal class Texture2DTestWindow(IWindow w) : GLGameWindow(w)
     {
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
 
-        graphicsBatcher?.DrawInstance(new Vertex2D.InstanceTransform2D()
-        {
-            Color = Color.White.ToVector4(),
-            ZIndex = 0,
-            Position = new Vector2D<float>(100, 100),
-            Size = new Vector2D<float>(224, 256),
-        });
+        graphicsBatcher?.DrawText(
+            "每一个字形都放在一个水平的基准线(Baseline)上（即上图中水平箭头指示的那条线）。\n" +
+            "一些字形恰好位于基准线上（如’X’），而另一些则会稍微越过基准线以下（如’g’或’p’）\n" +
+            "（译注：即这些带有下伸部的字母，可以见这里）。\n" +
+            "这些度量值精确定义了摆放字形所需的每个字形距离基准线的偏移量，\n" +
+            "每个字形的大小，以及需要预留多少空间来渲染下一个字形。下面这个表列出了我们需要的所有属性。"
+            , new Vector2D<float>(32, 32), GameApplication.Unifont);
 
         graphicsBatcher?.Flush();
     }
-
-    protected override void OnUpdate(double deltaTime) { }
 }

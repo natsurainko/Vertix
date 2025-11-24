@@ -19,6 +19,8 @@ public partial class GameApplication : IHost
     public GameApplication(IServiceProvider provider)
     {
         Services = provider;
+
+        OnLoading();
         Window = Services.GetRequiredService<GameWindow>();
     }
 
@@ -34,7 +36,6 @@ public partial class GameApplication : IHost
 
         try
         {
-            OnLoading();
             Window.CoreWindow.Run();
             taskCompletionSource.SetResult();
             hostAppLifetime.StopApplication();

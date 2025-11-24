@@ -18,6 +18,8 @@ public class GLGraphicsBatcher<TInstance> : IGraphicsBatcher<TInstance> where TI
     private readonly TInstance[] _instances;
     private int _currentIndex;
 
+    public IGraphicsDevice GraphicsDevice => _graphicsDevice;
+
     public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;
 
     public uint VerticesOrIndicesCount { get; set; }
