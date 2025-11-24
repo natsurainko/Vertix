@@ -7,7 +7,7 @@ using Vertix.Host;
 using Vertix.OpenGL.Windowing;
 
 new GameApplicationBuilder<GLGameDemo.GameApplication>()
-    .ConfigureWindow<GraphicsBatcher2DTestWindow>(GLGameWindow.DefaultGLWindowOptions)
+    .ConfigureWindow<TextureAtlasTestWindow>(GLGameWindow.DefaultGLWindowOptions)
     .ConfigureServices(services =>
     {
         services.AddSingleton<AssetImporter>();
