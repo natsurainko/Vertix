@@ -42,7 +42,7 @@ internal class TextureAtlasTestWindow(IWindow w) : GLGameWindow(w)
 
     protected unsafe override void OnLoaded()
     {
-        CoreWindow.Title = "Texture2D Test Window";
+        CoreWindow.Title = "Texture Atlas Test";
 
         _gL.Enable(EnableCap.DepthTest);
         _gL.Enable(EnableCap.Blend);
@@ -62,9 +62,9 @@ internal class TextureAtlasTestWindow(IWindow w) : GLGameWindow(w)
         {
             Vector2D<uint> size = new((uint)bitmap.Width, (uint)bitmap.Height);
 
-            texture.Initialize(size, (uint)InternalFormat.Rgba8);
-            texture.SetData(size, Vector2D<int>.Zero, (uint)PixelFormat.Bgra, (uint)PixelType.UnsignedByte, bitmap.GetPixelSpan());
-            ((GLTexture2D)texture).BindTexture(0);
+            texture.Initialize(size, TextureFormat.Bgra8);
+            texture.SetData(size, Vector2D<int>.Zero, bitmap.GetPixelSpan());
+            texture.BindTexture(0);
 
             Vector2D<float> tiledSize = new(16, 16);
 

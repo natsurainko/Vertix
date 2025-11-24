@@ -56,9 +56,9 @@ internal class Texture2DTestWindow(IWindow w) : GLGameWindow(w)
         {
             Vector2D<uint> size = new((uint)bitmap.Width, (uint)bitmap.Height);
 
-            texture.Initialize(size, (uint)InternalFormat.Rgba8);
-            texture.SetData(size, Vector2D<int>.Zero, (uint)PixelFormat.Bgra, (uint)PixelType.UnsignedByte, bitmap.GetPixelSpan());
-            ((GLTexture2D)texture).BindTexture(0);
+            texture.Initialize(size, TextureFormat.Bgra8);
+            texture.SetData(size, Vector2D<int>.Zero, bitmap.GetPixelSpan());
+            texture.BindTexture(0);
         }
 
         ITextureSampler textureSampler = Graphics.CreateTexture2DSampler(texture);

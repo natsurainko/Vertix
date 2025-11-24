@@ -1,4 +1,5 @@
-﻿using Silk.NET.Maths;
+﻿using Silk.NET.Assimp;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
@@ -54,8 +55,8 @@ internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
         ITexture2D texture2D = Graphics.CreateTexture2D();
-        texture2D.Initialize(Vector2D<uint>.One, (uint)InternalFormat.Rgba8);
-        texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, (uint)PixelFormat.Rgba, (uint)PixelType.UnsignedByte, stackalloc byte[] { 255, 255, 255, 255 });
+        texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
+        texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 255, 255, 255 });
         texture2D.BindTexture(0);
 
         vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
