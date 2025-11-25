@@ -7,9 +7,10 @@ A lightweight 3D game development framework for multiple graphics platforms, bui
 + [x] OpenGL 4.6 basic implementation  
 + [x] Assimp-based 3D model importer  
 + [x] Basic texture sampler interfaces  
++ [x] Basic font rendering based on FreeType  
 
 ### In Progress
-+ 🔄 Freetype font rendering
++ 🔄 Support RenderTarget and FrameBuffer  
 
 ## Quick Start
 Create your game application class by inheriting from `Vertix.Host.GameApplication` and create a window class that inherits from the graphics platform's base window class. For example, when using OpenGL, inherit from `GLGameWindow`.
