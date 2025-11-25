@@ -38,7 +38,7 @@ internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
         Camera.Rotate(new Vector3D<float>(-Scalar<float>.Pi / 10, -Scalar<float>.PiOver2 / 2, .0f));
 
         var assetImporter = sp.GetRequiredService<AssetImporter>();
-        model = assetImporter.LoadModel("Assets/block.fbx");
+        model = assetImporter.LoadModel("Assets/Models/block.fbx");
 
         Graphics.InitializeModelMeshesVertexArray(model);
 
@@ -48,13 +48,12 @@ internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
         {
             for (int j = 0; j < blockCountAsix; j++)
             {
-                Matrix4X4<float> transform = Matrix4X4.CreateWorld
+                instanceTransforms[i * blockCountAsix + j].WorldMatirx = Matrix4X4.CreateWorld
                 (
                     new Vector3D<float>(i * spacing, 0, -j * spacing),
                     -Vector3D<float>.UnitZ,
                     Vector3D<float>.UnitY
                 );
-                instanceTransforms[i * blockCountAsix + j].WorldMatirx = transform;
             }
         }
 

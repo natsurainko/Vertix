@@ -71,16 +71,64 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
 
     protected unsafe override void OnRender(double delateTime)
     {
-        Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
+        Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.Black);
 
-        graphicsBatcher?.DrawText(
-            "每一个字形都放在一个水平的基准线(Baseline)上（即上图中水平箭头指示的那条线）。\n" +
-            "一些字形恰好位于基准线上（如’X’），而另一些则会稍微越过基准线以下（如’g’或’p’）\n" +
-            "（译注：即这些带有下伸部的字母，可以见这里）。\n" +
-            "这些度量值精确定义了摆放字形所需的每个字形距离基准线的偏移量，\n" +
-            "每个字形的大小，以及需要预留多少空间来渲染下一个字形。下面这个表列出了我们需要的所有属性。"
-            , new Vector2D<float>(32, 32), GameApplication.Unifont);
+        _gL.DepthMask(false);
+
+        graphicsBatcher?.DrawText
+        (
+            """
+            每一个字形都放在一个水平的基准线(Baseline)上（即上图中水平箭头指示的那条线）。
+            一些字形恰好位于基准线上（如’X’），而另一些则会稍微越过基准线以下（如’g’或’p’）
+            （译注：即这些带有下伸部的字母，可以见这里）。
+            这些度量值精确定义了摆放字形所需的每个字形距离基准线的偏移量，
+            每个字形的大小，以及需要预留多少空间来渲染下一个字形。下面这个表列出了我们需要的所有属性。
+            """,
+            new Vector2D<float>(32, 32),
+            GameApplication.Unifont
+        );
+
+        graphicsBatcher?.DrawText
+        (
+            """
+            微软雅黑（英语：Microsoft YaHei）
+            """,
+            new Vector2D<float>(32, 144),
+            GameApplication.Msyh,
+            64
+        );
+
+        graphicsBatcher?.DrawText
+        (
+            """
+            _gL.Enable(EnableCap.DepthTest);
+            _gL.Enable(EnableCap.Blend);
+            _gL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            IVertexArray vertexArray = Graphics.CreateVertexArray();
+            IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
+            IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
+
+            vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
+            indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
+            vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
+            _gL.Enable(EnableCap.DepthTest);
+            _gL.Enable(EnableCap.Blend);
+            _gL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            IVertexArray vertexArray = Graphics.CreateVertexArray();
+            IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
+            IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
+
+            vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
+            indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
+            vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
+            """,
+            new Vector2D<float>(32, 256),
+            GameApplication.JetbrainsMono
+        );
 
         graphicsBatcher?.Flush();
+        _gL.DepthMask(true);
     }
 }
