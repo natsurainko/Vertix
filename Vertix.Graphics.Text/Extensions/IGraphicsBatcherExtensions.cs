@@ -11,9 +11,10 @@ public static class IGraphicsBatcherExtensions
     extension(IGraphicsBatcher<Vertex2D.InstanceTransform2D> graphicsBatcher)
     {
         public unsafe void DrawText(string text, Vector2D<float> position, FontFamily fontFamily,
-            uint fontSize = 16, FontStyle fontStyle = FontStyle.Normal, float lineSpacing = 1.2f)
+            uint fontSize = 16, FontStyle fontStyle = FontStyle.Normal, uint? lineSpacing = null)
         {
             List<FontTextureAtlas> fontTextures;
+            lineSpacing ??= (uint)(fontSize / 4f);
 
             if (!fontFamily.FontStyles.Contains(fontStyle)) fontStyle = FontStyle.Normal;
             if (!fontFamily._fontTextures.TryGetValue(fontStyle, out fontTextures!))
@@ -34,9 +35,11 @@ public static class IGraphicsBatcherExtensions
                 if (character == '\n')
                 {
                     offset.X = 0;
-                    offset.Y += fontSize * lineSpacing;
+                    offset.Y += fontSize + lineSpacing.Value;
                     continue;
                 }
+                if (char.IsControl(character))
+                    continue;
 
                 if (!fontFamily._glyphsIndexes.TryGetValue((character, fontStyle), out int textureIndex))
                 {
@@ -50,7 +53,7 @@ public static class IGraphicsBatcherExtensions
                     fontFamily._glyphsIndexes[(character, fontStyle)] = fontTextures.Count - 1;
                 }
 
-                short lineHeight = fontTextures[textureIndex].LineHeight;
+                int lineHeight = fontTextures[textureIndex].LineHeight;
                 FontGlyph fontGlyph = fontTextures[textureIndex].Glyphs[character];
                 if (texture2D != fontTextures[textureIndex].Texture)
                 {

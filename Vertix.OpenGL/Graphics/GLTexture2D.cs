@@ -42,6 +42,9 @@ public partial struct GLTexture2D : ITexture2D
 
     public readonly void SetData<T>(Vector2D<uint> size, Vector2D<int> offset, ReadOnlySpan<T> data, int mipmapLevel = 0) where T : unmanaged
     {
+        _gL.GetInteger(GetPName.UnpackAlignment, out int oldAlignment);
+        _gL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+
         _gL.TextureSubImage2D
         (
             _handle, mipmapLevel, 
@@ -51,6 +54,8 @@ public partial struct GLTexture2D : ITexture2D
             _pixelType, 
             data
         );
+
+        _gL.PixelStore(PixelStoreParameter.UnpackAlignment, oldAlignment);
     }
 
     public readonly void BindTexture(uint bindingIndex) => _gL.BindTextureUnit(bindingIndex, _handle);

@@ -21,13 +21,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\block.fbx">
+    <None Update="Assets\Models\block.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\chicken.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\GroundTest.fbx">
+    <None Update="Assets\Models\GroundTest.fbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Fonts\JetBrainsMono-Regular.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Fonts\MSYH.TTC">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Shaders\2D\rectangle.frag">
@@ -51,10 +57,10 @@
     <None Update="Assets\Shed..png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Test.fbx">
+    <None Update="Assets\Models\Test.fbx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\unifont-17.0.02.otf">
+    <None Update="Assets\Fonts\unifont-17.0.02.otf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="triangles.vert">
