@@ -11,12 +11,13 @@ public static class IGraphicsBatcherExtensions
     extension(IGraphicsBatcher<Vertex2D.InstanceTransform2D> graphicsBatcher)
     {
         public unsafe void DrawText(string text, Vector2D<float> position, FontFamily fontFamily,
-            uint fontSize = 16, FontStyle fontStyle = FontStyle.Normal, uint? lineSpacing = null)
+            uint fontSize = 16, FontStyle? targetFontStyle = default, uint? lineSpacing = null)
         {
+            FontStyle fontStyle = targetFontStyle ?? fontFamily.FontStyles[0];
             List<FontTextureAtlas> fontTextures;
             lineSpacing ??= (uint)(fontSize / 4f);
 
-            if (!fontFamily.FontStyles.Contains(fontStyle)) fontStyle = FontStyle.Normal;
+            if (!fontFamily.FontStyles.Contains(fontStyle)) fontStyle = fontFamily.FontStyles[0];
             if (!fontFamily._fontTextures.TryGetValue(fontStyle, out fontTextures!))
             {
                 fontTextures = [];

@@ -7,7 +7,6 @@ using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
 using Vertix.OpenGL.Extensions;
-using Vertix.OpenGL.Graphics;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;

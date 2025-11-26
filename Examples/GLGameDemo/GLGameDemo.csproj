@@ -21,6 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\Fonts\JetBrainsMono-Bold.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Fonts\JetBrainsMono-Italic.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Models\block.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
