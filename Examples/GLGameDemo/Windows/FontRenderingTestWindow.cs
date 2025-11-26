@@ -85,7 +85,7 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
             每个字形的大小，以及需要预留多少空间来渲染下一个字形。下面这个表列出了我们需要的所有属性。
             """,
             new Vector2D<float>(32, 32),
-            GameApplication.Unifont
+            GameApplication.Unifont!
         );
 
         graphicsBatcher?.DrawText
@@ -94,7 +94,7 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
             微软雅黑（英语：Microsoft YaHei）
             """,
             new Vector2D<float>(32, 144),
-            GameApplication.Msyh,
+            GameApplication.Msyh!,
             64
         );
 
@@ -125,7 +125,7 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
             vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
             """,
             new Vector2D<float>(32, 256),
-            GameApplication.JetbrainsMono
+            GameApplication.JetBrainsMono_Italic!
         );
 
         graphicsBatcher?.Flush();

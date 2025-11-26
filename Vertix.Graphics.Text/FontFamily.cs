@@ -6,7 +6,7 @@ using static FreeTypeSharp.FT;
 
 namespace Vertix.Graphics.Text;
 
-public unsafe partial struct FontFamily : IDisposable
+public unsafe partial class FontFamily : IDisposable
 {
     internal readonly Dictionary<FontStyle, IntPtr> _faces = [];
     internal readonly Dictionary<FontStyle, List<FontTextureAtlas>> _fontTextures = [];
@@ -28,15 +28,17 @@ public unsafe partial struct FontFamily : IDisposable
             FT_FaceRec_* face;
             uint faceCount = 1;
 
-            _ = FT_New_Face(FT_Lib, bytes, -1, &face);
-            faceCount = (uint)face->num_faces;
+            FT_Error error = FT_New_Face(FT_Lib, bytes, -1, &face);
+            if (error != FT_Error.FT_Err_Ok)
+                throw new Exception($"Failed to load font from file '{fontFilePath}'. Error code: {error}");
 
+            faceCount = (uint)face->num_faces;
             FontStyles = new FontStyle[faceCount];
 
             for (int i = 0; i < face->num_faces; i++)
             {
                 FT_FaceRec_* currentFace;
-                FT_Error error = FT_New_Face(FT_Lib, bytes, i, &currentFace);
+                error = FT_New_Face(FT_Lib, bytes, i, &currentFace);
 
                 if (error != FT_Error.FT_Err_Ok)
                 {
@@ -61,7 +63,7 @@ public unsafe partial struct FontFamily : IDisposable
                 Marshal.FreeHGlobal((nint)bytes);
         }
     }
-    public readonly void Dispose()
+    public void Dispose()
     {
         foreach (var facePtr in _faces.Values)
         {
@@ -84,7 +86,7 @@ public unsafe partial struct FontFamily : IDisposable
     }
 }
 
-unsafe partial struct FontFamily
+unsafe partial class FontFamily
 {
     internal static FT_LibraryRec_* FT_Lib;
 
