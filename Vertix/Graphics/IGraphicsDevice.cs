@@ -18,7 +18,7 @@ public interface IGraphicsDevice : IDisposable
 
     ITexture2D CreateTexture2D();
 
-    ITextureSampler CreateTexture2DSampler(ITexture2D texture2D);
+    ITextureSampler CreateTextureSampler();
 
     IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 128)
         where TInstance : unmanaged;

@@ -22,6 +22,8 @@ public interface ITextureSampler : IDisposable
     //bool ComparisonEnabled { get; set; }
 
     Vector4D<float> BorderColor { get; set; }
+
+    void BindSampler(uint bindingIndex);
 }
 
 public enum TextureFilter

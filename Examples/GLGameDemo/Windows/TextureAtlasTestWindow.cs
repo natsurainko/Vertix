@@ -83,12 +83,13 @@ internal class TextureAtlasTestWindow(IWindow w) : GLGameWindow(w)
             _instancePosition.Y = (CoreWindow.Size.Y - _instanceSize.Y) / 2f;
         }
 
-        ITextureSampler textureSampler = Graphics.CreateTexture2DSampler(texture);
+        ITextureSampler textureSampler = Graphics.CreateTextureSampler();
         textureSampler.MinFilter = TextureFilter.Nearest;
         textureSampler.MagFilter = TextureFilter.Nearest;
         textureSampler.AddressU = TextureAddressMode.ClampToEdge;
         textureSampler.AddressV = TextureAddressMode.ClampToEdge;
         textureSampler.AddressW = TextureAddressMode.ClampToEdge;
+        textureSampler.BindSampler(0);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray, Vertex2D.InstanceTransform2D.DefaultProperties, (uint)_indices.Length);
 
