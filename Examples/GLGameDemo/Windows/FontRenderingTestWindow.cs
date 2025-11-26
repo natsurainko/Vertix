@@ -15,21 +15,6 @@ namespace GLGameDemo.Windows;
 
 internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
 {
-    static readonly (ShaderType, string)[] _gLSLSources =
-    [
-        (ShaderType.VertexShader, "Assets/Shaders/2D/sdf_font.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/2D/sdf_font.frag"),
-    ];
-
-    static readonly uint[] _indices = [0, 1, 3, 1, 2, 3];
-    static readonly Vertex2D[] _vertices =
-    [
-        new() { Position = new(-1, -1) },
-        new() { Position = new(-1, 1) },
-        new() { Position = new(1, 1) },
-        new() { Position = new(1, -1) },
-    ];
-
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
 
@@ -45,14 +30,15 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
-        indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
+        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
+        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
-        graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray, Vertex2D.InstanceTransform2D.DefaultProperties, (uint)_indices.Length);
+        graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
 
         shader = Graphics.CreateShaderProgram();
-        shader.LoadGLSLShadersFromFiles(_gLSLSources);
+        shader.LoadGLSLShadersFromFiles(GameApplication._2D_FONT_SHADER);
         shader.Compile();
 
         Graphics.UseShaderProgram(shader);
@@ -125,7 +111,7 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
             vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
             """,
             new Vector2D<float>(32, 256),
-            GameApplication.JetBrainsMono_Italic!
+            GameApplication.JetbrainsMono!
         );
 
         graphicsBatcher?.Flush();

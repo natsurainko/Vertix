@@ -17,12 +17,6 @@ namespace GLGameDemo.Windows;
 
 internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
 {
-    static readonly (ShaderType, string)[] _gLSLSources =
-    [
-        (ShaderType.VertexShader, "Assets/Shaders/3D/triangles.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/3D/triangles.frag"),
-    ];
-
     const int blockCountAsix = 128;
 
     Model model;
@@ -64,7 +58,7 @@ internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
             model.Meshes[i].VertexArray?.AttachInstanceBuffer<Vertex.InstanceTransform3D>(instanceBuffer, Vertex.InstanceTransform3D.DefaultProperties);
 
         shader = Graphics.CreateShaderProgram();
-        shader.LoadGLSLShadersFromFiles(_gLSLSources);
+        shader.LoadGLSLShadersFromFiles(GameApplication._3D_BASIC_SHADER);
         shader.Compile();
 
         Graphics.UseShaderProgram(shader);
