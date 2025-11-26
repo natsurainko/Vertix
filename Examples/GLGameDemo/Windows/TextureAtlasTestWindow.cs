@@ -1,8 +1,9 @@
-﻿using Silk.NET.Maths;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using SkiaSharp;
 using System.Drawing;
+using Vertix.Content;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
@@ -13,23 +14,9 @@ using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLGameDemo.Windows;
 
-internal class TextureAtlasTestWindow(IWindow w) : GLGameWindow(w)
+internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
 {
-    static readonly (ShaderType, string)[] _gLSLSources =
-    [
-        (ShaderType.VertexShader, "Assets/Shaders/2D/rectangle.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/2D/rectangle.frag"),
-    ];
-
-    static readonly uint[] _indices = [0, 1, 3, 1, 2, 3];
     static readonly Vertex2D.InstanceTransform2D[] _instances = new Vertex2D.InstanceTransform2D[4];
-    static readonly Vertex2D[] _vertices =
-    [
-        new() { Position = new(-1, -1) },
-        new() { Position = new(-1, 1) },
-        new() { Position = new(1, 1) },
-        new() { Position = new(1, -1) },
-    ];
 
     Vector2D<float> _instancePosition = new(32, 32);
     Vector2D<float> _instanceSize = new(256, 256);
@@ -51,37 +38,29 @@ internal class TextureAtlasTestWindow(IWindow w) : GLGameWindow(w)
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        ITexture2D texture = Graphics.CreateTexture2D();
-
-        vertexBuffer.Initialize(_vertices.Length, (uint)BufferStorageMask.None, _vertices);
-        indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
+        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
+        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
-        using (var bitmap = SKBitmap.Decode("Assets/chicken.png"))
+        ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/chicken.png");
+        texture.BindTexture(0);
+
+        Vector2D<float> tiledSize = new(16, 16);
+
+        for (int i = 0; i < _instances.Length; i++)
         {
-            Vector2D<uint> size = new((uint)bitmap.Width, (uint)bitmap.Height);
-
-            texture.Initialize(size, TextureFormat.Bgra8);
-            texture.SetData(size, Vector2D<int>.Zero, bitmap.GetPixelSpan());
-            texture.BindTexture(0);
-
-            Vector2D<float> tiledSize = new(16, 16);
-
-            for (int i = 0; i < _instances.Length; i++)
+            _instances[i] = new Vertex2D.InstanceTransform2D
             {
-                _instances[i] = new Vertex2D.InstanceTransform2D
-                {
-                    Position = _instancePosition,
-                    Size = _instanceSize,
-                    TextureOffset = new(i * tiledSize.X / bitmap.Width, 0),
-                    TextureScale = new(tiledSize.X / bitmap.Width, tiledSize.Y / bitmap.Height),
-                };
-            }
-
-            _currentInstanceIndex = 0;
-            _instanceSize = Vector2D<float>.One * (float)(Math.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2.0);
-            _instancePosition.Y = (CoreWindow.Size.Y - _instanceSize.Y) / 2f;
+                Position = _instancePosition,
+                Size = _instanceSize,
+                TextureOffset = new(i * tiledSize.X / texture.Size.X, 0),
+                TextureScale = new(tiledSize.X / texture.Size.X, tiledSize.Y / texture.Size.Y),
+            };
         }
+
+        _currentInstanceIndex = 0;
+        _instanceSize = Vector2D<float>.One * (float)(Math.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2.0);
+        _instancePosition.Y = (CoreWindow.Size.Y - _instanceSize.Y) / 2f;
 
         ITextureSampler textureSampler = Graphics.CreateTextureSampler();
         textureSampler.MinFilter = TextureFilter.Nearest;
@@ -91,10 +70,11 @@ internal class TextureAtlasTestWindow(IWindow w) : GLGameWindow(w)
         textureSampler.AddressW = TextureAddressMode.ClampToEdge;
         textureSampler.BindSampler(0);
 
-        graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray, Vertex2D.InstanceTransform2D.DefaultProperties, (uint)_indices.Length);
+        graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
 
         shader = Graphics.CreateShaderProgram();
-        shader.LoadGLSLShadersFromFiles(_gLSLSources);
+        shader.LoadGLSLShadersFromFiles(GameApplication._2D_BASIC_SHADER);
         shader.Compile();
 
         Graphics.UseShaderProgram(shader);

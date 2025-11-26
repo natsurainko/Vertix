@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.22.0" />
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
 
   <ItemGroup>
