@@ -7,9 +7,24 @@ using Vertix.OpenGL.Helpers;
 
 namespace Vertix.OpenGL.Graphics;
 
-public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
+public struct GLTextureSampler : ITextureSampler
 {
-    private readonly uint _textureHandle = texture2D.Handle;
+    private readonly GL _gL;
+    private readonly uint _handle;
+
+    public readonly uint Handle => _handle;
+
+    public GLTextureSampler(GL gL)
+    {
+        _gL = gL;
+        _handle = gL.CreateSampler();
+    }
+
+    public GLTextureSampler(GL gL, uint handle)
+    {
+        _gL = gL;
+        _handle = handle;
+    }
 
     public TextureFilter MinFilter 
     {
@@ -19,7 +34,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureMinFilter, value.ToGLFilter());
+                _gL.SamplerParameter(_handle,  SamplerParameterI.MinFilter, value.ToGLFilter());
             }
         }
     } = TextureFilter.NearestMipmapLinear;
@@ -31,7 +46,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureMagFilter, value.ToGLFilter());
+                _gL.SamplerParameter(_handle, SamplerParameterI.MagFilter, value.ToGLFilter());
             }
         }
     } = TextureFilter.Linear;
@@ -44,7 +59,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureWrapS, value.ToGLWarp());
+                _gL.SamplerParameter(_handle, SamplerParameterI.WrapS, value.ToGLWarp());
             }
         }
     } = TextureAddressMode.Repeat;
@@ -56,7 +71,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureWrapT, value.ToGLWarp());
+                _gL.SamplerParameter(_handle, SamplerParameterI.WrapT, value.ToGLWarp());
             }
         }
     } = TextureAddressMode.Repeat;
@@ -68,7 +83,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureWrapR, value.ToGLWarp());
+                _gL.SamplerParameter(_handle, SamplerParameterI.WrapR, value.ToGLWarp());
             }
         }
     } = TextureAddressMode.Repeat;
@@ -81,7 +96,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureLodBias, value);
+                _gL.SamplerParameter(_handle, SamplerParameterF.LodBias, value);
             }
         }
     } = 0.0f;
@@ -93,7 +108,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureMinLod, value);
+                _gL.SamplerParameter(_handle, SamplerParameterF.MinLod, value);
             }
         }
     } = -1000.0f;
@@ -105,7 +120,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureMaxLod, value);
+                _gL.SamplerParameter(_handle, SamplerParameterF.MaxLod, value);
             }
         }
     } = 1000.0f;
@@ -118,7 +133,7 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             if (field != value)
             {
                 field = value;
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureMaxAnisotropy, value);
+                _gL.SamplerParameter(_handle, SamplerParameterF.MaxAnisotropy, value);
             }
         }
     } = 1;
@@ -135,10 +150,15 @@ public struct GLTextureSampler(GL gL, GLTexture2D texture2D) : ITextureSampler
             {
                 field = value;
                 Span<float> floats = [field.X, field.Y, field.Z, field.W];
-                gL.TextureParameter(_textureHandle, TextureParameterName.TextureBorderColor, floats);
+                _gL.SamplerParameter(_handle, SamplerParameterF.BorderColor, floats);
             }
         }
     } = Vector4D<float>.Zero;
 
-    public void Dispose() { }
+    public void BindSampler(uint bindingIndex) => _gL.BindSampler(bindingIndex, _handle);
+
+    public void Dispose() 
+    { 
+        _gL.DeleteSampler(_handle);
+    }
 }

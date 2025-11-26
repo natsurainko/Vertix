@@ -40,13 +40,7 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 
     public ITexture2D CreateTexture2D() => new GLTexture2D(GL);
 
-    public ITextureSampler CreateTexture2DSampler(ITexture2D texture2D)
-    {
-        if (texture2D is not GLTexture2D gLTexture2D)
-            throw new InvalidOperationException();
-
-        return new GLTextureSampler(GL, gLTexture2D);
-    }
+    public ITextureSampler CreateTextureSampler() => new GLTextureSampler(GL);
 
     public IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 4096)
         where TInstance : unmanaged => new GLGraphicsBatcher<TInstance>(this, vertexArray, properties, verticesOrIndicesCount, capacity);
