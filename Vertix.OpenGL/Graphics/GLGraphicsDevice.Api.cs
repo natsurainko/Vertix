@@ -14,6 +14,17 @@ namespace Vertix.OpenGL.Graphics;
 
 public partial class GLGraphicsDevice : IGraphicsDevice
 {
+    public void BindRenderTarget(IRenderTarget? renderTarget)
+    {
+        if (renderTarget == null)
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            return;
+        }
+
+        renderTarget.BindRenderTarget();
+    }
+
     public unsafe void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = 0)
     {
         if ((buffers & ClearBufferMask.Color) == ClearBufferMask.Color)
@@ -37,6 +48,8 @@ public partial class GLGraphicsDevice : IGraphicsDevice
     public IVertexArray CreateVertexArray() => new GLVertexArray(GL);
 
     public IGraphicsBuffer CreateGraphicsBuffer() => new GLGraphicsBuffer(GL);
+
+    public IRenderTarget CreateRenderTarget(Vector2D<uint> size) => new GLRenderTarget(GL, size);
 
     public ITexture2D CreateTexture2D() => new GLTexture2D(GL);
 
