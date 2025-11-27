@@ -6,11 +6,14 @@ A lightweight 3D game development framework for multiple graphics platforms, bui
 ### Features
 + [x] OpenGL 4.6 basic implementation  
 + [x] Assimp-based 3D model importer  
-+ [x] Basic texture sampler interfaces  
++ [x] Basic texture sampler interfaces
++ [x] Basic RenderTarget and MRT support
 + [x] Basic font rendering based on FreeType  
 
 ### In Progress
-+ 🔄 Support RenderTarget and FrameBuffer  
++ 🔄 Refactoring Vertex2D.InstanceTransform2D to use orthogonal projection matirx  
++ 🔄 Loading bones data from 3D model files using Assimp
++ 🔄 Using texture sampler in 3D basic shader  
 
 ## Quick Start
 Create your game application class by inheriting from `Vertix.Host.GameApplication` and create a window class that inherits from the graphics platform's base window class. For example, when using OpenGL, inherit from `GLGameWindow`.
