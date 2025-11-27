@@ -44,14 +44,14 @@ public partial class GLTexture2D : GLTexture, ITexture2D
         Initialized = true;
     }
 
-    public void SetData<TData>(Vector2D<uint> size, Vector2D<int> offset, ReadOnlySpan<TData> data, int mipmapLevel = 0) where TData : unmanaged
+    public void SetData<TData>(Vector2D<uint> size, Vector2D<int> offset, ReadOnlySpan<TData> data, int mipmapIndex = 0) where TData : unmanaged
     {
         _gL.GetInteger(GetPName.UnpackAlignment, out int oldAlignment);
         _gL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
 
         _gL.TextureSubImage2D
         (
-            Handle, mipmapLevel,
+            Handle, mipmapIndex,
             offset.X, offset.Y, 
             size.X, size.Y,
             _pixelFormat,

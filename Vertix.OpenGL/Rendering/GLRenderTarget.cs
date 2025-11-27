@@ -30,7 +30,7 @@ public class GLRenderTarget : IRenderTarget
         Size = size;
     }
 
-    public void AttachTargetTexture(ITexture texture, RenderTargetAttachment renderTargetAttachment = RenderTargetAttachment.Color)
+    public void AttachTargetTexture(ITexture texture, RenderTargetAttachment renderTargetAttachment = RenderTargetAttachment.Color, int mipmapIndex = 0)
     {
         if (texture is not GLTexture gLTexture) 
             throw new InvalidOperationException();
@@ -40,8 +40,8 @@ public class GLRenderTarget : IRenderTarget
         (
             FrameBufferHandle,
             GetFramebufferAttachment(renderTargetAttachment),
-            gLTexture.Handle, 
-            (int)gLTexture.MipmapLevels
+            gLTexture.Handle,
+            mipmapIndex
         );
     }
 
@@ -59,7 +59,11 @@ public class GLRenderTarget : IRenderTarget
         _colorBuffers = [.. colorBuffers];
     }
 
-    public void BindRenderTarget() => _gL.NamedFramebufferDrawBuffers(FrameBufferHandle, _colorBuffers);
+    public void BindRenderTarget()
+    {
+        _gL.BindFramebuffer(FramebufferTarget.Framebuffer, FrameBufferHandle);
+        _gL.NamedFramebufferDrawBuffers(FrameBufferHandle, _colorBuffers);
+    }
 
     private FramebufferAttachment GetFramebufferAttachment(RenderTargetAttachment renderTargetAttachment)
     {

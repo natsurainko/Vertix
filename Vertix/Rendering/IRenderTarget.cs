@@ -17,5 +17,5 @@ public interface IRenderTarget : IDisposable
 
     void BindRenderTarget();
 
-    void AttachTargetTexture(ITexture texture, RenderTargetAttachment renderTargetAttachment = RenderTargetAttachment.Color);
+    void AttachTargetTexture(ITexture texture, RenderTargetAttachment renderTargetAttachment = RenderTargetAttachment.Color, int mipmapIndex = 0);
 }
