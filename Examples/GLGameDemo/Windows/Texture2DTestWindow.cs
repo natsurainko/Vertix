@@ -19,6 +19,12 @@ internal class Texture2DTestWindow(IWindow w, IServiceProvider sp) : GLGameWindo
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
 
+    Rectangle<float> rect = new(100, 100, 224, 256);
+
+    Matrix4X4<float> view = Matrix4X4<float>.Identity;
+    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4X4<float> instanceMatrix;
+
     protected unsafe override void OnLoaded()
     {
         CoreWindow.Title = "Texture2D Test Window";
@@ -30,11 +36,11 @@ internal class Texture2DTestWindow(IWindow w, IServiceProvider sp) : GLGameWindo
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
-        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
-        ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/Shed..png");
+        ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/Images/Shed..png");
         texture.BindTexture(0);
 
         ITextureSampler textureSampler = Graphics.CreateTextureSampler();
@@ -46,16 +52,16 @@ internal class Texture2DTestWindow(IWindow w, IServiceProvider sp) : GLGameWindo
         textureSampler.BindSampler(0);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectangleIndices.Length);
 
         shader = Graphics.CreateShaderProgram();
         shader.LoadGLSLShadersFromFiles(GameApplication._2D_BASIC_SHADER);
         shader.Compile();
-
         Graphics.UseShaderProgram(shader);
 
-        shader.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
-        shader.Parameters["isInstance"].SetValue(true);
+        instanceMatrix = rect.ToScreenMatrix();
+        shader?.Parameters["view"].SetValue(view);
+        shader?.Parameters["projection"].SetValue(projection);
 
         CoreWindow.Resize += CoreWindow_Resize;
     }
@@ -63,19 +69,16 @@ internal class Texture2DTestWindow(IWindow w, IServiceProvider sp) : GLGameWindo
     private void CoreWindow_Resize(Vector2D<int> size)
     {
         Graphics.Viewport(size);
-        shader?.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
+
+        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        shader?.Parameters["projection"].SetValue(projection);
     }
 
     protected unsafe override void OnRender(double delateTime)
     {
         Graphics.Clear(ClearBufferMask.Color, Color.CornflowerBlue);
 
-        graphicsBatcher?.DrawInstance(new Vertex2D.InstanceTransform2D()
-        {
-            Position = new Vector2D<float>(100, 100),
-            Size = new Vector2D<float>(224, 256),
-        });
-
+        graphicsBatcher?.DrawInstance(new() { WorldMatirx = instanceMatrix });
         graphicsBatcher?.Flush();
     }
 

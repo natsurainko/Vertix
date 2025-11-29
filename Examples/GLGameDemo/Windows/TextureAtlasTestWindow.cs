@@ -16,15 +16,15 @@ namespace GLGameDemo.Windows;
 
 internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
 {
-    static readonly Vertex2D.InstanceTransform2D[] _instances = new Vertex2D.InstanceTransform2D[4];
-
-    Vector2D<float> _instancePosition = new(32, 32);
-    Vector2D<float> _instanceSize = new(256, 256);
-
-    int _currentInstanceIndex;
-
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
+
+    int _texureAtlasIndex = 0;
+    Rectangle<float> rect;
+
+    Matrix4X4<float> view = Matrix4X4<float>.Identity;
+    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4X4<float> instanceMatrix;
 
     protected unsafe override void OnLoaded()
     {
@@ -38,29 +38,12 @@ internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
-        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
-        ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/chicken.png");
+        ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/Images/chicken.png");
         texture.BindTexture(0);
-
-        Vector2D<float> tiledSize = new(16, 16);
-
-        for (int i = 0; i < _instances.Length; i++)
-        {
-            _instances[i] = new Vertex2D.InstanceTransform2D
-            {
-                Position = _instancePosition,
-                Size = _instanceSize,
-                TextureOffset = new(i * tiledSize.X / texture.Size.X, 0),
-                TextureScale = new(tiledSize.X / texture.Size.X, tiledSize.Y / texture.Size.Y),
-            };
-        }
-
-        _currentInstanceIndex = 0;
-        _instanceSize = Vector2D<float>.One * (float)(Math.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2.0);
-        _instancePosition.Y = (CoreWindow.Size.Y - _instanceSize.Y) / 2f;
 
         ITextureSampler textureSampler = Graphics.CreateTextureSampler();
         textureSampler.MinFilter = TextureFilter.Nearest;
@@ -71,7 +54,7 @@ internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
         textureSampler.BindSampler(0);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectangleIndices.Length);
 
         shader = Graphics.CreateShaderProgram();
         shader.LoadGLSLShadersFromFiles(GameApplication._2D_BASIC_SHADER);
@@ -79,8 +62,12 @@ internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
 
         Graphics.UseShaderProgram(shader);
 
-        shader.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
-        shader.Parameters["isInstance"].SetValue(true);
+        rect.Size = Vector2D<float>.One * MathF.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2f;
+        rect.Origin.Y = (CoreWindow.Size.Y - rect.Size.Y) / 2f;
+        instanceMatrix = rect.ToScreenMatrix();
+
+        shader?.Parameters["view"].SetValue(view);
+        shader?.Parameters["projection"].SetValue(projection);
 
         CoreWindow.Resize += CoreWindow_Resize;
     }
@@ -88,21 +75,23 @@ internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
     private void CoreWindow_Resize(Vector2D<int> size)
     {
         Graphics.Viewport(size);
-        shader?.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
 
-        _instanceSize = Vector2D<float>.One * MathF.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2f;
-        _instancePosition.Y = (CoreWindow.Size.Y - _instanceSize.Y) / 2f;
+        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        shader?.Parameters["projection"].SetValue(projection);
+
+        rect.Size = Vector2D<float>.One * MathF.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2f;
+        rect.Origin.Y = (CoreWindow.Size.Y - rect.Size.Y) / 2f;
     }
 
     protected unsafe override void OnRender(double delateTime)
     {
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
 
-        Vertex2D.InstanceTransform2D frameInstance = _instances[_currentInstanceIndex];
-        frameInstance.Size = _instanceSize;
-        frameInstance.Position = _instancePosition;
-
-        graphicsBatcher?.DrawInstance(frameInstance);
+        graphicsBatcher?.DrawInstance(new() 
+        {
+            WorldMatirx = instanceMatrix,
+            TextureRegion = new Vector4D<float>(0.25f * _texureAtlasIndex, 0, 0.25f, 1)
+        });
         graphicsBatcher?.Flush();
     }
 
@@ -114,8 +103,10 @@ internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
 
         if (_deltaTime >= 0.25)
         {
-            _currentInstanceIndex = (_currentInstanceIndex + 1) % 4;
-            _instancePosition.X = (_instancePosition.X +( _instanceSize.X / 8) + _instanceSize.X) % (CoreWindow.Size.X + _instanceSize.X) - _instanceSize.X;
+            _texureAtlasIndex = (_texureAtlasIndex + 1) % 4;
+
+            rect.Origin.X = (rect.Origin.X + (rect.Size.X / 8) + rect.Size.X) % (CoreWindow.Size.X + rect.Size.X) - rect.Size.X;
+            instanceMatrix = rect.ToScreenMatrix();
             _deltaTime = 0;
         }
     }

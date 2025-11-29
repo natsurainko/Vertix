@@ -37,11 +37,11 @@ public class AssetImporter : IDisposable
 
             if (mesh->MTextureCoords[0] != null)
             {
-                vertex.TexCoord.X = mesh->MTextureCoords[0][i].X;
-                vertex.TexCoord.Y = mesh->MTextureCoords[0][i].Y;
+                vertex.TextureCoord.X = mesh->MTextureCoords[0][i].X;
+                vertex.TextureCoord.Y = mesh->MTextureCoords[0][i].Y;
             }
             else
-                vertex.TexCoord = Vector2D<float>.Zero;
+                vertex.TextureCoord = Vector2D<float>.Zero;
 
             modelMesh.Vertices[i] = vertex;
         }

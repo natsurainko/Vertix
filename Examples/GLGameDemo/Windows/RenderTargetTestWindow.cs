@@ -3,6 +3,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
+using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
 using Vertix.Graphics.Text.Extensions;
@@ -20,8 +21,12 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
 
     ITexture2D? texture2D;
-    //ITextureSampler? textureSampler;
+    ITextureSampler? textureSampler;
     IRenderTarget? renderTarget;
+
+    Matrix4X4<float> view = Matrix4X4<float>.Identity;
+    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4X4<float> instanceMatrix;
 
     bool _needRecreateRenderTarget = true;
     bool _needRedrawRenderTarget;
@@ -41,17 +46,19 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
-        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectangleIndices.Length);
 
-        //textureSampler = Graphics.CreateTextureSampler();
-        //textureSampler.MinFilter = TextureFilter.Nearest;
-        //textureSampler.MagFilter = TextureFilter.Nearest;
-        //textureSampler?.BindSampler(0);
+        textureSampler = Graphics.CreateTextureSampler();
+        textureSampler.MinFilter = TextureFilter.Nearest;
+        textureSampler.MagFilter = TextureFilter.Nearest;
+        textureSampler?.BindSampler(0);
+
+        instanceMatrix = new Rectangle<float>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y).ToScreenMatrix();
 
         PrepareShaders();
         Graphics.UseShaderProgram(rectShader);
@@ -67,10 +74,14 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
             return;
 
         Graphics.Viewport(size);
-        fontShader?.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
-        rectShader?.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
 
-        if (new Vector2D<uint>((uint)CoreWindow.Size.X, (uint)CoreWindow.Size.Y) == renderTarget?.Size) 
+        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        instanceMatrix = new Rectangle<float>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y).ToScreenMatrix();
+
+        rectShader?.Parameters["projection"].SetValue(projection);
+        fontShader?.Parameters["projection"].SetValue(projection);
+
+        if (new Vector2D<uint>((uint)CoreWindow.Size.X, (uint)CoreWindow.Size.Y) == renderTarget?.Size)
             return;
 
         _needRecreateRenderTarget = true;
@@ -161,14 +172,9 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
 
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.Black);
 
-        graphicsBatcher?.DrawInstance(new Vertex2D.InstanceTransform2D()
-        {
-            Position = Vector2D<float>.Zero,
-            Size = new Vector2D<float>(CoreWindow.Size.X, CoreWindow.Size.Y),
-            TextureScale = new(1, -1),
-        });
-
+        graphicsBatcher?.DrawInstance(new() { WorldMatirx = instanceMatrix, TextureRegion = new Vector4D<float>(0, 0, 1, -1) });
         graphicsBatcher?.Flush();
+
         CoreWindow.SwapBuffers();
     }
 
@@ -192,15 +198,13 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
         fontShader = Graphics.CreateShaderProgram();
         fontShader.LoadGLSLShadersFromFiles(GameApplication._2D_FONT_SHADER);
         fontShader.Compile();
+        fontShader?.Parameters["view"].SetValue(view);
+        fontShader?.Parameters["projection"].SetValue(projection);
 
         rectShader = Graphics.CreateShaderProgram();
         rectShader.LoadGLSLShadersFromFiles(GameApplication._2D_BASIC_SHADER);
         rectShader.Compile();
-
-        Vector2D<float> sizeInv = new(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y);
-        rectShader.Parameters["screenSizeInv"].SetValue(sizeInv);
-        rectShader.Parameters["isInstance"].SetValue(true);
-        fontShader.Parameters["screenSizeInv"].SetValue(sizeInv);
-        fontShader.Parameters["isInstance"].SetValue(true);
+        rectShader?.Parameters["view"].SetValue(view);
+        rectShader?.Parameters["projection"].SetValue(projection);
     }
 }
