@@ -8,6 +8,7 @@ using Vertix.Graphics;
 using Vertix.Graphics.Resources;
 using Vertix.Graphics.Text.Extensions;
 using Vertix.OpenGL.Extensions;
+using Vertix.OpenGL.Rendering;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
@@ -26,6 +27,8 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
 
     Matrix4X4<float> view = Matrix4X4<float>.Identity;
     Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4X4<float> renderTargetProjection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 0, 600, -100f, 100f);
+
     Matrix4X4<float> instanceMatrix;
 
     bool _needRecreateRenderTarget = true;
@@ -76,10 +79,11 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
         Graphics.Viewport(size);
 
         projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        renderTargetProjection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, 0, CoreWindow.Size.Y, -100f, 100f);
         instanceMatrix = new Rectangle<float>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y).ToScreenMatrix();
 
         rectShader?.Parameters["projection"].SetValue(projection);
-        fontShader?.Parameters["projection"].SetValue(projection);
+        fontShader?.Parameters["projection"].SetValue(renderTargetProjection);
 
         if (new Vector2D<uint>((uint)CoreWindow.Size.X, (uint)CoreWindow.Size.Y) == renderTarget?.Size)
             return;
@@ -172,7 +176,7 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
 
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.Black);
 
-        graphicsBatcher?.DrawInstance(new() { WorldMatirx = instanceMatrix, TextureRegion = new Vector4D<float>(0, 0, 1, -1) });
+        graphicsBatcher?.DrawInstance(new() { WorldMatirx = instanceMatrix });
         graphicsBatcher?.Flush();
 
         CoreWindow.SwapBuffers();
@@ -199,7 +203,7 @@ internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
         fontShader.LoadGLSLShadersFromFiles(GameApplication._2D_FONT_SHADER);
         fontShader.Compile();
         fontShader?.Parameters["view"].SetValue(view);
-        fontShader?.Parameters["projection"].SetValue(projection);
+        fontShader?.Parameters["projection"].SetValue(renderTargetProjection);
 
         rectShader = Graphics.CreateShaderProgram();
         rectShader.LoadGLSLShadersFromFiles(GameApplication._2D_BASIC_SHADER);
