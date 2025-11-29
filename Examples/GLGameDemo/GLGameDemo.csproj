@@ -29,7 +29,7 @@
     <None Update="Assets\Models\block.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\chicken.png">
+    <None Update="Assets\Images\chicken.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Models\GroundTest.fbx">
@@ -41,25 +41,22 @@
     <None Update="Assets\Fonts\MSYH.TTC">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\2D\rectangle.frag">
+    <None Update="Assets\Shaders\shader2D_font.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\2D\rectangle.vert">
+    <None Update="Assets\Shaders\shader2D.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\2D\sdf_font.frag">
+    <None Update="Assets\Shaders\shader2D.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\2D\sdf_font.vert">
+    <None Update="Assets\Shaders\shader3D.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\3D\triangles.frag">
+    <None Update="Assets\Shaders\shader3D.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\3D\triangles.vert">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Shed..png">
+    <None Update="Assets\Images\Shed..png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Models\Test.fbx">

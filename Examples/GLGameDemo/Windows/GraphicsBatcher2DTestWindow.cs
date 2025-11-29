@@ -14,21 +14,26 @@ namespace GLGameDemo.Windows;
 
 internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
 {
-    static readonly Vertex2D.InstanceTransform2D[] _instanceTransforms =
-    [
-        new() { Position = new(10, 10), Size = new(50, 50), ZIndex = 0, Color = Color.Red.ToVector4() },
-        new() { Position = new(40, 40), Size = new(50, 50), ZIndex = 1, Color = Color.Green.ToVector4() },
-        new() { Position = new(10, 20), Size = new(75, 75), ZIndex = 2, Color = Color.Blue.ToVector4() },
-        new() { Position = new(30, 5), Size = new(50, 50), ZIndex = 0, Color = Color.Yellow.ToVector4() },
-        new() { Position = new(120, 120), Size = new(50, 50), ZIndex = 4, Color = Color.Cyan.ToVector4() },
-        new() { Position = new(240, 240), Size = new(50, 50), ZIndex = 5, Color = Color.Magenta.ToVector4() },
-        new() { Position = new(180, 180), Size = new(50, 50), ZIndex = 6, Color = Color.Orange.ToVector4() },
-        new() { Position = new(160, 160), Size = new(100, 100), ZIndex = 7, Color = Color.Purple.ToVector4() },
-        new() { Position = new(120, 240), Size = new(50, 50), ZIndex = 8, Color = Color.Lime.ToVector4() },
-    ];
-
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
+
+    Vertex2D.InstanceTransform2D[] instanceTransform = [];
+    readonly (Rectangle<float>, float, Color)[] rectangles =
+    [
+        (new(10, 10, 50, 50), 0, Color.Red),
+        (new(40, 40, 50, 50), 1, Color.Green),
+        (new(10, 45, 50, 50), 2, Color.Blue),
+        (new(30, 5, 50, 50), 0, Color.Yellow),
+        (new(120, 120, 50, 50), 4, Color.Cyan),
+        (new(240, 240, 50, 50), 5, Color.Magenta),
+        (new(180, 180, 50, 50), 6, Color.Orange),
+        (new(160, 160, 100, 100), 7, Color.Purple),
+        (new(120, 240, 50, 50), 8, Color.Lime),
+    ];
+
+    Matrix4X4<float> view = Matrix4X4<float>.Identity;
+    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4X4<float> instanceMatrix;
 
     protected unsafe override void OnLoaded()
     {
@@ -44,12 +49,18 @@ internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
         texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 255, 255, 255 });
         texture2D.BindTexture(0);
 
-        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
-        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectangleIndices.Length);
+
+        instanceTransform = [.. rectangles.Select(r => new Vertex2D.InstanceTransform2D()
+        {
+            Color = r.Item3.ToVector4(),
+            WorldMatirx = r.Item1.ToScreenMatrix(r.Item2)
+        })];
 
         shader = Graphics.CreateShaderProgram();
         shader.LoadGLSLShadersFromFiles(GameApplication._2D_BASIC_SHADER);
@@ -57,8 +68,8 @@ internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
 
         Graphics.UseShaderProgram(shader);
 
-        shader.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
-        shader.Parameters["isInstance"].SetValue(true);
+        shader?.Parameters["view"].SetValue(view);
+        shader?.Parameters["projection"].SetValue(projection);
 
         CoreWindow.Resize += CoreWindow_Resize;
     }
@@ -66,15 +77,17 @@ internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
     private void CoreWindow_Resize(Vector2D<int> size)
     {
         Graphics.Viewport(size);
-        shader?.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
+
+        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        shader?.Parameters["projection"].SetValue(projection);
     }
 
     protected unsafe override void OnRender(double delateTime)
     {
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
 
-        for (int i = 0; i < _instanceTransforms.Length; i++)
-            graphicsBatcher?.DrawInstance(_instanceTransforms[i]);
+        for (int i = 0; i < instanceTransform.Length; i++)
+            graphicsBatcher?.DrawInstance(instanceTransform[i]);
 
         graphicsBatcher?.Flush();
     }

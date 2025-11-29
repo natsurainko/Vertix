@@ -18,6 +18,9 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;
 
+    Matrix4X4<float> view = Matrix4X4<float>.Identity;
+    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+
     protected unsafe override void OnLoaded()
     {
         CoreWindow.Title = "Font Rendering Test";
@@ -30,12 +33,12 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
         IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
 
-        vertexBuffer.Initialize(GameApplication.RectVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectVertices);
-        indexBuffer.Initialize(GameApplication.RectIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectIndices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)GameApplication.RectangleIndices.Length);
 
         shader = Graphics.CreateShaderProgram();
         shader.LoadGLSLShadersFromFiles(GameApplication._2D_FONT_SHADER);
@@ -43,8 +46,8 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
 
         Graphics.UseShaderProgram(shader);
 
-        shader.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
-        shader.Parameters["isInstance"].SetValue(true);
+        shader?.Parameters["view"].SetValue(view);
+        shader?.Parameters["projection"].SetValue(projection);
 
         CoreWindow.Resize += CoreWindow_Resize;
     }
@@ -52,7 +55,9 @@ internal class FontRenderingTestWindow(IWindow w) : GLGameWindow(w)
     private void CoreWindow_Resize(Vector2D<int> size)
     {
         Graphics.Viewport(size);
-        shader?.Parameters["screenSizeInv"].SetValue(new Vector2D<float>(1f / CoreWindow.Size.X, 1f / CoreWindow.Size.Y));
+
+        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        shader?.Parameters["projection"].SetValue(projection);
     }
 
     protected unsafe override void OnRender(double delateTime)

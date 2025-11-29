@@ -36,18 +36,26 @@ internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWi
 
         Graphics.InitializeModelMeshesVertexArray(model);
 
+        ITexture2D texture2D = Graphics.CreateTexture2D();
+        texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
+        texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 255, 255, 255 });
+        texture2D.BindTexture(0);
+
         Vertex.InstanceTransform3D[] instanceTransforms = new Vertex.InstanceTransform3D[blockCountAsix * blockCountAsix];
         float spacing = 1.5f;
         for (int i = 0; i < blockCountAsix; i++)
         {
             for (int j = 0; j < blockCountAsix; j++)
             {
-                instanceTransforms[i * blockCountAsix + j].WorldMatirx = Matrix4X4.CreateWorld
-                (
-                    new Vector3D<float>(i * spacing, 0, -j * spacing),
-                    -Vector3D<float>.UnitZ,
-                    Vector3D<float>.UnitY
-                );
+                instanceTransforms[i * blockCountAsix + j] = new() 
+                {
+                    WorldMatirx = Matrix4X4.CreateWorld
+                    (
+                        new Vector3D<float>(i * spacing, 0, -j * spacing),
+                        -Vector3D<float>.UnitZ,
+                        Vector3D<float>.UnitY
+                    )
+                };
             }
         }
 

@@ -2,6 +2,7 @@
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
+using Vertix.Extensions;
 using Vertix.Graphics.Resources;
 
 namespace Vertix.Graphics.Text.Extensions;
@@ -64,12 +65,23 @@ public static class IGraphicsBatcherExtensions
                     texture2D.BindTexture(0);
                 }
 
+                Rectangle<float> textArea = new
+                (
+                    position + offset + new Vector2D<float>(fontGlyph.Bearing.X, lineHeight - fontGlyph.Bearing.Y) * scale,
+                    new Vector2D<float>(fontGlyph.Size.X, fontGlyph.Size.Y) * scale
+                );
+                Vector4D<float> textureRegion = new
+                (
+                    fontGlyph.UVTopLeft.X,
+                    fontGlyph.UVTopLeft.Y,
+                    fontGlyph.UVBottomRight.X - fontGlyph.UVTopLeft.X,
+                    fontGlyph.UVBottomRight.Y - fontGlyph.UVTopLeft.Y
+                );
+
                 graphicsBatcher.DrawInstance(new()
                 {
-                    Position = position + offset + new Vector2D<float>(fontGlyph.Bearing.X, lineHeight - fontGlyph.Bearing.Y) * scale,
-                    Size = new Vector2D<float>(fontGlyph.Size.X, fontGlyph.Size.Y) * scale,
-                    TextureOffset = fontGlyph.UVTopLeft,
-                    TextureScale = fontGlyph.UVBottomRight - fontGlyph.UVTopLeft
+                    WorldMatirx = textArea.ToScreenMatrix(),
+                    TextureRegion = textureRegion
                 });
 
                 offset += new Vector2D<float>(fontGlyph.Advance * scale, 0);

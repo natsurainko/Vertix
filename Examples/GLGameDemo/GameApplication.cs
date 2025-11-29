@@ -10,8 +10,6 @@ internal class GameApplication(IServiceProvider sp) : Vertix.Host.GameApplicatio
     public static FontFamily? Msyh;
 
     public static FontFamily? JetbrainsMono;
-    //public static FontFamily? JetBrainsMono_Italic;
-    //public static FontFamily? JetBrainsMono_Bold;
 
     protected override void OnLoading()
     {
@@ -19,34 +17,32 @@ internal class GameApplication(IServiceProvider sp) : Vertix.Host.GameApplicatio
         Msyh = new FontFamily("Assets/Fonts/MSYH.TTC");
 
         JetbrainsMono = new FontFamily("Assets/Fonts/JetBrainsMono-Regular.ttf");
-        //JetBrainsMono_Italic = new FontFamily("Assets/Fonts/JetBrainsMono-Italic.ttf");
-        //JetBrainsMono_Bold = new FontFamily("Assets/Fonts/JetBrainsMono-Bold.ttf");
     }
 
     internal static readonly (ShaderType, string)[] _2D_FONT_SHADER =
     [
-        (ShaderType.VertexShader, "Assets/Shaders/2D/sdf_font.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/2D/sdf_font.frag"),
+        (ShaderType.VertexShader, "Assets/Shaders/shader2D.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/shader2D_font.frag"),
     ];
 
     internal static readonly (ShaderType, string)[] _2D_BASIC_SHADER =
     [
-        (ShaderType.VertexShader, "Assets/Shaders/2D/rectangle.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/2D/rectangle.frag"),
+        (ShaderType.VertexShader, "Assets/Shaders/shader2D.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/shader2D.frag"),
     ];
 
     internal static readonly (ShaderType, string)[] _3D_BASIC_SHADER =
     [
-        (ShaderType.VertexShader, "Assets/Shaders/3D/triangles.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/3D/triangles.frag"),
+        (ShaderType.VertexShader, "Assets/Shaders/shader3D.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/shader3D.frag"),
     ];
 
-    internal static readonly uint[] RectIndices = [0, 1, 3, 1, 2, 3];
-    internal static readonly Vertex2D[] RectVertices =
+    internal static readonly uint[] RectangleIndices = [0, 1, 3, 1, 2, 3];
+    internal static readonly Vertex2D[] RectangleVertices =
     [
-        new() { Position = new(-1, -1) },
-        new() { Position = new(-1, 1) },
-        new() { Position = new(1, 1) },
-        new() { Position = new(1, -1) },
+        new() { Position = new(-1, -1, 0), TextureCoord = new(0, 0) },
+        new() { Position = new(-1, 1, 0), TextureCoord = new(0, 1) },
+        new() { Position = new(1, 1, 0), TextureCoord = new(1, 1) },
+        new() { Position = new(1, -1, 0), TextureCoord = new(1, 0) },
     ];
 }
