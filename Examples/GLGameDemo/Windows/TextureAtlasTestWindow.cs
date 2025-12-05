@@ -14,7 +14,7 @@ using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLGameDemo.Windows;
 
-internal class TextureAtlasTestWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
+internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProvider sp) : GLGameWindow(w, d)
 {
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;

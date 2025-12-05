@@ -37,6 +37,7 @@ public partial class GameWindow
 {
     internal static Dictionary<ContextAPI, Func<WindowOptions?, GameWindow>> PlatformCreateWindowFuncs = [];
     internal static Dictionary<ContextAPI, Func<WindowOptions?, IWindow>> PlatformCreateCoreWindowFuncs = [];
+    internal static Dictionary<ContextAPI, Func<IWindow, IGraphicsDevice>> PlatformCreateGraphicsDeviceFuncs = [];
 
     public static GameWindow Create(WindowOptions windowOptions)
     {
@@ -50,6 +51,14 @@ public partial class GameWindow
     {
         if (PlatformCreateCoreWindowFuncs.TryGetValue(windowOptions.API.API, out var func))
             return func(windowOptions);
+
+        throw new InvalidOperationException("Target graphics api not register");
+    }
+
+    public static IGraphicsDevice CreateGraphicsDevice(WindowOptions windowOptions, IWindow window)
+    {
+        if (PlatformCreateGraphicsDeviceFuncs.TryGetValue(windowOptions.API.API, out var func))
+            return func(window);
 
         throw new InvalidOperationException("Target graphics api not register");
     }

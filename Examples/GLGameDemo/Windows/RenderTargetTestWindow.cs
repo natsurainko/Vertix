@@ -8,14 +8,13 @@ using Vertix.Graphics;
 using Vertix.Graphics.Resources;
 using Vertix.Graphics.Text.Extensions;
 using Vertix.OpenGL.Extensions;
-using Vertix.OpenGL.Rendering;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLGameDemo.Windows;
 
-internal class RenderTargetTestWindow(IWindow w) : GLGameWindow(w)
+internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWindow(w, d)
 {
     IShaderProgram? fontShader;
     IShaderProgram? rectShader;
