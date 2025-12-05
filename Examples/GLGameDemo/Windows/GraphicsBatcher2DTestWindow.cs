@@ -12,7 +12,7 @@ using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLGameDemo.Windows;
 
-internal class GraphicsBatcher2DTestWindow(IWindow w) : GLGameWindow(w)
+internal class GraphicsBatcher2DTestWindow(IWindow w, IGraphicsDevice d) : GLGameWindow(w, d)
 {
     IShaderProgram? shader;
     IGraphicsBatcher<Vertex2D.InstanceTransform2D>? graphicsBatcher;

@@ -15,7 +15,7 @@ using PrimitiveType = Vertix.Graphics.PrimitiveType;
 
 namespace GLGameDemo.Windows;
 
-internal class DrawInstanceTestWindow(IWindow w, IServiceProvider sp) : GLGameWindow(w)
+internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProvider sp) : GLGameWindow(w, d)
 {
     const int blockCountAsix = 128;
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Silk.NET.Windowing;
 using System;
 using System.Collections.Generic;
+using Vertix.Graphics;
 using Vertix.Windowing;
 
 namespace Vertix.Host;
@@ -46,6 +47,7 @@ public class GameApplicationBuilder<TGameApplication> : IHostApplicationBuilder
 
         IWindow coreWindow = GameWindow.CreateCore(_windowOptions.Value);
         Services.AddSingleton<IWindow>(coreWindow);
+        Services.AddSingleton<IGraphicsDevice>(GameWindow.CreateGraphicsDevice(_windowOptions.Value, coreWindow));
         Services.AddSingleton(typeof(GameWindow), _windowType);
 
         IHost host = _builder.Build();

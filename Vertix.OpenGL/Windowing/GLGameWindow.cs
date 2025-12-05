@@ -13,11 +13,11 @@ public partial class GLGameWindow : GameWindow
 
     public override IGraphicsDevice Graphics { get; }
 
-    public GLGameWindow(IWindow window) : base(window)
+    public GLGameWindow(IWindow window, IGraphicsDevice graphicsDevice) : base(window)
     {
-        window.Initialize();
-        _gL = window.CreateOpenGL();
-        Graphics = new GLGraphicsDevice(_gL);
+        Graphics = graphicsDevice;
+        _gL = ((GLGraphicsDevice)graphicsDevice).GL;
+
         window.Center();
         window.IsVisible = true;
         OnLoaded();
@@ -50,12 +50,19 @@ public partial class GLGameWindow
         );
 
         PlatformCreateWindowFuncs.Add(ContextAPI.OpenGL, Create);
-        PlatformCreateCoreWindowFuncs.Add(ContextAPI.OpenGL, options => Window.Create(options ?? DefaultGLWindowOptions));
+        PlatformCreateCoreWindowFuncs.Add(ContextAPI.OpenGL, static options =>
+        {
+            IWindow coreWindow = Window.Create(options ?? DefaultGLWindowOptions);
+            coreWindow.Initialize();
+            return coreWindow;
+        });
+        PlatformCreateGraphicsDeviceFuncs.Add(ContextAPI.OpenGL, static window => new GLGraphicsDevice(window.CreateOpenGL()));
     }
 
     public static GameWindow Create(WindowOptions? windowOptions = null)
     {
         IWindow coreWindow = Window.Create(windowOptions ?? DefaultGLWindowOptions);
-        return new GLGameWindow(coreWindow);
+        coreWindow.Initialize();
+        return new GLGameWindow(coreWindow, new GLGraphicsDevice(coreWindow.CreateOpenGL()));
     }
 }
