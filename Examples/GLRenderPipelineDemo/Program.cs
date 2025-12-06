@@ -7,8 +7,11 @@ using Vertix.Content;
 using Vertix.Host;
 using Vertix.OpenGL.Windowing;
 
+WindowOptions windowOptions = GLGameWindow.DefaultGLWindowOptions;
+windowOptions.Size = new Silk.NET.Maths.Vector2D<int>(1280, 768);
+
 new GameApplicationBuilder<GLRenderPipelineDemo.GameApplication>()
-    .ConfigureWindow<MainWindow>(GLGameWindow.DefaultGLWindowOptions)
+    .ConfigureWindow<MainWindow>(windowOptions)
     .ConfigureServices(services =>
     {
         services.AddSingleton<AssetImporter>();

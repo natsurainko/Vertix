@@ -29,11 +29,7 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         _graphicsDevice.UseShaderProgram(_graphicsResources.ScreenSampleShader);
         _graphicsDevice.BindTexture(0, RenderContext.GBufferTarget?.TargetTextures[0]);
 
-        _graphicsResources.ScreenSampleShader.Parameters["window"].SetValue(RenderContext.WindowMatrix);
-        _graphicsResources.ScreenSampleShader.Parameters["view"].SetValue(RenderContext.WindowViewMatirx);
-        _graphicsResources.ScreenSampleShader.Parameters["projection"].SetValue(RenderContext.WindowSampleProjectionMatrix);
-
-        _graphicsDevice.DrawVertexElementsArray(_graphicsResources.RectangleVertexArray, PrimitiveType.Triangles, 6);
+        _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
         _graphicsDevice.BindTexture(0, null);
     }
 }
