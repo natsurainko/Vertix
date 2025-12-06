@@ -1,5 +1,4 @@
-﻿using GLGameDemo;
-using GLGameDemo.Windows;
+﻿using GLGameDemo.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Silk.NET.Windowing;
@@ -12,8 +11,6 @@ new GameApplicationBuilder<GLGameDemo.GameApplication>()
     .ConfigureServices(services =>
     {
         services.AddSingleton<AssetImporter>();
-        services.AddSingleton<RenderContext>();
-        services.AddSingleton<RenderPipeline>();
     })
     .Build()
     .Run();

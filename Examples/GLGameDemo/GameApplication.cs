@@ -4,14 +4,14 @@ using Vertix.Graphics.Text;
 
 namespace GLGameDemo;
 
-internal class GameApplication(IServiceProvider sp) : Vertix.Host.GameApplication(sp)
+internal class GameApplication : Vertix.Host.GameApplication
 {
     public static FontFamily? Unifont;
     public static FontFamily? Msyh;
 
     public static FontFamily? JetbrainsMono;
 
-    protected override void OnLoading()
+    public GameApplication()
     {
         Unifont = new FontFamily("Assets/Fonts/unifont-17.0.02.otf");
         Msyh = new FontFamily("Assets/Fonts/MSYH.TTC");

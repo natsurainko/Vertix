@@ -8,6 +8,8 @@ namespace Vertix.Graphics;
 
 public interface IGraphicsDevice : IDisposable
 {
+    bool Disposed { get; }
+
     void BindRenderTarget(IRenderTarget? renderTarget);
 
     void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = default);
@@ -21,6 +23,8 @@ public interface IGraphicsDevice : IDisposable
     IRenderTarget CreateRenderTarget(Vector2D<uint> size);
 
     ITexture2D CreateTexture2D();
+
+    ITexture2D[] CreateTexture2Ds(int count);
 
     ITextureSampler CreateTextureSampler();
 
