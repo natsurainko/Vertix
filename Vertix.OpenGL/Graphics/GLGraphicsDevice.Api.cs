@@ -16,13 +16,16 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 {
     public void BindRenderTarget(IRenderTarget? renderTarget)
     {
+        if (renderTarget == _currentRenderTarget) return;
         if (renderTarget == null)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            _currentRenderTarget = null;
             return;
         }
 
         renderTarget.BindRenderTarget();
+        _currentRenderTarget = renderTarget;
     }
 
     public unsafe void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = 0)
@@ -52,6 +55,18 @@ public partial class GLGraphicsDevice : IGraphicsDevice
     public IRenderTarget CreateRenderTarget(Vector2D<uint> size) => new GLRenderTarget(GL, size);
 
     public ITexture2D CreateTexture2D() => new GLTexture2D(GL);
+
+    public ITexture2D[] CreateTexture2Ds(int count)
+    {
+        Span<uint> handles = stackalloc uint[count];
+        GL.CreateTextures(TextureTarget.Texture2D, handles);
+        ITexture2D[] texture2Ds = new ITexture2D[count];
+
+        for (int i = 0; i < count; i++)
+            texture2Ds[i] = new GLTexture2D(GL, handles[i]);
+
+        return texture2Ds;
+    }
 
     public ITextureSampler CreateTextureSampler() => new GLTextureSampler(GL);
 
@@ -112,9 +127,11 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 
     public void UseShaderProgram(IShaderProgram? shaderProgram)
     {
+        if (shaderProgram == _currentShaderProgram) return;
         if (shaderProgram == null)
         {
             GL.UseProgram(0);
+            _currentShaderProgram = null;
             return;
         }
 
@@ -122,6 +139,7 @@ public partial class GLGraphicsDevice : IGraphicsDevice
             throw new InvalidOperationException();
 
         gLShaderProgram.Use();
+        _currentShaderProgram = shaderProgram;
     }
 
     public void Viewport(Vector2D<int> size) => GL.Viewport(size);

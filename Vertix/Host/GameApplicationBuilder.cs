@@ -34,6 +34,9 @@ public class GameApplicationBuilder<TGameApplication> : IHostApplicationBuilder
     public GameApplicationBuilder<TGameApplication> ConfigureWindow<TWindow>(WindowOptions windowOptions)
         where TWindow : GameWindow
     {
+        if (_windowType != null)
+            throw new InvalidOperationException();
+
         _windowOptions = windowOptions;
         _windowType = typeof(TWindow);
 

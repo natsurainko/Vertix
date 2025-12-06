@@ -10,33 +10,21 @@ namespace Vertix.Host;
 
 public partial class GameApplication : IHost
 {
-    public IServiceProvider Services { get; }
+    public IServiceProvider Services => Host!.Services;
 
     public IHost? Host { get; internal set; }
-
-    public GameWindow Window { get; }
-
-    public GameApplication(IServiceProvider provider)
-    {
-        Services = provider;
-
-        OnLoading();
-        Window = Services.GetRequiredService<GameWindow>();
-    }
-
-    public void Dispose()
-    {
-        Host?.Dispose();
-    }
 
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         var taskCompletionSource = new TaskCompletionSource();
         var hostAppLifetime = Services.GetRequiredService<IHostApplicationLifetime>();
+        var gameWindow = Services.GetRequiredService<GameWindow>();
 
         try
         {
-            Window.CoreWindow.Run();
+            gameWindow.CoreWindow.Run();
+            gameWindow.Graphics.Dispose();
+
             taskCompletionSource.SetResult();
             hostAppLifetime.StopApplication();
         }
@@ -48,10 +36,10 @@ public partial class GameApplication : IHost
         return taskCompletionSource.Task;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.CompletedTask;
-    }
+    public Task StopAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-    protected virtual void OnLoading() { }
+    public void Dispose()
+    {
+        Host?.Dispose();
+    }
 }

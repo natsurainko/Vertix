@@ -1,8 +1,10 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.Windowing;
+using Vertix.Engine.Camera;
 using Vertix.Extensions;
+using Vertix.Rendering;
 
-namespace GLGameDemo;
+namespace GLRenderPipelineDemo.Rendering;
 
 internal class RenderContext
 {
@@ -10,7 +12,15 @@ internal class RenderContext
 
     public Rectangle<float> WindowRectangle;
     public Matrix4X4<float> WindowMatrix;
+    public Matrix4X4<float> WindowViewMatirx = Matrix4X4<float>.Identity;
     public Matrix4X4<float> WindowProjectionMatrix;
+
+    public Matrix4X4<float> CameraViewMatrix;
+    public Matrix4X4<float> CameraProjectionMatrix;
+
+    public PerspectiveCamera? PerspectiveCamera { get; set; }
+
+    public IRenderTarget? GBufferTarget { get; set; }
 
     public RenderContext(IWindow window)
     {
@@ -27,5 +37,16 @@ internal class RenderContext
         WindowRectangle = new Rectangle<float>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y);
         WindowMatrix = WindowRectangle.ToScreenMatrix();
         WindowProjectionMatrix = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+    }
+
+    public void Update()
+    {
+        if (PerspectiveCamera != null)
+        {
+            PerspectiveCamera!.GetViewMatrix(out var view);
+            PerspectiveCamera.GetProjectionMatrix(out var projection);
+            CameraViewMatrix = view;
+            CameraProjectionMatrix = projection;
+        }
     }
 }

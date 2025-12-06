@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Examples/">
     <Project Path="Examples/GLGameDemo/GLGameDemo.csproj" Id="7002bf20-0647-49ad-810a-4b3b34ed4e3d" />
+    <Project Path="Examples/GLRenderPipelineDemo/GLRenderPipelineDemo.csproj" Id="5b11dcf5-1cfc-4a90-9caa-44591553bf6a" />
   </Folder>
   <Project Path="Vertix.Direct3D12/Vertix.Direct3D12.csproj" />
   <Project Path="Vertix.Engine/Vertix.Engine.csproj" Id="c827681c-1cc3-47cb-bbab-1122404476ce" />
