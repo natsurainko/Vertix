@@ -12,6 +12,8 @@ public interface IGraphicsDevice : IDisposable
 
     void BindRenderTarget(IRenderTarget? renderTarget);
 
+    void BindTexture(uint bindingIndex, ITexture? texture);
+
     void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = default);
 
     IShaderProgram CreateShaderProgram();

@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Silk.NET.Input.Glfw" Version="2.22.0" />
     <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.22.0" />
   </ItemGroup>
 
@@ -20,6 +21,9 @@
 
   <ItemGroup>
     <None Update="Assets\Fonts\unifont-17.0.02.otf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Models\GroundTest.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Shaders\Passes\geometry_pass.frag">

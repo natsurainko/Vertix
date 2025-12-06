@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controller\" />
+    <ProjectReference Include="..\Vertix\Vertix.csproj" />
   </ItemGroup>
 
 </Project>
