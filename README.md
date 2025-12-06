@@ -6,11 +6,14 @@ A lightweight 3D game development framework for multiple graphics platforms, bui
 ### Features
 + [x] OpenGL 4.6 basic implementation  
 + [x] Assimp-based 3D model importer  
-+ [x] Basic texture sampler interfaces
-+ [x] Basic RenderTarget and MRT support
++ [x] Basic texture sampler interfaces  
 + [x] Basic font rendering based on FreeType  
++ [x] RenderTarget and MRT (multi-RenderTarget) support  
++ [x] RenderPipeline abstraction implementation  
++ [x] Basic camera, scene, GameObject3D implementation  
 
 ### In Progress
++ 🔄 GLRenderPipelineDemo with deferred-shading implementation
 + 🔄 Loading bones data from 3D model files using Assimp
 
 ## Quick Start
