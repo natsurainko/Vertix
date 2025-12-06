@@ -20,18 +20,20 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
     {
         _graphicsResources = graphicsResources;
 
-        AddPass(new GeometryPass(graphicsResources.GeometryPassShader));
+        AddPass(new GeometryPass(graphicsResources.GeometryPassShader, graphicsResources));
     }
 
     public override void FinalDraw()
     {
-        _graphicsDevice.BindRenderTarget(null);
+        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
         _graphicsDevice.UseShaderProgram(_graphicsResources.ScreenSampleShader);
+        _graphicsDevice.BindTexture(0, RenderContext.GBufferTarget?.TargetTextures[0]);
 
         _graphicsResources.ScreenSampleShader.Parameters["window"].SetValue(RenderContext.WindowMatrix);
         _graphicsResources.ScreenSampleShader.Parameters["view"].SetValue(RenderContext.WindowViewMatirx);
-        _graphicsResources.ScreenSampleShader.Parameters["projection"].SetValue(RenderContext.WindowProjectionMatrix);
+        _graphicsResources.ScreenSampleShader.Parameters["projection"].SetValue(RenderContext.WindowSampleProjectionMatrix);
 
         _graphicsDevice.DrawVertexElementsArray(_graphicsResources.RectangleVertexArray, PrimitiveType.Triangles, 6);
+        _graphicsDevice.BindTexture(0, null);
     }
 }

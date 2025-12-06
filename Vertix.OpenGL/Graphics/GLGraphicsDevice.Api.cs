@@ -28,6 +28,20 @@ public partial class GLGraphicsDevice : IGraphicsDevice
         _currentRenderTarget = renderTarget;
     }
 
+    public void BindTexture(uint bindingIndex, ITexture? texture)
+    {
+        if (texture == null)
+        {
+            GL.BindTextureUnit(bindingIndex, 0);
+            return;
+        }
+
+        if (texture is not GLTexture gLTexture)
+            throw new InvalidOperationException();
+
+        gLTexture.BindTexture(bindingIndex);
+    }
+
     public unsafe void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = 0)
     {
         if ((buffers & ClearBufferMask.Color) == ClearBufferMask.Color)

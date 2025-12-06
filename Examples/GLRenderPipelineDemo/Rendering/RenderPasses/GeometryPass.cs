@@ -1,14 +1,18 @@
 ﻿using Silk.NET.Maths;
+using Vertix.Engine;
 using Vertix.Graphics;
 using Vertix.Rendering;
+using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace GLRenderPipelineDemo.Rendering.RenderPasses;
 
-internal class GeometryPass(IShaderProgram shaderProgram) : RenderPass<RenderContext>
+internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources graphicsResources) : RenderPass<RenderContext>
 {
     private IRenderTarget? _renderTarget;
     private ITexture2D[] _texture2Ds = [];
+
     private readonly IShaderProgram _shaderProgram = shaderProgram;
+    private readonly GraphicsResources _graphicsResources = graphicsResources;
 
     public override string Name => "GeometryPass";
 
@@ -43,10 +47,29 @@ internal class GeometryPass(IShaderProgram shaderProgram) : RenderPass<RenderCon
 
     public override void Execute()
     {
-        _graphicsDevice!.BindRenderTarget(_renderTarget);
-        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth);
+        if (_graphicsDevice == null || _context == null || _renderTarget == null) return;
+
+        _renderTarget.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
+        _graphicsDevice.BindRenderTarget(_renderTarget);
         _graphicsDevice.UseShaderProgram(_shaderProgram);
 
+        _graphicsDevice.BindTexture(0, _graphicsResources.DefaultTexture);
+        _graphicsDevice.BindTexture(1, _graphicsResources.DefaultTexture);
+
+        _shaderProgram.Parameters["view"].SetValue(_context.CameraViewMatrix);
+        _shaderProgram.Parameters["projection"].SetValue(_context.CameraProjectionMatrix);
+
+        for (int i = 0; i < _context.SceneManager.SceneObjects.Count; i++)
+        {
+            GameObject3D gameObject3D = _context.SceneManager.SceneObjects[i];
+
+            _shaderProgram.Parameters["world"].SetValue(gameObject3D.WorldMatrix);
+            gameObject3D.Draw(_graphicsDevice);
+        }
+
+        _graphicsDevice.BindTexture(0, null);
+        _graphicsDevice.BindTexture(1, null);
+        _graphicsDevice.BindRenderTarget(null);
     }
 
     public override void Dispose()

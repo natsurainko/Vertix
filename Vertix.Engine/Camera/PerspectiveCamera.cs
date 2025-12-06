@@ -2,17 +2,36 @@
 
 namespace Vertix.Engine.Camera;
 
-public class PerspectiveCamera : ICamera
+public partial class PerspectiveCamera : GameObject3D
 {
-    //private readonly ViewportAdapter _viewportAdapter = viewportAdapter;
-    //private GameObject3D? _targetObject;
+    /// <summary>
+    /// Move the camera in its relative orientation
+    /// </summary>
+    /// <param name="offset">offset == (forward, up, right)</param>
+    public override void Move(Vector3D<float> offset)
+    {
+        if (CameraMode != CameraMode.Free)
+        {
+            _targetObject?.Move(offset);
+            return;
+        }
+
+        _movementAccumulator += offset;
+    }
+
+    /// <summary>
+    /// angles = (pitch, yaw, roll)
+    /// </summary>
+    /// <param name="angles"></param>
+    public void Rotate(Vector3D<float> angles) => _rotationAccumulator += angles;
+}
+
+public partial class PerspectiveCamera : ICamera
+{
+    private GameObject3D? _targetObject;
 
     private Vector3D<float> _movementAccumulator = Vector3D<float>.Zero;
     private Vector3D<float> _rotationAccumulator = Vector3D<float>.Zero;
-
-    public Vector3D<float> Position { get; set; }
-
-    public Quaternion<float> Orientation { get; set; } = Quaternion<float>.Identity;
 
     public float FieldOfView { get; set; } = Scalar.DegreesToRadians(45f);
     public float AspectRatio { get; set; } = 800 / 600f;
@@ -21,6 +40,7 @@ public class PerspectiveCamera : ICamera
 
     public CameraMode CameraMode { get; set; } = CameraMode.Free;
     public float TargetDistance { get; set; } = 5f;
+    public bool AllowRoll { get; set; } = false;
 
     public Vector3D<float> TargetPosition { get; set; } = Vector3D<float>.Zero;
 
@@ -28,11 +48,11 @@ public class PerspectiveCamera : ICamera
     {
         if (_rotationAccumulator != Vector3D<float>.Zero)
         {
-            Orientation *= Quaternion<float>.CreateFromYawPitchRoll(_rotationAccumulator.Y, _rotationAccumulator.X, _rotationAccumulator.Z);
+            base.Rotate(_rotationAccumulator, AllowRoll);
             _rotationAccumulator = Vector3D<float>.Zero;
         }
 
-        Quaternion<float> orientation = Orientation;// (_targetObject != null && CameraMode == CameraMode.FirstPerson ? _targetObject : this).GetOrientationForCamera();
+        Quaternion<float> orientation = _targetObject != null && CameraMode == CameraMode.FirstPerson ? _targetObject.Orientation : this.Orientation;
         Vector3D<float> forward = Vector3D.Transform(-Vector3D<float>.UnitZ, orientation);
         Vector3D<float> up = Vector3D.Transform(Vector3D<float>.UnitY, orientation);
 
@@ -73,26 +93,5 @@ public class PerspectiveCamera : ICamera
 
     public void GetProjectionMatrix(out Matrix4X4<float> matrix) => matrix = Matrix4X4.CreatePerspectiveFieldOfView(FieldOfView, AspectRatio, NearPlane, FarPlane);
 
-    /// <summary>
-    /// Move the camera in its relative orientation
-    /// </summary>
-    /// <param name="offset">offset == (forward, up, right)</param>
-    public void Move(Vector3D<float> offset)
-    {
-        if (CameraMode != CameraMode.Free)
-        {
-            //_targetObject?.Move(offset);
-            return;
-        }
-
-        _movementAccumulator += offset;
-    }
-
-    /// <summary>
-    /// angles = (pitch, yaw, roll)
-    /// </summary>
-    /// <param name="angles"></param>
-    public void Rotate(Vector3D<float> angles) => _rotationAccumulator += angles;
-
-    //public void SetTarget(GameObject3D? target) => _targetObject = target;
+    public void SetTarget(GameObject3D? target) => _targetObject = target;
 }
