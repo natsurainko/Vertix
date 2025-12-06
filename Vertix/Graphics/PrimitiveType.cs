@@ -6,4 +6,5 @@ public enum PrimitiveType
     Lines,
     Triangles,
     Quads,
+    TriangleStrip
 }

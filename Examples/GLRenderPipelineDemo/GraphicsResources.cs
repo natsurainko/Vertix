@@ -1,7 +1,5 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.OpenGL;
-using SkiaSharp;
-using System.Drawing;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
@@ -33,12 +31,13 @@ internal class GraphicsResources : IDisposable
         IGraphicsBuffer indexBuffer = graphicsDevice.CreateGraphicsBuffer();
 
         vertexBuffer.Initialize(RectangleVertices.Length, (uint)BufferStorageMask.None, RectangleVertices);
-        indexBuffer.Initialize(RectangleIndices.Length, (uint)BufferStorageMask.None, RectangleIndices);
+        //indexBuffer.Initialize(RectangleIndices.Length, (uint)BufferStorageMask.None, RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         RectangleVertexArray = vertexArray;
         RectangleBatcher = graphicsDevice.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)RectangleIndices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)RectangleVertices.Length);
+        RectangleBatcher.PrimitiveType = Vertix.Graphics.PrimitiveType.TriangleStrip;
 
         Basic2DShader = graphicsDevice.CreateShaderProgram();
         Basic2DShader.LoadGLSLShadersFromFiles(_2D_BASIC_SHADER);
@@ -92,11 +91,10 @@ internal class GraphicsResources : IDisposable
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/geometry_pass.frag"),
     ];
 
-    internal static readonly uint[] RectangleIndices = [0, 1, 3, 1, 2, 3];
     internal static readonly Vertex2D[] RectangleVertices =
     [
-        new() { Position = new(-1, -1, 0), TextureCoord = new(0, 0) },
         new() { Position = new(-1, 1, 0), TextureCoord = new(0, 1) },
+        new() { Position = new(-1, -1, 0), TextureCoord = new(0, 0) },
         new() { Position = new(1, 1, 0), TextureCoord = new(1, 1) },
         new() { Position = new(1, -1, 0), TextureCoord = new(1, 0) },
     ];

@@ -24,6 +24,8 @@ public partial class PerspectiveCamera : GameObject3D
     /// </summary>
     /// <param name="angles"></param>
     public void Rotate(Vector3D<float> angles) => _rotationAccumulator += angles;
+
+    public override void Rotate(Vector3D<float> angles, bool _ = false) => Rotate(angles);
 }
 
 public partial class PerspectiveCamera : ICamera

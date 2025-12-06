@@ -13,6 +13,7 @@ public static class EnumHelper
             Vertix.Graphics.PrimitiveType.Lines => PrimitiveType.Lines,
             Vertix.Graphics.PrimitiveType.Triangles => PrimitiveType.Triangles,
             Vertix.Graphics.PrimitiveType.Quads => PrimitiveType.Quads,
+            Vertix.Graphics.PrimitiveType.TriangleStrip => PrimitiveType.TriangleStrip,
             _ => throw new NotSupportedException(),
         };
     }

@@ -2,7 +2,7 @@
 using Silk.NET.Windowing;
 using Vertix.Engine.Camera;
 using Vertix.Engine.Scene;
-using Vertix.Extensions;
+//using Vertix.Extensions;
 using Vertix.Rendering;
 
 namespace GLRenderPipelineDemo.Rendering;
@@ -12,10 +12,9 @@ internal class RenderContext
     private readonly IWindow CoreWindow;
 
     public Rectangle<float> WindowRectangle;
-    public Matrix4X4<float> WindowMatrix;
-    public Matrix4X4<float> WindowViewMatirx = Matrix4X4<float>.Identity;
-    public Matrix4X4<float> WindowProjectionMatrix;
-    public Matrix4X4<float> WindowSampleProjectionMatrix;
+    //public Matrix4X4<float> WindowMatrix;
+    //public Matrix4X4<float> WindowViewMatirx = Matrix4X4<float>.Identity;
+    //public Matrix4X4<float> WindowProjectionMatrix;
 
     public Matrix4X4<float> CameraViewMatrix;
     public Matrix4X4<float> CameraProjectionMatrix;
@@ -37,9 +36,8 @@ internal class RenderContext
     private void OnWindowResized(Vector2D<int> obj)
     {
         WindowRectangle = new Rectangle<float>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y);
-        WindowMatrix = WindowRectangle.ToScreenMatrix();
-        WindowProjectionMatrix = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
-        WindowSampleProjectionMatrix = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, 0, CoreWindow.Size.Y, -100f, 100f);
+        //WindowMatrix = WindowRectangle.ToScreenMatrix();
+        //WindowProjectionMatrix = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
 
         PerspectiveCamera.AspectRatio = CoreWindow.Size.X / (float)CoreWindow.Size.Y;
     }
