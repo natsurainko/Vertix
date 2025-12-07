@@ -52,6 +52,7 @@ internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources grap
         _renderTarget.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
         _graphicsDevice.BindRenderTarget(_renderTarget);
         _graphicsDevice.UseShaderProgram(_shaderProgram);
+        _graphicsDevice.EnableFaceCulling = true;
 
         _graphicsDevice.BindTexture(0, _graphicsResources.DefaultTexture);
         _graphicsDevice.BindTexture(1, _graphicsResources.DefaultTexture);
@@ -66,10 +67,6 @@ internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources grap
             _shaderProgram.Parameters["world"].SetValue(gameObject3D.WorldMatrix);
             gameObject3D.Draw(_graphicsDevice);
         }
-
-        _graphicsDevice.BindTexture(0, null);
-        _graphicsDevice.BindTexture(1, null);
-        _graphicsDevice.BindRenderTarget(null);
     }
 
     public override void Dispose()

@@ -14,15 +14,21 @@ internal class GraphicsResources : IDisposable
 
     public IGraphicsBatcher<Vertex2D.InstanceTransform2D> RectangleBatcher { get; private set; }
 
-    public IShaderProgram Basic2DShader { get; private set; }
+    //public IShaderProgram Basic2DShader { get; private set; }
 
-    public IShaderProgram Basic3DShader { get; private set; }
+    //public IShaderProgram Basic3DShader { get; private set; }
 
     public IShaderProgram ScreenSampleShader { get; private set; }
 
     public IShaderProgram GeometryPassShader { get; private set; }
 
+    public IShaderProgram DirectionalShadowPassShader { get; private set; }
+
+    public IShaderProgram DirectionalLightingPassShader { get; private set; }
+
     public ITexture2D DefaultTexture { get; private set; }
+
+    public ITextureSampler NearestSampler { get; private set; }
 
     public GraphicsResources(IGraphicsDevice graphicsDevice)
     {
@@ -39,13 +45,13 @@ internal class GraphicsResources : IDisposable
             Vertex2D.InstanceTransform2D.DefaultProperties, (uint)RectangleVertices.Length);
         RectangleBatcher.PrimitiveType = Vertix.Graphics.PrimitiveType.TriangleStrip;
 
-        Basic2DShader = graphicsDevice.CreateShaderProgram();
-        Basic2DShader.LoadGLSLShadersFromFiles(_2D_BASIC_SHADER);
-        Basic2DShader.Compile();
+        //Basic2DShader = graphicsDevice.CreateShaderProgram();
+        //Basic2DShader.LoadGLSLShadersFromFiles(_2D_BASIC_SHADER);
+        //Basic2DShader.Compile();
 
-        Basic3DShader = graphicsDevice.CreateShaderProgram();
-        Basic3DShader.LoadGLSLShadersFromFiles(_3D_BASIC_SHADER);
-        Basic3DShader.Compile();
+        //Basic3DShader = graphicsDevice.CreateShaderProgram();
+        //Basic3DShader.LoadGLSLShadersFromFiles(_3D_BASIC_SHADER);
+        //Basic3DShader.Compile();
 
         ScreenSampleShader = graphicsDevice.CreateShaderProgram();
         ScreenSampleShader.LoadGLSLShadersFromFiles(_SCREEN_SAMPLE_SHADER);
@@ -55,11 +61,27 @@ internal class GraphicsResources : IDisposable
         GeometryPassShader.LoadGLSLShadersFromFiles(_GEOMETRY_PASS_SHADER);
         GeometryPassShader.Compile();
 
+        DirectionalShadowPassShader = graphicsDevice.CreateShaderProgram();
+        DirectionalShadowPassShader.LoadGLSLShadersFromFiles(_DIRECTIONAL_SHADOW_PASS_SHADER);
+        DirectionalShadowPassShader.Compile();
+
+        DirectionalLightingPassShader = graphicsDevice.CreateShaderProgram();
+        DirectionalLightingPassShader.LoadGLSLShadersFromFiles(_DIRECTIONAL_LIGHTING_PASS_SHADER);
+        DirectionalLightingPassShader.Compile();
+
         ITexture2D texture2D = graphicsDevice.CreateTexture2D();
         texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
         texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 0, 0, 255 });
 
         DefaultTexture = texture2D;
+
+        ITextureSampler textureSampler = graphicsDevice.CreateTextureSampler();
+        textureSampler.MinFilter = TextureFilter.Nearest;
+        textureSampler.MagFilter = TextureFilter.Nearest;
+        textureSampler.AddressU = TextureAddressMode.ClampToEdge;
+        textureSampler.AddressV = TextureAddressMode.ClampToEdge;
+
+        NearestSampler = textureSampler;
     }
 
     public void Dispose()
@@ -67,17 +89,17 @@ internal class GraphicsResources : IDisposable
 
     }
 
-    internal static readonly (ShaderType, string)[] _3D_BASIC_SHADER =
-    [
-        (ShaderType.VertexShader, "Assets/Shaders/shader3D.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/shader3D.frag"),
-    ];
+    //internal static readonly (ShaderType, string)[] _3D_BASIC_SHADER =
+    //[
+    //    (ShaderType.VertexShader, "Assets/Shaders/shader3D.vert"),
+    //    (ShaderType.FragmentShader, "Assets/Shaders/shader3D.frag"),
+    //];
 
-    internal static readonly (ShaderType, string)[] _2D_BASIC_SHADER =
-    [
-        (ShaderType.VertexShader, "Assets/Shaders/shader2D.vert"),
-        (ShaderType.FragmentShader, "Assets/Shaders/shader2D.frag"),
-    ];
+    //internal static readonly (ShaderType, string)[] _2D_BASIC_SHADER =
+    //[
+    //    (ShaderType.VertexShader, "Assets/Shaders/shader2D.vert"),
+    //    (ShaderType.FragmentShader, "Assets/Shaders/shader2D.frag"),
+    //];
 
     internal static readonly (ShaderType, string)[] _SCREEN_SAMPLE_SHADER =
     [
@@ -89,6 +111,18 @@ internal class GraphicsResources : IDisposable
     [
         (ShaderType.VertexShader, "Assets/Shaders/Passes/geometry_pass.vert"),
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/geometry_pass.frag"),
+    ];
+
+    internal static readonly (ShaderType, string)[] _DIRECTIONAL_SHADOW_PASS_SHADER =
+    [
+        (ShaderType.VertexShader, "Assets/Shaders/Passes/directional_shadow_pass.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/Passes/directional_shadow_pass.frag"),
+    ];
+
+    internal static readonly (ShaderType, string)[] _DIRECTIONAL_LIGHTING_PASS_SHADER =
+    [
+        (ShaderType.VertexShader, "Assets/Shaders/screen_sample.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/Passes/directional_lighting_pass.frag"),
     ];
 
     internal static readonly Vertex2D[] RectangleVertices =
