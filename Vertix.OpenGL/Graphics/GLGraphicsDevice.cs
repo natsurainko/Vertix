@@ -1,5 +1,6 @@
 ﻿using Silk.NET.OpenGL;
 using System;
+using Vertix.Graphics;
 using Vertix.Rendering;
 
 namespace Vertix.OpenGL.Graphics;
@@ -13,7 +14,16 @@ public partial class GLGraphicsDevice : IDisposable
 
     public bool Disposed { get; private set; }
 
-    internal GLGraphicsDevice(GL gL) => GL = gL;
+    internal GLGraphicsDevice(GL gL)
+    {
+        GL = gL;
+
+        EnableFaceCulling = false;
+        EnableDepthTest = false;
+
+        CullFace = CullFaceMode.BackFace;
+        FaceWindingOrder = FaceWindingOrder.CounterClockwise;
+    }
 
     public void Dispose()
     {

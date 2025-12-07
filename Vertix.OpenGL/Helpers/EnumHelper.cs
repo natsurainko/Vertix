@@ -64,6 +64,11 @@ public static class EnumHelper
             Vertix.Graphics.TextureFormat.Rgba16f => SizedInternalFormat.Rgba16f,
             Vertix.Graphics.TextureFormat.Rgba32f => SizedInternalFormat.Rgba32f,
 
+            Vertix.Graphics.TextureFormat.Depth16 => SizedInternalFormat.DepthComponent16,
+            Vertix.Graphics.TextureFormat.Depth24 => SizedInternalFormat.DepthComponent24,
+            Vertix.Graphics.TextureFormat.Depth32 => SizedInternalFormat.DepthComponent32,
+            Vertix.Graphics.TextureFormat.Depth32f => SizedInternalFormat.DepthComponent32f,
+
             Vertix.Graphics.TextureFormat.Depth24Stencil8 => SizedInternalFormat.Depth24Stencil8,
             Vertix.Graphics.TextureFormat.Depth32fStencil8 => SizedInternalFormat.Depth32fStencil8,
 
@@ -160,6 +165,24 @@ public static class EnumHelper
                     break;
                 case Vertix.Graphics.TextureFormat.Rgba32f:
                     pixelFormat = PixelFormat.Rgba;
+                    pixelType = PixelType.Float;
+                    break;
+
+                case Vertix.Graphics.TextureFormat.Depth16:
+                    pixelFormat = PixelFormat.DepthComponent;
+                    pixelType = PixelType.UnsignedShort;
+                    break;
+                case Vertix.Graphics.TextureFormat.Depth24:
+                    pixelFormat = PixelFormat.DepthComponent;
+                    pixelType = PixelType.UnsignedInt;
+                    break;
+                case Vertix.Graphics.TextureFormat.Depth32:
+                    pixelFormat = PixelFormat.DepthComponent;
+                    pixelType = PixelType.UnsignedInt;
+                    break;
+
+                case Vertix.Graphics.TextureFormat.Depth32f:
+                    pixelFormat = PixelFormat.DepthComponent;
                     pixelType = PixelType.Float;
                     break;
 

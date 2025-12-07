@@ -21,13 +21,20 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         _graphicsResources = graphicsResources;
 
         AddPass(new GeometryPass(graphicsResources.GeometryPassShader, graphicsResources));
+        AddPass(new DirectionalShadowPass(graphicsResources.DirectionalShadowPassShader));
+        AddPass(new DirectionalLightingPass(graphicsResources.DirectionalLightingPassShader, graphicsResources));
+
+        _graphicsResources.ScreenSampleShader.Parameters["isSingleValue"].SetValue(false);
     }
 
     public override void FinalDraw()
     {
+        _graphicsDevice.BindRenderTarget(null);
+        _graphicsDevice.EnableFaceCulling = false;
+
         _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
         _graphicsDevice.UseShaderProgram(_graphicsResources.ScreenSampleShader);
-        _graphicsDevice.BindTexture(0, RenderContext.GBufferTarget?.TargetTextures[0]);
+        _graphicsDevice.BindTexture(0, RenderContext.DirectionalLightingTarget?.TargetTextures[0]);
 
         _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
         _graphicsDevice.BindTexture(0, null);

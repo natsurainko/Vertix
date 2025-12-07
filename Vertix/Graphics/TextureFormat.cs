@@ -31,6 +31,11 @@ public enum TextureFormat
     Rgba16f,
     Rgba32f,
 
+    Depth16,
+    Depth24,
+    Depth32,
+    Depth32f,
+
     Depth24Stencil8,
     Depth32fStencil8,
 }

@@ -14,6 +14,71 @@ namespace Vertix.OpenGL.Graphics;
 
 public partial class GLGraphicsDevice : IGraphicsDevice
 {
+    public bool EnableDepthTest
+    {
+        get => field;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                if (value)
+                    GL.Enable(EnableCap.DepthTest);
+                else GL.Disable(EnableCap.DepthTest);
+            }
+        }
+    }
+
+    public bool EnableFaceCulling 
+    { 
+        get => field;
+        set
+        {
+            if (field != value) 
+            {
+                field = value;
+                if (value)
+                    GL.Enable(EnableCap.CullFace);
+                else GL.Disable(EnableCap.CullFace);
+            }
+        }
+    }
+
+    public CullFaceMode CullFace
+    {
+        get => field;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                GL.CullFace(value switch
+                {
+                    CullFaceMode.FrontFace => TriangleFace.Front,
+                    CullFaceMode.BackAndFrontFace => TriangleFace.FrontAndBack,
+                    _ => TriangleFace.Back,
+                });
+            }
+        }
+    }
+
+    public FaceWindingOrder FaceWindingOrder
+    {
+        get => field;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                GL.FrontFace(value switch
+                {
+                    FaceWindingOrder.Clockwise => FrontFaceDirection.CW,
+                    _ => FrontFaceDirection.Ccw,
+                });
+            }
+        }
+    }
+
     public void BindRenderTarget(IRenderTarget? renderTarget)
     {
         if (renderTarget == _currentRenderTarget) return;
@@ -40,6 +105,20 @@ public partial class GLGraphicsDevice : IGraphicsDevice
             throw new InvalidOperationException();
 
         gLTexture.BindTexture(bindingIndex);
+    }
+
+    public void BindTextureSampler(uint bindingIndex, ITextureSampler? textureSampler)
+    {
+        if (textureSampler == null)
+        {
+            GL.BindSampler(bindingIndex, 0);
+            return;
+        }
+
+        if (textureSampler is not GLTextureSampler gLTextureSampler)
+            throw new InvalidOperationException();
+
+        gLTextureSampler.BindSampler(bindingIndex);
     }
 
     public unsafe void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = 0)

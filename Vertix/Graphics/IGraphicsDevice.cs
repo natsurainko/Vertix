@@ -8,11 +8,21 @@ namespace Vertix.Graphics;
 
 public interface IGraphicsDevice : IDisposable
 {
+    bool EnableDepthTest { get; set; }
+
+    bool EnableFaceCulling { get; set; }
+
+    CullFaceMode CullFace { get; set; }
+
+    FaceWindingOrder FaceWindingOrder { get; set; }
+
     bool Disposed { get; }
 
     void BindRenderTarget(IRenderTarget? renderTarget);
 
     void BindTexture(uint bindingIndex, ITexture? texture);
+
+    void BindTextureSampler(uint bindingIndex, ITextureSampler? texture);
 
     void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = default);
 

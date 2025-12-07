@@ -1,7 +1,6 @@
 ﻿using GLRenderPipelineDemo.Controlling;
 using GLRenderPipelineDemo.Rendering;
 using Silk.NET.Input;
-using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Vertix.Content;
 using Vertix.Engine.Controller;
@@ -20,8 +19,7 @@ internal class MainWindow(IWindow w, IGraphicsDevice d,
 
     protected override void OnLoaded()
     {
-        _gL.Enable(EnableCap.DepthTest);
-
+        Graphics.EnableDepthTest = true;
         IInputContext inputContext = this.CoreWindow.CreateInput();
 
         _mouseController = new MouseControllerInput(inputContext);
@@ -33,10 +31,15 @@ internal class MainWindow(IWindow w, IGraphicsDevice d,
         rotationController.AttachObject(renderContext.PerspectiveCamera);
         positionController.AttachObject(renderContext.PerspectiveCamera);
 
-        Model model = assetImporter.LoadModel("Assets/Models/GroundTest.fbx");
-        Graphics.InitializeModelMeshesVertexArray(model);
+        Model planeModel = assetImporter.LoadModel("Assets/Models/Plane.fbx");
+        Model blockModel = assetImporter.LoadModel("Assets/Models/Block.fbx");
 
-        renderContext.SceneManager.AddObject(new SceneObject3D() { Model = model });
+        Graphics.InitializeModelMeshesVertexArray(planeModel);
+        Graphics.InitializeModelMeshesVertexArray(blockModel);
+
+        renderContext.SceneManager.AddObject(new SceneObject3D() { Model = planeModel });
+        renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(0, 0.5f, 0) });
+        renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(2, 3, 2) });
     }
 
     protected override void OnRender(double delateTime)
