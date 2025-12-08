@@ -24,7 +24,7 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         AddPass(new DirectionalShadowPass(graphicsResources.DirectionalShadowPassShader));
         AddPass(new DirectionalLightingPass(graphicsResources.DirectionalLightingPassShader, graphicsResources));
 
-        _graphicsResources.ScreenSampleShader.Parameters["isSingleValue"].SetValue(false);
+        _graphicsResources.ScreenSampleShader.Parameters["isSingleValue"].SetValue(true);
     }
 
     public override void FinalDraw()

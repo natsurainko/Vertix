@@ -39,13 +39,13 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _graphicsDevice.UseShaderProgram(_shaderProgram);
         _graphicsDevice.EnableFaceCulling = false;
 
-        //_shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
+        _shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
         _shaderProgram.Parameters["lightSpaceMatrix"].SetValue(_context.DirectionalLight.LightViewProjectionMatrix);
 
         _graphicsDevice.BindTexture(0, _context.GBufferTarget?.TargetTextures[0]);
         _graphicsDevice.BindTexture(1, _context.GBufferTarget?.TargetTextures[1]);
         _graphicsDevice.BindTexture(2, _context.DirectionalShadowTarget?.TargetTextures[0]);
-        //_graphicsDevice.BindTextureSampler(2, _graphicsResources.NearestSampler);
+        _graphicsDevice.BindTextureSampler(2, _graphicsResources.NearestSampler);
 
         _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
     }
