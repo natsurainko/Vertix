@@ -12,7 +12,7 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram) : RenderPass<
 
     private readonly IShaderProgram _shaderProgram = shaderProgram;
 
-    public Vector2D<int> ShadowMapSize { get; init; } = new(1024, 1024);
+    public Vector2D<int> ShadowMapSize { get; init; } = new(2048, 2048);
 
     public override string Name => "DirectionalShadowPass";
 

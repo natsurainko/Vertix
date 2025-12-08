@@ -14,7 +14,7 @@ uniform mat4 lightSpaceMatrix;
 
 void main() {
     vec3 fragPos = texture(gPosition, TexCoord).rgb;
-    vec3 normal = texture(gNormal, TexCoord).rgb;
+    vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
 
     vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos, 1.0);
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -23,7 +23,16 @@ void main() {
     float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
 
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+    float bias = max(0.0001 * (1.0 - dot(normal, -lightDirection)), 0.00063);
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
 
     if (projCoords.z > 1.0)
         shadow = 0.0;

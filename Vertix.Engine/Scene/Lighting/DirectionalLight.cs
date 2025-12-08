@@ -14,9 +14,9 @@ public class DirectionalLight : GameObject3D
 
     public float FieldOfView { get; set; } = Scalar.DegreesToRadians(90f);
 
-    public float NearPlane { get; set; } = 0.1f;
+    public float NearPlane { get; set; } = 1.0f;
 
-    public float FarPlane { get; set; } = 40f;
+    public float FarPlane { get; set; } = 20f;
 
     public float OrthographicSize { get; set; } = 20f;
 
@@ -30,5 +30,12 @@ public class DirectionalLight : GameObject3D
         LightViewMatrix = Matrix4X4.CreateLookAt(Position, target, up);
         LightProjectionMatrix = Matrix4X4.CreateOrthographic(OrthographicSize, OrthographicSize, NearPlane, FarPlane);
         LightViewProjectionMatrix = LightViewMatrix * LightProjectionMatrix;
+    }
+
+    public void FitToScene(Vector3D<float> sceneCenter, float sceneRadius)
+    {
+        OrthographicSize = sceneRadius * 2.0f;
+        FarPlane = sceneRadius * 3.0f;
+        Position = sceneCenter - LightDirection * sceneRadius * 1.5f;
     }
 }
