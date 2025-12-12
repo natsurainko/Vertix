@@ -42,6 +42,8 @@ public partial struct GLGraphicsBuffer : IGraphicsBuffer
         _gL.NamedBufferSubData(_handle, offset, (uint)(length * sizeof(T)), data[..length]);
     }
 
+    public readonly void BindAsUniform(uint bindingIndex) => _gL.BindBufferBase(BufferTargetARB.UniformBuffer, bindingIndex, _handle);
+
     public void Dispose()
     {
         _gL.DeleteBuffer(_handle);

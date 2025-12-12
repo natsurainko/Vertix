@@ -12,8 +12,6 @@ public class DirectionalLight : GameObject3D
 
     public Vector3D<float> LightDirection { get; private set; }
 
-    public float FieldOfView { get; set; } = Scalar.DegreesToRadians(90f);
-
     public float NearPlane { get; set; } = 1.0f;
 
     public float FarPlane { get; set; } = 20f;

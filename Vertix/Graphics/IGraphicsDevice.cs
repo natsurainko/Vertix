@@ -38,6 +38,8 @@ public interface IGraphicsDevice : IDisposable
 
     ITexture2D[] CreateTexture2Ds(int count);
 
+    ITexture2DArray CreateTexture2DArray();
+
     ITextureSampler CreateTextureSampler();
 
     IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 128)

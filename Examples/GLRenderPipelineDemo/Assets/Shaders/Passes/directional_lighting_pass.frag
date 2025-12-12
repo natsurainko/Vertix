@@ -7,35 +7,64 @@ in vec2 TexCoord;
 layout (binding = 0) uniform sampler2D gPosition;
 layout (binding = 1) uniform sampler2D gNormal;
 
-layout (binding = 2) uniform sampler2D shadowMap;
+layout (binding = 2) uniform sampler2DArray shadowMap;
+layout (std140, binding = 0) uniform LightSpaceMatrices
+{
+    mat4 lightSpaceMatrices[8];
+};
 
+uniform mat4 view;
 uniform vec3 lightDirection;
-uniform mat4 lightSpaceMatrix;
+uniform float cascadePlaneDistances[8];
+uniform int cascadeCount;
+uniform float farPlane;
 
-void main() {
+float CalculateShadow() {
     vec3 fragPos = texture(gPosition, TexCoord).rgb;
-    vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
 
-    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos, 1.0);
+    vec4 fragPosViewSpace = view * vec4(fragPos, 1.0);
+    float depthValue = abs(fragPosViewSpace.z);
+
+    int layer = -1;
+    for (int i = 0; i < cascadeCount; ++i) {
+        if (depthValue < cascadePlaneDistances[i]) {
+            layer = i;
+            break;
+        }
+    }
+
+    if (layer == -1) layer = cascadeCount;
+
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPos, 1.0);
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
+    if (currentDepth > 1.0) return 0.0;
 
-    float bias = max(0.0001 * (1.0 - dot(normal, -lightDirection)), 0.00063);
+    vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
+    float bias = max(0.05 * (1.0 - dot(normal, -lightDirection)), 0.005);
+    const float biasModifier = 0.5f;
+
+    if (layer == cascadeCount)
+        bias *= 1 / (farPlane * biasModifier);
+    else
+        bias *= 1 / (cascadePlaneDistances[layer] * biasModifier);
+
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+            float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
         }
     }
     shadow /= 9.0;
+        
+    return shadow;
+}
 
-    if (projCoords.z > 1.0)
-        shadow = 0.0;
-
-    gShadow = vec4(vec3(1 - shadow), 1.0);
+void main() {
+    float shadow = CalculateShadow();
+    gShadow = vec4(vec3(shadow), 1.0);
 }

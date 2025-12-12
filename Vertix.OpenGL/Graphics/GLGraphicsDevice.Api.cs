@@ -123,20 +123,28 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 
     public unsafe void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = 0)
     {
+        Silk.NET.OpenGL.ClearBufferMask glClearMask = 0;
+
         if ((buffers & ClearBufferMask.Color) == ClearBufferMask.Color)
         {
-            float* colorsPtr = stackalloc float[4];
-            colorsPtr[0] = color.R / 255.0f;
-            colorsPtr[1] = color.G / 255.0f;
-            colorsPtr[2] = color.B / 255.0f;
-            colorsPtr[3] = color.A / 255.0f;
-
-            GL.ClearBuffer(BufferKind.Color, 0, colorsPtr);
+            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            glClearMask |= Silk.NET.OpenGL.ClearBufferMask.ColorBufferBit;
         }
+
         if ((buffers & ClearBufferMask.Depth) == ClearBufferMask.Depth)
-            GL.ClearBuffer(BufferKind.Depth, 0, in depth);
+        {
+            GL.ClearDepth(depth);
+            glClearMask |= Silk.NET.OpenGL.ClearBufferMask.DepthBufferBit;
+        }
+
         if ((buffers & ClearBufferMask.Stencil) == ClearBufferMask.Stencil)
-            GL.ClearBuffer(BufferKind.Stencil, 0, in stencil);
+        {
+            GL.ClearStencil(stencil);
+            glClearMask |= Silk.NET.OpenGL.ClearBufferMask.StencilBufferBit;
+        }
+
+        if (glClearMask != 0)
+            GL.Clear(glClearMask);
     }
 
     public IShaderProgram CreateShaderProgram() => new GLShaderProgram(GL);
@@ -160,6 +168,8 @@ public partial class GLGraphicsDevice : IGraphicsDevice
 
         return texture2Ds;
     }
+
+    public ITexture2DArray CreateTexture2DArray() => new GLTexture2DArray(GL);
 
     public ITextureSampler CreateTextureSampler() => new GLTextureSampler(GL);
 

@@ -49,8 +49,9 @@ internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources grap
     {
         if (_graphicsDevice == null || _context == null || _renderTarget == null) return;
 
-        _renderTarget.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
         _graphicsDevice.BindRenderTarget(_renderTarget);
+        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
+
         _graphicsDevice.UseShaderProgram(_shaderProgram);
         _graphicsDevice.EnableFaceCulling = true;
 

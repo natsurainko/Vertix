@@ -43,6 +43,7 @@ public abstract partial class GameObject3D
             if (field != value)
             {
                 field = value;
+                OnOrientationChanged();
                 UpdateWorldMatrix();
             }
         }
@@ -96,4 +97,6 @@ public partial class GameObject3D
     }
 
     protected virtual void OnWorldMatrixChanged() { }
+
+    protected virtual void OnOrientationChanged() { }
 }

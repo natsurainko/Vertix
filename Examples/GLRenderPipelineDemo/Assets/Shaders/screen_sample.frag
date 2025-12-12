@@ -13,4 +13,6 @@ void main() {
 	} else {
 		fColor = texture(texture0, TexCoord);
 	}
+
+	// fColor = vec4(vec3(texture(texture0, vec3(TexCoord, 4)).r), 1.0);
 }

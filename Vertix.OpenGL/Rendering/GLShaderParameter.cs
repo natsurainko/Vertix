@@ -237,4 +237,33 @@ public readonly struct GLShaderParameter : IShaderParameter
                 throw new NotSupportedException($"Uniform type {UniformType} is not supported");
         }
     }
+
+    public unsafe void SetValues<T>(ReadOnlySpan<T> values, uint length) where T : unmanaged
+    {
+        if (_type == null) throw new InvalidOperationException();
+        if (typeof(T) != _type) throw new ArgumentException($"The value should be {_type.Name} type");
+
+        switch (UniformType)
+        {
+            case UniformType.Int:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform1(_handle, _location, length, (int*)ptr);
+                break;
+            case UniformType.UnsignedInt:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform1(_handle, _location, length, (uint*)ptr);
+                break;
+            case UniformType.Float:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform1(_handle, _location, length, (float*)ptr);
+                break;
+            case UniformType.Double:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform1(_handle, _location, length, (double*)ptr);
+                break;
+
+            default:
+                throw new NotSupportedException($"Uniform type {UniformType} is not supported");
+        }
+    }
 }

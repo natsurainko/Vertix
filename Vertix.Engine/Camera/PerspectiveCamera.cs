@@ -1,4 +1,6 @@
 ﻿using Silk.NET.Maths;
+using Vertix.Engine.Extensions;
+using Vertix.Engine.Maths;
 
 namespace Vertix.Engine.Camera;
 
@@ -38,13 +40,13 @@ public partial class PerspectiveCamera : ICamera
     public float FieldOfView { get; set; } = Scalar.DegreesToRadians(45f);
     public float AspectRatio { get; set; } = 800 / 600f;
     public float NearPlane { get; set; } = 0.1f;
-    public float FarPlane { get; set; } = 1000f;
+    public float FarPlane { get; set; } = 500f;
 
     public CameraMode CameraMode { get; set; } = CameraMode.Free;
     public float TargetDistance { get; set; } = 5f;
     public bool AllowRoll { get; set; } = false;
 
-    public Vector3D<float> TargetPosition { get; set; } = Vector3D<float>.Zero;
+    public Frustum<float> Frustum { get; private set; }
 
     public void GetViewMatrix(out Matrix4X4<float> matrix)
     {
@@ -57,24 +59,24 @@ public partial class PerspectiveCamera : ICamera
         Quaternion<float> orientation = _targetObject != null && CameraMode == CameraMode.FirstPerson ? _targetObject.Orientation : this.Orientation;
         Vector3D<float> forward = Vector3D.Transform(-Vector3D<float>.UnitZ, orientation);
         Vector3D<float> up = Vector3D.Transform(Vector3D<float>.UnitY, orientation);
+        Vector3D<float> right = Vector3D.Transform(Vector3D<float>.UnitX, orientation);
+        UpdateCameraFrustum(forward, up, right);
 
         Vector3D<float> cameraPosition;
         Vector3D<float> cameraTarget;
 
-        if (CameraMode == CameraMode.FirstPerson)
+        if (CameraMode == CameraMode.FirstPerson && _targetObject != null)
         {
-            cameraPosition = TargetPosition;
-            cameraTarget = TargetPosition + forward;
+            cameraPosition = _targetObject.Position;
+            cameraTarget = _targetObject.Position + forward;
         }
-        else if (CameraMode == CameraMode.ThirdPerson)
+        else if (CameraMode == CameraMode.ThirdPerson && _targetObject != null)
         {
-            cameraPosition = TargetPosition - forward * TargetDistance;
-            cameraTarget = TargetPosition;
+            cameraPosition = _targetObject.Position - forward * TargetDistance;
+            cameraTarget = _targetObject.Position;
         }
         else
         {
-            Vector3D<float> right = Vector3D.Transform(Vector3D<float>.UnitX, orientation);
-
             if (_movementAccumulator != Vector3D<float>.Zero)
             {
                 // Apply changes to Position
@@ -96,4 +98,23 @@ public partial class PerspectiveCamera : ICamera
     public void GetProjectionMatrix(out Matrix4X4<float> matrix) => matrix = Matrix4X4.CreatePerspectiveFieldOfView(FieldOfView, AspectRatio, NearPlane, FarPlane);
 
     public void SetTarget(GameObject3D? target) => _targetObject = target;
+
+    private void UpdateCameraFrustum(Vector3D<float> forward, Vector3D<float> up, Vector3D<float> right)
+    {
+        float halfVSide = FarPlane * Scalar.Tan(FieldOfView * .5f);
+        float halfHSide = halfVSide * AspectRatio;
+        Vector3D<float> frontMultFar = FarPlane * forward;
+
+        Frustum = new()
+        {
+            LeftPlane = Plane.Create(Position, Vector3D.Cross(up, frontMultFar + right * halfHSide)),
+            RightPlane = Plane.Create(Position, Vector3D.Cross(frontMultFar - right * halfHSide, up)),
+
+            TopPlane = Plane.Create(Position, Vector3D.Cross(right, frontMultFar - up * halfVSide)),
+            BottomPlane = Plane.Create(Position, Vector3D.Cross(frontMultFar + up * halfVSide, right)),
+
+            NearPlane = Plane.Create(Position + NearPlane * forward, forward),
+            FarPlane = Plane.Create(Position + frontMultFar, forward),
+        };
+    }
 }

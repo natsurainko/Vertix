@@ -55,6 +55,9 @@ public partial class GLShaderProgram(GL gL) : IShaderProgram
         for (int i = 0; i < gL.GetProgram(_handle, ProgramPropertyARB.ActiveUniforms); i++)
         {
             gL.GetActiveUniform(_handle, (uint)i, 256, out uint length, out int size, out UniformType type, out string name);
+
+            if (size > 1 && name.EndsWith("[0]")) 
+                name = name[..^3];
             Parameters[name] = new GLShaderParameter(gL, _handle, name, type);
         }
 
