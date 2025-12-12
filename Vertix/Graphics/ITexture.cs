@@ -23,3 +23,15 @@ public interface ITexture2D : ITexture
     void SetData<TData>(Vector2D<uint> size, Vector2D<int> offset, ReadOnlySpan<TData> data, int mipmapLevel = 0) 
         where TData : unmanaged;
 }
+
+public interface ITexture2DArray : ITexture
+{
+    Vector2D<uint> Size { get; }
+
+    uint Layers { get; }
+
+    void Initialize(Vector2D<uint> size, uint layers, TextureFormat format, uint mipmapLevels = 1);
+
+    void SetData<TData>(Vector2D<uint> size, int layerIndex, Vector2D<int> offset, ReadOnlySpan<TData> data, int mipmapLevel = 0)
+        where TData : unmanaged;
+}

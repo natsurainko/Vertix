@@ -26,9 +26,13 @@ internal class GraphicsResources : IDisposable
 
     public IShaderProgram DirectionalLightingPassShader { get; private set; }
 
+    public IShaderProgram BlendPassShader { get; private set; }
+
     public ITexture2D DefaultTexture { get; private set; }
 
     public ITextureSampler NearestSampler { get; private set; }
+
+    public IGraphicsBuffer LightSpaceMatircesBuffer { get; private set; }
 
     public GraphicsResources(IGraphicsDevice graphicsDevice)
     {
@@ -69,19 +73,30 @@ internal class GraphicsResources : IDisposable
         DirectionalLightingPassShader.LoadGLSLShadersFromFiles(_DIRECTIONAL_LIGHTING_PASS_SHADER);
         DirectionalLightingPassShader.Compile();
 
+        BlendPassShader = graphicsDevice.CreateShaderProgram();
+        BlendPassShader.LoadGLSLShadersFromFiles(_BLEND_PASS_SHADER);
+        BlendPassShader.Compile();
+
         ITexture2D texture2D = graphicsDevice.CreateTexture2D();
         texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
-        texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 0, 0, 255 });
+        texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 255, 255, 255 });
 
         DefaultTexture = texture2D;
 
         ITextureSampler textureSampler = graphicsDevice.CreateTextureSampler();
         textureSampler.MinFilter = TextureFilter.Nearest;
         textureSampler.MagFilter = TextureFilter.Nearest;
-        textureSampler.AddressU = TextureAddressMode.ClampToEdge;
-        textureSampler.AddressV = TextureAddressMode.ClampToEdge;
+        textureSampler.AddressU = TextureAddressMode.ClampToBorder;
+        textureSampler.AddressV = TextureAddressMode.ClampToBorder;
+        textureSampler.BorderColor = Vector4D<float>.One;
 
         NearestSampler = textureSampler;
+
+        IGraphicsBuffer graphicsBuffer = graphicsDevice.CreateGraphicsBuffer();
+        graphicsBuffer.Initialize<Matrix4X4<float>>(8, BufferStorageMask.DynamicStorageBit, []);
+
+        LightSpaceMatircesBuffer = graphicsBuffer;
+        LightSpaceMatircesBuffer.BindAsUniform(0);
     }
 
     public void Dispose()
@@ -116,6 +131,7 @@ internal class GraphicsResources : IDisposable
     internal static readonly (ShaderType, string)[] _DIRECTIONAL_SHADOW_PASS_SHADER =
     [
         (ShaderType.VertexShader, "Assets/Shaders/Passes/directional_shadow_pass.vert"),
+        (ShaderType.GeometryShader, "Assets/Shaders/Passes/directional_shadow_pass.gemo"),
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/directional_shadow_pass.frag"),
     ];
 
@@ -123,6 +139,12 @@ internal class GraphicsResources : IDisposable
     [
         (ShaderType.VertexShader, "Assets/Shaders/screen_sample.vert"),
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/directional_lighting_pass.frag"),
+    ];
+
+    internal static readonly (ShaderType, string)[] _BLEND_PASS_SHADER =
+    [
+        (ShaderType.VertexShader, "Assets/Shaders/screen_sample.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/Passes/blend_pass.frag"),
     ];
 
     internal static readonly Vertex2D[] RectangleVertices =

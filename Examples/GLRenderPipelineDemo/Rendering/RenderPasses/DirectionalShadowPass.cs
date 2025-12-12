@@ -5,12 +5,13 @@ using Vertix.Rendering;
 
 namespace GLRenderPipelineDemo.Rendering.RenderPasses;
 
-internal class DirectionalShadowPass(IShaderProgram shaderProgram) : RenderPass<RenderContext>
+internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResources graphicsResources) : RenderPass<RenderContext>
 {
     private IRenderTarget? _renderTarget;
-    private ITexture2D? _texture2D;
+    private ITexture2DArray? _texture2DArray;
 
     private readonly IShaderProgram _shaderProgram = shaderProgram;
+    private readonly GraphicsResources _graphicsResources = graphicsResources;
 
     public Vector2D<int> ShadowMapSize { get; init; } = new(2048, 2048);
 
@@ -21,11 +22,11 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram) : RenderPass<
         base.Initialize(graphicsDevice, renderContext);
 
         _renderTarget = _graphicsDevice!.CreateRenderTarget(ShadowMapSize.As<uint>());
-        _texture2D = _graphicsDevice.CreateTexture2D();
+        _texture2DArray = _graphicsDevice.CreateTexture2DArray();
 
         // Depth Texture
-        _texture2D.Initialize(ShadowMapSize.As<uint>(), TextureFormat.Depth32f);
-        _renderTarget.AttachTargetTexture(_texture2D, RenderTargetAttachment.Depth);
+        _texture2DArray.Initialize(ShadowMapSize.As<uint>(), (uint)renderContext.LightSpaceMatrices.Length, TextureFormat.Depth32f);
+        _renderTarget.AttachTargetTexture(_texture2DArray, RenderTargetAttachment.Depth);
 
         _renderTarget.Initialize();
         _context!.DirectionalShadowTarget = _renderTarget;
@@ -35,12 +36,15 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram) : RenderPass<
     {
         if (_graphicsDevice == null || _context == null || _renderTarget == null) return;
 
-        _renderTarget.Clear(ClearBufferMask.Depth);
         _graphicsDevice.BindRenderTarget(_renderTarget);
-        _graphicsDevice.Viewport(ShadowMapSize);
+        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
 
+        _graphicsDevice.Viewport(ShadowMapSize);
         _graphicsDevice.UseShaderProgram(_shaderProgram);
-        _shaderProgram.Parameters["lightSpaceMatrix"].SetValue(_context.DirectionalLight.LightViewProjectionMatrix);
+        _graphicsDevice.EnableFaceCulling = true;
+        _graphicsDevice.CullFace = CullFaceMode.FrontFace;
+
+        _graphicsResources.LightSpaceMatircesBuffer.Fill(0, 5, _context.LightSpaceMatrices);
 
         for (int i = 0; i < _context.SceneManager.SceneObjects.Count; i++)
         {
@@ -51,11 +55,12 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram) : RenderPass<
         }
 
         _graphicsDevice.Viewport(_context.WindowRectangle.Size);
+        _graphicsDevice.CullFace = CullFaceMode.BackFace;
     }
 
     public override void Dispose()
     {
         _renderTarget?.Dispose();
-        _texture2D?.Dispose();
+        _texture2DArray?.Dispose();
     }
 }

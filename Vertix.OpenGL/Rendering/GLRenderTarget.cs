@@ -2,11 +2,9 @@
 using Silk.NET.OpenGL;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using Vertix.Graphics;
 using Vertix.OpenGL.Graphics;
 using Vertix.Rendering;
-using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace Vertix.OpenGL.Rendering;
 
@@ -65,25 +63,6 @@ public class GLRenderTarget : IRenderTarget
     {
         _gL.BindFramebuffer(FramebufferTarget.Framebuffer, FrameBufferHandle);
         _gL.NamedFramebufferDrawBuffers(FrameBufferHandle, _colorBuffers);
-    }
-
-    public unsafe void Clear(ClearBufferMask buffers, Color color = default, float depth = 1f, int stencil = 0)
-    {
-        if ((buffers & ClearBufferMask.Color) == ClearBufferMask.Color)
-        {
-            float* colorsPtr = stackalloc float[4];
-            colorsPtr[0] = color.R / 255.0f;
-            colorsPtr[1] = color.G / 255.0f;
-            colorsPtr[2] = color.B / 255.0f;
-            colorsPtr[3] = color.A / 255.0f;
-
-            for (int i = 0; i < _colorBuffers.Length; i++)
-                _gL.ClearNamedFramebuffer(FrameBufferHandle, BufferKind.Color, _colorBuffers[i] - ColorBuffer.ColorAttachment0, colorsPtr);
-        }
-        if ((buffers & ClearBufferMask.Depth) == ClearBufferMask.Depth)
-            _gL.ClearNamedFramebuffer(FrameBufferHandle, BufferKind.Depth, 0, in depth);
-        if ((buffers & ClearBufferMask.Stencil) == ClearBufferMask.Stencil)
-            _gL.ClearNamedFramebuffer(FrameBufferHandle, BufferKind.Stencil, 0, in stencil);
     }
 
     private FramebufferAttachment GetFramebufferAttachment(RenderTargetAttachment renderTargetAttachment)
