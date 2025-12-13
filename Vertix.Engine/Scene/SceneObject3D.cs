@@ -1,5 +1,5 @@
 ﻿using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 
 namespace Vertix.Engine.Scene;
 

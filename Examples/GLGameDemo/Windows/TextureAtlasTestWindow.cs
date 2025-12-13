@@ -3,10 +3,11 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
+using System.Numerics;
 using Vertix.Content;
 using Vertix.Extensions;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Extensions;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
@@ -22,9 +23,9 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
     int _texureAtlasIndex = 0;
     Rectangle<float> rect;
 
-    Matrix4X4<float> view = Matrix4X4<float>.Identity;
-    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
-    Matrix4X4<float> instanceMatrix;
+    Matrix4x4 view = Matrix4x4.Identity;
+    Matrix4x4 projection = Matrix4x4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4x4 instanceMatrix;
 
     protected unsafe override void OnLoaded()
     {
@@ -76,7 +77,7 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
     {
         Graphics.Viewport(size);
 
-        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        projection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
         shader?.Parameters["projection"].SetValue(projection);
 
         rect.Size = Vector2D<float>.One * MathF.Min(CoreWindow.Size.X, CoreWindow.Size.Y) / 2f;
@@ -90,7 +91,7 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
         graphicsBatcher?.DrawInstance(new()
         {
             WorldMatirx = instanceMatrix,
-            TextureRegion = new Vector4D<float>(0.25f * _texureAtlasIndex, 0, 0.25f, 1)
+            TextureRegion = new Vector4(0.25f * _texureAtlasIndex, 0, 0.25f, 1)
         });
         graphicsBatcher?.Flush();
     }

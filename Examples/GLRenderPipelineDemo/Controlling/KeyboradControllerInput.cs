@@ -1,22 +1,20 @@
 ﻿using Silk.NET.Input;
-using Silk.NET.Maths;
+using System.Numerics;
 using Vertix.Engine.Controller;
 
 namespace GLRenderPipelineDemo.Controlling;
 
-internal class KeyboradControllerInput : IControllerInput
+internal class KeyboradControllerInput : IControllerInput<Vector3>
 {
     private readonly IInputContext _inputContext;
     private readonly List<Key> _pressingKeys = [];
-    private Vector3D<float> _movingOffset;
+    private Vector3 _movingOffset;
 
     public event EventHandler<double>? OnUpdate;
 
     public IKeyboard? Keyboard { get; private set; }
 
-    public Vector3D<float> MovingOffset => _movingOffset;
-
-    public Vector3D<float> RotatingOffset => Vector3D<float>.Zero;
+    public Vector3 Value => _movingOffset;
 
     public KeyboradControllerInput(IInputContext inputContext)
     {
@@ -50,7 +48,7 @@ internal class KeyboradControllerInput : IControllerInput
         }
 
         OnUpdate?.Invoke(this, deltaTime);
-        _movingOffset = Vector3D<float>.Zero;
+        _movingOffset = Vector3.Zero;
     }
 
     private void ConfigureDeivces()

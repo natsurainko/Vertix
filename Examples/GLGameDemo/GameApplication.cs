@@ -1,5 +1,5 @@
 ﻿using Silk.NET.OpenGL;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.Graphics.Text;
 
 namespace GLGameDemo;

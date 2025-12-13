@@ -1,11 +1,11 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 
 namespace Vertix.Engine.Camera;
 
 public interface ICamera
 {
-    Vector3D<float> Position { get; set; }
-    Quaternion<float> Orientation { get; set; }
+    Vector3 Position { get; set; }
+    Quaternion Orientation { get; set; }
 
     CameraMode CameraMode { get; set; }
     float TargetDistance { get; set; }
@@ -15,13 +15,13 @@ public interface ICamera
     float NearPlane { get; }
     float FarPlane { get; }
 
-    //GameObject3D? Target { get; }
+    GameObject3D? Target { get; }
 
-    void GetViewMatrix(out Matrix4X4<float> matrix);
-    void GetProjectionMatrix(out Matrix4X4<float> matrix);
+    void GetViewMatrix(out Matrix4x4 matrix);
+    void GetProjectionMatrix(out Matrix4x4 matrix);
 
-    void Move(Vector3D<float> offset);
-    void Rotate(Vector3D<float> angles);
+    void Move(Vector3 offset);
+    void Rotate(Vector3 angles);
 
-    //void SetTarget(GameObject3D? target);
+    void SetTarget(GameObject3D? target);
 }

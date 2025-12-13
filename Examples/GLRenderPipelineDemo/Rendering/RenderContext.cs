@@ -1,9 +1,9 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.Windowing;
+using System.Numerics;
 using Vertix.Engine.Camera;
 using Vertix.Engine.Scene;
 using Vertix.Engine.Scene.Lighting;
-
 
 //using Vertix.Extensions;
 using Vertix.Rendering;
@@ -15,14 +15,14 @@ internal class RenderContext
     private readonly IWindow CoreWindow;
 
     public Rectangle<int> WindowRectangle;
-    //public Matrix4X4<float> WindowMatrix;
-    //public Matrix4X4<float> WindowViewMatirx = Matrix4X4<float>.Identity;
-    //public Matrix4X4<float> WindowProjectionMatrix;
+    //public Matrix4x4 WindowMatrix;
+    //public Matrix4x4 WindowViewMatirx = Matrix4x4.Identity;
+    //public Matrix4x4 WindowProjectionMatrix;
 
-    public Matrix4X4<float> CameraViewMatrix;
-    public Matrix4X4<float> CameraProjectionMatrix;
+    public Matrix4x4 CameraViewMatrix;
+    public Matrix4x4 CameraProjectionMatrix;
 
-    public Matrix4X4<float>[] LightSpaceMatrices = new Matrix4X4<float>[5];
+    public Matrix4x4[] LightSpaceMatrices = new Matrix4x4[5];
     public float[] CascadePlaneDistances = [10, 20, 50, 250];
     public int ShadowCascadeLevels = 4;
 
@@ -32,7 +32,7 @@ internal class RenderContext
 
     public DirectionalLight DirectionalLight { get; } = new()
     {
-        Orientation = Quaternion<float>.CreateFromYawPitchRoll(-Scalar<float>.PiOver2 / 2, -Scalar<float>.PiOver2 / 2, 0),
+        Orientation = Quaternion.CreateFromYawPitchRoll(-MathF.PI / 4, -MathF.PI / 4, 0),
     };
 
     public IRenderTarget? GBufferTarget { get; set; }
@@ -58,7 +58,7 @@ internal class RenderContext
     {
         WindowRectangle = new Rectangle<int>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y);
         //WindowMatrix = WindowRectangle.ToScreenMatrix();
-        //WindowProjectionMatrix = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        //WindowProjectionMatrix = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
 
         PerspectiveCamera.AspectRatio = CoreWindow.Size.X / (float)CoreWindow.Size.Y;
     }
@@ -72,6 +72,8 @@ internal class RenderContext
 
             UpdateLightSpaceMatrices();
         }
+
+        //DirectionalLight.Orientation = Quaternion.CreateFromYawPitchRoll(-MathF.PI / 4, MathF.PI * (float)Math.Sin(CoreWindow.Time * 0.1), 0);
     }
 
     private void UpdateLightSpaceMatrices()
@@ -95,15 +97,15 @@ internal class RenderContext
         }
     }
 
-    private Matrix4X4<float> GetLightSpaceMatrix(float nearPlane, float farPlane)
+    private Matrix4x4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
-        Matrix4X4<float> projection = Matrix4X4.CreatePerspectiveFieldOfView(
+        Matrix4x4 projection = Matrix4x4.CreatePerspectiveFieldOfView(
             PerspectiveCamera.FieldOfView, PerspectiveCamera.AspectRatio, nearPlane, farPlane);
 
-        Matrix4X4.Invert(CameraViewMatrix * projection, out var inv);
-        Vector3D<float> center = Vector3D<float>.Zero;
+        Matrix4x4.Invert(CameraViewMatrix * projection, out var inv);
+        Vector3 center = Vector3.Zero;
 
-        Span<Vector4D<float>> vector4Ds = stackalloc Vector4D<float>[8];
+        Span<Vector4> vector4Ds = stackalloc Vector4[8];
 
         int index = 0;
         for (int x = 0; x < 2; ++x)
@@ -112,16 +114,16 @@ internal class RenderContext
             {
                 for (int z = 0; z < 2; ++z)
                 {
-                    Vector4D<float> pt = new Vector4D<float>
+                    Vector4 pt = Vector4.Transform(new Vector4
                     (
                         2.0f * x - 1.0f,
                         2.0f * y - 1.0f,
                         z, // 2.0f * z - 1.0f, // 1.0f * z,
                         1.0f
-                    ) * inv;
+                    ), inv);
 
                     pt /= pt.W;
-                    center += new Vector3D<float>(pt.X, pt.Y, pt.Z);
+                    center += new Vector3(pt.X, pt.Y, pt.Z);
 
                     vector4Ds[index++] = pt;
                 }
@@ -129,8 +131,8 @@ internal class RenderContext
         }
 
         center /= 8;
-        Matrix4X4<float> lightViewMatrix = Matrix4X4.CreateLookAt(
-            center, center + DirectionalLight.LightDirection, Vector3D<float>.UnitY);
+        Matrix4x4 lightViewMatrix = Matrix4x4.CreateLookAt(
+            center, center + DirectionalLight.LightDirection, Vector3.UnitY);
 
         float minX = float.MaxValue;
         float minY = float.MaxValue;
@@ -142,7 +144,7 @@ internal class RenderContext
 
         for (int i = 0; i < 8; i++)
         {
-            Vector4D<float> transform = vector4Ds[i] * lightViewMatrix;
+            Vector4 transform = Vector4.Transform(vector4Ds[i], lightViewMatrix);
             minX = MathF.Min(minX, transform.X);
             minY = MathF.Min(minY, transform.Y);
             minZ = MathF.Min(minZ, transform.Z);
@@ -153,7 +155,7 @@ internal class RenderContext
         }
 
         // Tune this parameter according to the scene
-        const float zMult = 2.0f;
+        const float zMult = 5.0f;
         if (minZ < 0)
             minZ *= zMult;
         else
@@ -164,6 +166,6 @@ internal class RenderContext
         else
             maxZ *= zMult;
 
-        return lightViewMatrix * Matrix4X4.CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
+        return lightViewMatrix * Matrix4x4.CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
     }
 }

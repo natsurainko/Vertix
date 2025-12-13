@@ -3,10 +3,11 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
+using System.Numerics;
 using Vertix.Content;
 using Vertix.Engine.Camera;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Extensions;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;
@@ -28,8 +29,8 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
         CoreWindow.Title = "Draw Instance Test Window";
         _gL.Enable(EnableCap.DepthTest);
 
-        Camera.Position = new Vector3D<float>(-15f, 15f, 15f);
-        Camera.Rotate(new Vector3D<float>(-Scalar<float>.Pi / 10, -Scalar<float>.PiOver2 / 2, .0f));
+        Camera.Position = new Vector3(-15f, 15f, 15f);
+        Camera.Rotate(new Vector3(-MathF.PI / 10, -MathF.PI / 4, .0f));
 
         var assetImporter = sp.GetRequiredService<AssetImporter>();
         model = assetImporter.LoadModel("Assets/Models/block.fbx");
@@ -49,11 +50,11 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
             {
                 instanceTransforms[i * blockCountAsix + j] = new()
                 {
-                    WorldMatirx = Matrix4X4.CreateWorld
+                    WorldMatirx = Matrix4x4.CreateWorld
                     (
-                        new Vector3D<float>(i * spacing, 0, -j * spacing),
-                        -Vector3D<float>.UnitZ,
-                        Vector3D<float>.UnitY
+                        new Vector3(i * spacing, 0, -j * spacing),
+                        -Vector3.UnitZ,
+                        Vector3.UnitY
                     )
                 };
             }

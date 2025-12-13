@@ -6,10 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Silk.NET.Maths" Version="2.22.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Vertix\Vertix.csproj" />
   </ItemGroup>
 

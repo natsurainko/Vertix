@@ -1,16 +1,16 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 
-namespace Vertix.Graphics.Resources;
+namespace Vertix.Graphics.Primitives;
 
 public record struct Vertex2D()
 {
-    public Vector3D<float> Position;
+    public Vector3 Position;
 
-    public Vector4D<float> Color = Vector4D<float>.One;
+    public Vector4 Color = Vector4.One;
 
-    public Vector2D<float> TextureCoord;
+    public Vector2 TextureCoord;
 
-    public Vector4D<float> TextureRegion = new(0, 0, 1, 1);
+    public Vector4 TextureRegion = new(0, 0, 1, 1);
 
     public readonly static VertexArrayProperty[] DefaultProperties =
     [
@@ -22,11 +22,11 @@ public record struct Vertex2D()
 
     public struct InstanceTransform2D()
     {
-        public Matrix4X4<float> WorldMatirx;
+        public Matrix4x4 WorldMatirx;
 
-        public Vector4D<float> Color = Vector4D<float>.One;
+        public Vector4 Color = Vector4.One;
 
-        public Vector4D<float> TextureRegion = new(0, 0, 1, 1);
+        public Vector4 TextureRegion = new(0, 0, 1, 1);
 
         public readonly static VertexArrayProperty[] DefaultProperties =
         [

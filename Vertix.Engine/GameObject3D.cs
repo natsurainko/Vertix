@@ -1,15 +1,15 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 using Vertix.Graphics;
 
 namespace Vertix.Engine;
 
 public abstract partial class GameObject3D
 {
-    protected Matrix4X4<float> _worldMatrix;
+    protected Matrix4x4 _worldMatrix;
 
-    public virtual Matrix4X4<float> WorldMatrix => _worldMatrix;
+    public virtual Matrix4x4 WorldMatrix => _worldMatrix;
 
-    public Vector3D<float> Scale
+    public Vector3 Scale
     {
         get => field;
         set
@@ -20,9 +20,9 @@ public abstract partial class GameObject3D
                 UpdateWorldMatrix();
             }
         }
-    } = Vector3D<float>.One;
+    } = Vector3.One;
 
-    public Vector3D<float> Position
+    public Vector3 Position
     {
         get => field;
         set
@@ -33,9 +33,9 @@ public abstract partial class GameObject3D
                 UpdateWorldMatrix();
             }
         }
-    } = Vector3D<float>.Zero;
+    } = Vector3.Zero;
 
-    public Quaternion<float> Orientation
+    public Quaternion Orientation
     {
         get => field;
         set
@@ -47,7 +47,7 @@ public abstract partial class GameObject3D
                 UpdateWorldMatrix();
             }
         }
-    } = Quaternion<float>.Identity;
+    } = Quaternion.Identity;
 
     public GameObject3D() => UpdateWorldMatrix();
 
@@ -59,14 +59,14 @@ public abstract partial class GameObject3D
     /// Move the object in its relative orientation
     /// </summary>
     /// <param name="offset">offset == (forward, up, right)</param>
-    public virtual void Move(Vector3D<float> offset)
+    public virtual void Move(Vector3 offset)
     {
         // Add translation
-        Vector3D<float> forward = Vector3D.Transform(-Vector3D<float>.UnitZ, Orientation);
-        Vector3D<float> right = Vector3D.Transform(Vector3D<float>.UnitX, Orientation);
+        Vector3 forward = Vector3.Transform(-Vector3.UnitZ, Orientation);
+        Vector3 right = Vector3.Transform(Vector3.UnitX, Orientation);
 
         Position += forward * offset.X;
-        Position += Vector3D<float>.UnitY * offset.Y;
+        Position += Vector3.UnitY * offset.Y;
         Position += right * offset.Z;
     }
 
@@ -74,14 +74,14 @@ public abstract partial class GameObject3D
     /// angles = (pitch, yaw, roll)
     /// </summary>
     /// <param name="angles"></param>
-    public virtual void Rotate(Vector3D<float> angles, bool allowRoll = false)
+    public virtual void Rotate(Vector3 angles, bool allowRoll = false)
     {
-        Orientation = Quaternion<float>.CreateFromAxisAngle(allowRoll
-            ? Vector3D.Transform(Vector3D<float>.UnitY, Orientation) : Vector3D<float>.UnitY, angles.Y) * Orientation;
-        Orientation = Quaternion<float>.CreateFromAxisAngle(
-            Vector3D.Transform(Vector3D<float>.UnitX, Orientation), angles.X) * Orientation;
-        Orientation = Quaternion<float>.CreateFromAxisAngle(
-            Vector3D.Transform(-Vector3D<float>.UnitZ, Orientation), angles.Z) * Orientation;
+        Orientation = Quaternion.CreateFromAxisAngle(allowRoll
+            ? Vector3.Transform(Vector3.UnitY, Orientation) : Vector3.UnitY, angles.Y) * Orientation;
+        Orientation = Quaternion.CreateFromAxisAngle(
+            Vector3.Transform(Vector3.UnitX, Orientation), angles.X) * Orientation;
+        Orientation = Quaternion.CreateFromAxisAngle(
+            Vector3.Transform(-Vector3.UnitZ, Orientation), angles.Z) * Orientation;
     }
 }
 
@@ -89,9 +89,9 @@ public partial class GameObject3D
 {
     protected virtual void UpdateWorldMatrix()
     {
-        _worldMatrix = Matrix4X4.CreateScale(Scale) *
-            Matrix4X4.CreateFromQuaternion(Orientation) *
-            Matrix4X4.CreateTranslation(Position);
+        _worldMatrix = Matrix4x4.CreateScale(Scale) *
+            Matrix4x4.CreateFromQuaternion(Orientation) *
+            Matrix4x4.CreateTranslation(Position);
 
         OnWorldMatrixChanged();
     }

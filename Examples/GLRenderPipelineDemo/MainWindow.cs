@@ -1,13 +1,13 @@
 ﻿using GLRenderPipelineDemo.Controlling;
 using GLRenderPipelineDemo.Rendering;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 using Silk.NET.Windowing;
+using System.Numerics;
 using Vertix.Content;
 using Vertix.Engine.Controller;
 using Vertix.Engine.Scene;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Windowing;
 
 namespace GLRenderPipelineDemo;
@@ -43,7 +43,7 @@ internal class MainWindow(IWindow w, IGraphicsDevice d,
         renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(0, 0.5f, 0) });
         renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(2, 3, 2) });
 
-        renderContext.DirectionalLight.FitToScene(Vector3D<float>.Zero, 7f);
+        renderContext.DirectionalLight.FitToScene(Vector3.Zero, 7f);
     }
 
     protected override void OnRender(double delateTime)

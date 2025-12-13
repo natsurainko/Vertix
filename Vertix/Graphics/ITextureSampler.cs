@@ -1,5 +1,5 @@
-﻿using Silk.NET.Maths;
-using System;
+﻿using System;
+using System.Numerics;
 
 namespace Vertix.Graphics;
 
@@ -21,7 +21,7 @@ public interface ITextureSampler : IDisposable
     //ComparisonFunction ComparisonFunc { get; set; }
     //bool ComparisonEnabled { get; set; }
 
-    Vector4D<float> BorderColor { get; set; }
+    Vector4 BorderColor { get; set; }
 
     void BindSampler(uint bindingIndex);
 }
