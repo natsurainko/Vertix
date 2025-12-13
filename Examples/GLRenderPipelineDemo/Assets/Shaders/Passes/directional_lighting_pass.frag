@@ -19,6 +19,25 @@ uniform float cascadePlaneDistances[8];
 uniform int cascadeCount;
 uniform float farPlane;
 
+const vec2 poissonDisk[16] = vec2[](
+    vec2(-0.94201624, -0.39906216),
+    vec2(0.94558609, -0.76890725),
+    vec2(-0.094184101, -0.92938870),
+    vec2(0.34495938, 0.29387760),
+    vec2(-0.91588581, 0.45771432),
+    vec2(-0.81544232, -0.87912464),
+    vec2(-0.38277543, 0.27676845),
+    vec2(0.97484398, 0.75648379),
+    vec2(0.44323325, -0.97511554),
+    vec2(0.53742981, -0.47373420),
+    vec2(-0.26496911, -0.41893023),
+    vec2(0.79197514, 0.19090188),
+    vec2(-0.24188840, 0.99706507),
+    vec2(-0.81409955, 0.91437590),
+    vec2(0.19984126, 0.78641367),
+    vec2(0.14383161, -0.14100790)
+);
+
 float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texelSize) {
     vec3 lightDir = normalize(-lightDirection);
 
@@ -37,6 +56,19 @@ float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texe
     float normalBias = clamp(1.0 - dot(normal, lightDir), 0.0, 1.0);
     
     return biasScale * normalBias * 2.0 + 0.0002;
+}
+
+float PossionSampleShadow(vec3 projCoords, float layer, float depth, float bias, vec2 texelSize) {
+    float searchRadius = 2.0;
+    float shadow = 0.0;
+
+    for(int i = 0; i < 16; ++i) {
+        vec2 offset = poissonDisk[i] * texelSize * searchRadius;
+        float pcfDepth = texture(shadowMap, vec3(projCoords.xy + offset, layer)).r;
+        shadow += (depth - bias) > pcfDepth ? 1.0 : 0.0;
+    }
+    
+    return shadow / 16.0;
 }
 
 float CalculateShadow() {
@@ -63,18 +95,7 @@ float CalculateShadow() {
     if (currentDepth > 1.0) return 0.0;
 
     float bias = CalculateReceiverPlaneBias(fragPos, normal, layer, texelSize);
-    const float biasModifier = 0.5f;
-
-    float shadow = 0.0;
-    for(int x = -1; x <= 1; ++x) {
-        for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
-            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
-        }
-    }
-    shadow /= 9.0;
-        
-    return shadow;
+    return PossionSampleShadow(projCoords, layer, currentDepth, bias, texelSize);
 }
 
 void main() {
