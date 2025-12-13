@@ -87,7 +87,7 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
     {
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
 
-        graphicsBatcher?.DrawInstance(new() 
+        graphicsBatcher?.DrawInstance(new()
         {
             WorldMatirx = instanceMatrix,
             TextureRegion = new Vector4D<float>(0.25f * _texureAtlasIndex, 0, 0.25f, 1)
@@ -97,7 +97,7 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
 
     double _deltaTime = 0;
 
-    protected override void OnUpdate(double deltaTime) 
+    protected override void OnUpdate(double deltaTime)
     {
         _deltaTime += deltaTime;
 

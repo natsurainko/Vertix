@@ -6,12 +6,13 @@ using Microsoft.Extensions.Logging;
 using Silk.NET.Windowing;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Vertix.Graphics;
 using Vertix.Windowing;
 
 namespace Vertix.Host;
 
-public class GameApplicationBuilder<TGameApplication> : IHostApplicationBuilder
+public class GameApplicationBuilder<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TGameApplication> : IHostApplicationBuilder
     where TGameApplication : GameApplication
 {
     private readonly HostApplicationBuilder _builder;

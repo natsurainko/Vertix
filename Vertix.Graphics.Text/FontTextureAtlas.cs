@@ -57,7 +57,7 @@ public unsafe class FontTextureAtlas : IDisposable
 
         FT_Bitmap_ bitmap = glyph->bitmap;
         uint glyphWidth = bitmap.width;
-        uint glyphHeight =  bitmap.rows;
+        uint glyphHeight = bitmap.rows;
 
         if (_currentPosition.X + glyphWidth > ATLAS_WIDTH)
         {
@@ -80,7 +80,7 @@ public unsafe class FontTextureAtlas : IDisposable
             ),
             UVBottomRight = new
             (
-                (_currentPosition.X + glyphWidth) / (float)ATLAS_WIDTH, 
+                (_currentPosition.X + glyphWidth) / (float)ATLAS_WIDTH,
                 (_currentPosition.Y + glyphHeight) / (float)ATLAS_HEIGHT
             )
         };
@@ -90,7 +90,7 @@ public unsafe class FontTextureAtlas : IDisposable
         _currentPosition.X += (int)glyphWidth;
         Glyphs[character] = fontGlyph;
 
-        if (ATLAS_WIDTH < SDF_FONT_PIXEL_SIZE + _currentPosition.X && 
+        if (ATLAS_WIDTH < SDF_FONT_PIXEL_SIZE + _currentPosition.X &&
             ATLAS_HEIGHT < SDF_FONT_PIXEL_SIZE + _currentPosition.Y)
             IsFull = true;
 

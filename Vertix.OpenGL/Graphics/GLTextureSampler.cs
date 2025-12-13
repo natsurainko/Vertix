@@ -26,7 +26,7 @@ public struct GLTextureSampler : ITextureSampler
         _handle = handle;
     }
 
-    public TextureFilter MinFilter 
+    public TextureFilter MinFilter
     {
         readonly get => field;
         set
@@ -34,7 +34,7 @@ public struct GLTextureSampler : ITextureSampler
             if (field != value)
             {
                 field = value;
-                _gL.SamplerParameter(_handle,  SamplerParameterI.MinFilter, value.ToGLFilter());
+                _gL.SamplerParameter(_handle, SamplerParameterI.MinFilter, value.ToGLFilter());
             }
         }
     } = TextureFilter.NearestMipmapLinear;
@@ -157,8 +157,8 @@ public struct GLTextureSampler : ITextureSampler
 
     public void BindSampler(uint bindingIndex) => _gL.BindSampler(bindingIndex, _handle);
 
-    public void Dispose() 
-    { 
+    public void Dispose()
+    {
         _gL.DeleteSampler(_handle);
     }
 }

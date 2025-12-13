@@ -11,7 +11,7 @@ public static class IGraphicsBufferExtensions
     {
         public unsafe void Initialize<T>(int length, BufferStorageMask flags, ReadOnlySpan<T> data) where T : unmanaged
         {
-            if (graphicsBuffer is not GLGraphicsBuffer) 
+            if (graphicsBuffer is not GLGraphicsBuffer)
                 throw new InvalidOperationException();
 
             graphicsBuffer.Initialize(length, (uint)flags, data);

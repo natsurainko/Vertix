@@ -45,7 +45,7 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _graphicsDevice.EnableFaceCulling = false;
 
         _shaderProgram.Parameters["view"].SetValue(_context.CameraViewMatrix);
-        _shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
+        //_shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
 
         _graphicsDevice.BindTexture(0, _context.GBufferTarget?.TargetTextures[0]);
         _graphicsDevice.BindTexture(1, _context.GBufferTarget?.TargetTextures[1]);

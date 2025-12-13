@@ -76,7 +76,7 @@ public abstract partial class GameObject3D
     /// <param name="angles"></param>
     public virtual void Rotate(Vector3D<float> angles, bool allowRoll = false)
     {
-        Orientation = Quaternion<float>.CreateFromAxisAngle(allowRoll 
+        Orientation = Quaternion<float>.CreateFromAxisAngle(allowRoll
             ? Vector3D.Transform(Vector3D<float>.UnitY, Orientation) : Vector3D<float>.UnitY, angles.Y) * Orientation;
         Orientation = Quaternion<float>.CreateFromAxisAngle(
             Vector3D.Transform(Vector3D<float>.UnitX, Orientation), angles.X) * Orientation;

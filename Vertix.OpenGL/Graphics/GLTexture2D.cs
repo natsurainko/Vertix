@@ -27,7 +27,7 @@ public partial class GLTexture2D : GLTexture, ITexture2D
         Initialized = true;
     }
 
-    public virtual void SetData<TData>(Vector2D<uint> size, Vector2D<int> offset, ReadOnlySpan<TData> data, int mipmapIndex = 0) 
+    public virtual void SetData<TData>(Vector2D<uint> size, Vector2D<int> offset, ReadOnlySpan<TData> data, int mipmapIndex = 0)
         where TData : unmanaged
     {
         _gL.GetInteger(GetPName.UnpackAlignment, out int oldAlignment);

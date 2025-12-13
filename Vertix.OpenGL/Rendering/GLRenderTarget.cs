@@ -32,7 +32,7 @@ public class GLRenderTarget : IRenderTarget
 
     public void AttachTargetTexture(ITexture texture, RenderTargetAttachment renderTargetAttachment = RenderTargetAttachment.Color, int mipmapIndex = 0)
     {
-        if (texture is not GLTexture gLTexture) 
+        if (texture is not GLTexture gLTexture)
             throw new InvalidOperationException();
 
         _targetTextures.Add(texture);
