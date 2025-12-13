@@ -13,8 +13,8 @@ A lightweight 3D game development framework for multiple graphics platforms, bui
 + [x] Basic camera, scene, GameObject3D implementation  
 
 ### In Progress
-+ 🔄 GLRenderPipelineDemo with deferred-shading implementation
-+ 🔄 Loading bones data from 3D model files using Assimp
++ 🔄 Improving GLRenderPipelineDemo rendering performance  
++ 🔄 Loading bones data from 3D model files using Assimp  
 
 ## Quick Start
 Create your game application class by inheriting from `Vertix.Host.GameApplication` and create a window class that inherits from the graphics platform's base window class. For example, when using OpenGL, inherit from `GLGameWindow`.
@@ -31,6 +31,24 @@ new GameApplicationBuilder<GLGameDemo.GameApplication>()
 ```
 
 You can refer to the examples in the repository.
+
+## Demos
+
+### GLRenderPipelineDemo
+
+#### Features
++ [x] Using RenderPipeline and RenderPass in rendering  
++ [x] Implement GeometryBuffer for deferred rendering  
++ [x] Implement CSM (Cascaded Shadow Maps) for shadow maps  
++ [x] Using possion disk in PCF shadow sample  
++ [x] Basic Blinn-Phong lighting model  
++ [x] Free perspective camera (moving mouse to rotate view, pressing wasd,shift to move position)  
++ [x] Configured assembly trimming and enabled AOT for publish  
+
+#### Screenshots
+
+<img width="1332" height="850" alt="img_1" src="https://github.com/user-attachments/assets/ae7bcaea-88c2-46d7-9f0c-886bf57c7e96" />
+<img width="1332" height="850" alt="img_2" src="https://github.com/user-attachments/assets/c056b61d-71fc-427b-a3a2-d493dd59f1df" />
 
 ## Roadmap
 - [ ] Complete GUI system
