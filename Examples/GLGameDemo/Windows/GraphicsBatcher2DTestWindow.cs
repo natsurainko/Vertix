@@ -2,6 +2,7 @@
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
+using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
@@ -31,9 +32,8 @@ internal class GraphicsBatcher2DTestWindow(IWindow w, IGraphicsDevice d) : GLGam
         (new(120, 240, 50, 50), 8, Color.Lime),
     ];
 
-    Matrix4X4<float> view = Matrix4X4<float>.Identity;
-    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
-    Matrix4X4<float> instanceMatrix;
+    Matrix4x4 view = Matrix4x4.Identity;
+    Matrix4x4 projection = Matrix4x4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
 
     protected unsafe override void OnLoaded()
     {
@@ -78,7 +78,7 @@ internal class GraphicsBatcher2DTestWindow(IWindow w, IGraphicsDevice d) : GLGam
     {
         Graphics.Viewport(size);
 
-        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        projection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
         shader?.Parameters["projection"].SetValue(projection);
     }
 

@@ -3,6 +3,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
+using System.Numerics;
 using Vertix.Content;
 using Vertix.Extensions;
 using Vertix.Graphics;
@@ -21,9 +22,9 @@ internal class Texture2DTestWindow(IWindow w, IGraphicsDevice d, IServiceProvide
 
     Rectangle<float> rect = new(100, 100, 224, 256);
 
-    Matrix4X4<float> view = Matrix4X4<float>.Identity;
-    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
-    Matrix4X4<float> instanceMatrix;
+    Matrix4x4 view = Matrix4x4.Identity;
+    Matrix4x4 projection = Matrix4x4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4x4 instanceMatrix;
 
     protected unsafe override void OnLoaded()
     {
@@ -70,7 +71,7 @@ internal class Texture2DTestWindow(IWindow w, IGraphicsDevice d, IServiceProvide
     {
         Graphics.Viewport(size);
 
-        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        projection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
         shader?.Parameters["projection"].SetValue(projection);
     }
 

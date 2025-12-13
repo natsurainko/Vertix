@@ -1,6 +1,6 @@
-﻿using Silk.NET.Maths;
-using Silk.NET.OpenGL;
+﻿using Silk.NET.OpenGL;
 using System;
+using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.OpenGL.Helpers;
@@ -141,7 +141,7 @@ public struct GLTextureSampler : ITextureSampler
     //ComparisonFunction ComparisonFunc { get; set; }
     //bool ComparisonEnabled { get; set; }
 
-    public Vector4D<float> BorderColor
+    public Vector4 BorderColor
     {
         readonly get => field;
         set
@@ -153,7 +153,7 @@ public struct GLTextureSampler : ITextureSampler
                 _gL.SamplerParameter(_handle, SamplerParameterF.BorderColor, floats);
             }
         }
-    } = Vector4D<float>.Zero;
+    } = Vector4.Zero;
 
     public void BindSampler(uint bindingIndex) => _gL.BindSampler(bindingIndex, _handle);
 

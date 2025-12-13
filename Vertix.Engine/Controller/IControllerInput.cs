@@ -1,13 +1,10 @@
-﻿using Silk.NET.Maths;
-using System;
+﻿using System;
 
 namespace Vertix.Engine.Controller;
 
-public interface IControllerInput
+public interface IControllerInput<TValue> where TValue : unmanaged
 {
-    Vector3D<float> MovingOffset { get; }
-
-    Vector3D<float> RotatingOffset { get; }
+    TValue Value { get; }
 
     event EventHandler<double> OnUpdate;
 }

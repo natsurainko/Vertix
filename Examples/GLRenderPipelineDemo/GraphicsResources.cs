@@ -1,5 +1,6 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.OpenGL;
+using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
@@ -88,7 +89,7 @@ internal class GraphicsResources : IDisposable
         textureSampler.MagFilter = TextureFilter.Nearest;
         textureSampler.AddressU = TextureAddressMode.ClampToBorder;
         textureSampler.AddressV = TextureAddressMode.ClampToBorder;
-        textureSampler.BorderColor = Vector4D<float>.One;
+        textureSampler.BorderColor = Vector4.One;
 
         NearestSampler = textureSampler;
 

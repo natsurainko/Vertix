@@ -2,6 +2,7 @@
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics.Resources;
 
@@ -11,7 +12,7 @@ public static class IGraphicsBatcherExtensions
 {
     extension(IGraphicsBatcher<Vertex2D.InstanceTransform2D> graphicsBatcher)
     {
-        public unsafe void DrawText(string text, Vector2D<float> position, FontFamily fontFamily,
+        public unsafe void DrawText(string text, Vector2 position, FontFamily fontFamily,
             uint fontSize = 16, FontStyle? targetFontStyle = default, uint? lineSpacing = null)
         {
             FontStyle fontStyle = targetFontStyle ?? fontFamily.FontStyles[0];
@@ -28,7 +29,7 @@ public static class IGraphicsBatcherExtensions
             float scale = fontSize / (float)FontTextureAtlas.SDF_FONT_PIXEL_SIZE;
             ITexture2D? texture2D = null;
             ReadOnlySpan<char> chars = text.AsSpan();
-            Vector2D<float> offset = Vector2D<float>.Zero;
+            Vector2 offset = Vector2.Zero;
 
             for (int i = 0; i < chars.Length; i++)
             {
@@ -65,12 +66,9 @@ public static class IGraphicsBatcherExtensions
                     texture2D.BindTexture(0);
                 }
 
-                Rectangle<float> textArea = new
-                (
-                    position + offset + new Vector2D<float>(fontGlyph.Bearing.X, lineHeight - fontGlyph.Bearing.Y) * scale,
-                    new Vector2D<float>(fontGlyph.Size.X, fontGlyph.Size.Y) * scale
-                );
-                Vector4D<float> textureRegion = new
+                Vector2 origin = position + offset + new Vector2(fontGlyph.Bearing.X, lineHeight - fontGlyph.Bearing.Y) * scale;
+                Vector2 size = new Vector2(fontGlyph.Size.X, fontGlyph.Size.Y) * scale;
+                Vector4 textureRegion = new
                 (
                     fontGlyph.UVTopLeft.X,
                     fontGlyph.UVTopLeft.Y,
@@ -80,11 +78,11 @@ public static class IGraphicsBatcherExtensions
 
                 graphicsBatcher.DrawInstance(new()
                 {
-                    WorldMatirx = textArea.ToScreenMatrix(),
+                    WorldMatirx = new Rectangle<float>(origin.X, origin.Y, size.X, size.Y).ToScreenMatrix(),
                     TextureRegion = textureRegion
                 });
 
-                offset += new Vector2D<float>(fontGlyph.Advance * scale, 0);
+                offset += new Vector2(fontGlyph.Advance * scale, 0);
             }
 
             graphicsBatcher.Flush();

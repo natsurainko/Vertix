@@ -1,16 +1,15 @@
-﻿using Silk.NET.Maths;
-using System;
+﻿using Plane = System.Numerics.Plane;
 
 namespace Vertix.Engine.Maths;
 
-public struct Frustum<T> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+public struct Frustum
 {
-    public Plane<T> LeftPlane { get; set; }
-    public Plane<T> RightPlane { get; set; }
+    public Plane LeftPlane { get; set; }
+    public Plane RightPlane { get; set; }
 
-    public Plane<T> TopPlane { get; set; }
-    public Plane<T> BottomPlane { get; set; }
+    public Plane TopPlane { get; set; }
+    public Plane BottomPlane { get; set; }
 
-    public Plane<T> NearPlane { get; set; }
-    public Plane<T> FarPlane { get; set; }
+    public Plane NearPlane { get; set; }
+    public Plane FarPlane { get; set; }
 }

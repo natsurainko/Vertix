@@ -1,5 +1,5 @@
-﻿using Silk.NET.Maths;
-using System;
+﻿using System.Numerics;
+using Plane = System.Numerics.Plane;
 
 namespace Vertix.Engine.Extensions;
 
@@ -7,13 +7,12 @@ public static class PlaneExtensions
 {
     extension(Plane)
     {
-        public static Plane<T> Create<T>(Vector3D<T> position, Vector3D<T> normal)
-            where T : unmanaged, IEquatable<T>, IFormattable, IComparable<T>
+        public static Plane Create(Vector3 position, Vector3 normal)
         {
-            return new Plane<T>()
+            return new Plane()
             {
-                Distance = Vector3D.Dot(normal, position),
-                Normal = Vector3D.Normalize(normal)
+                D = Vector3.Dot(normal, position),
+                Normal = Vector3.Normalize(normal)
             };
         }
     }

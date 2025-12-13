@@ -1,6 +1,7 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using System;
+using System.Numerics;
 using Vertix.Rendering;
 
 namespace Vertix.OpenGL.Rendering;
@@ -35,17 +36,17 @@ public readonly struct GLShaderParameter : IShaderParameter
             UniformType.IntVec2 => typeof(Vector2D<int>),
             UniformType.IntVec3 => typeof(Vector3D<int>),
             UniformType.IntVec4 => typeof(Vector4D<int>),
-            UniformType.FloatVec2 => typeof(Vector2D<float>),
-            UniformType.FloatVec3 => typeof(Vector3D<float>),
-            UniformType.FloatVec4 => typeof(Vector4D<float>),
+            UniformType.FloatVec2 => typeof(Vector2),
+            UniformType.FloatVec3 => typeof(Vector3),
+            UniformType.FloatVec4 => typeof(Vector4),
             UniformType.FloatMat2 => typeof(Matrix2X2<float>),
             UniformType.FloatMat3 => typeof(Matrix3X3<float>),
-            UniformType.FloatMat4 => typeof(Matrix4X4<float>),
+            UniformType.FloatMat4 => typeof(Matrix4x4),
             _ => null,
         };
     }
 
-    public void SetValue<T>(T value) where T : unmanaged
+    public unsafe void SetValue<T>(T value) where T : unmanaged
     {
         if (_type == null) throw new InvalidOperationException();
         if (typeof(T) != _type) throw new ArgumentException($"The value should be {_type.Name} type");
@@ -70,16 +71,13 @@ public readonly struct GLShaderParameter : IShaderParameter
 
             // Vector types
             case UniformType.FloatVec2:
-                Vector2D<float> v2f = (Vector2D<float>)(object)value;
-                _gL.ProgramUniform2(_handle, _location, v2f.X, v2f.Y);
+                _gL.ProgramUniform2(_handle, _location, (Vector2)(object)value);
                 break;
             case UniformType.FloatVec3:
-                Vector3D<float> v3f = (Vector3D<float>)(object)value;
-                _gL.ProgramUniform3(_handle, _location, v3f.X, v3f.Y, v3f.Z);
+                _gL.ProgramUniform3(_handle, _location, (Vector3)(object)value);
                 break;
             case UniformType.FloatVec4:
-                Vector4D<float> v4f = (Vector4D<float>)(object)value;
-                _gL.ProgramUniform4(_handle, _location, v4f.X, v4f.Y, v4f.Z, v4f.W);
+                _gL.ProgramUniform4(_handle, _location, (Vector4)(object)value);
                 break;
             case UniformType.IntVec2:
                 Vector2D<int> v2i = (Vector2D<int>)(object)value;
@@ -136,14 +134,9 @@ public readonly struct GLShaderParameter : IShaderParameter
                 break;
 
             case UniformType.FloatMat4:
-                Matrix4X4<float> m4f = (Matrix4X4<float>)(object)value;
-                Span<float> floats4 = [
-                    m4f.M11, m4f.M12, m4f.M13, m4f.M14,
-                    m4f.M21, m4f.M22, m4f.M23, m4f.M24,
-                    m4f.M31, m4f.M32, m4f.M33, m4f.M34,
-                    m4f.M41, m4f.M42, m4f.M43, m4f.M44
-                ];
-                _gL.ProgramUniformMatrix4(_handle, _location, 1, false, floats4);
+                Matrix4x4 m4f = (Matrix4x4)(object)value;
+                float* ptr = &m4f.M11;
+                _gL.ProgramUniformMatrix4(_handle, _location, 1, false, ptr);
                 break;
 
             // Matrix types - double
