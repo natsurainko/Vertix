@@ -21,19 +21,18 @@ uniform float farPlane;
 
 float CalculateShadow() {
     vec3 fragPos = texture(gPosition, TexCoord).rgb;
+    vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
 
     vec4 fragPosViewSpace = view * vec4(fragPos, 1.0);
     float depthValue = abs(fragPosViewSpace.z);
 
-    int layer = -1;
+    int layer = cascadeCount;
     for (int i = 0; i < cascadeCount; ++i) {
         if (depthValue < cascadePlaneDistances[i]) {
             layer = i;
             break;
         }
     }
-
-    if (layer == -1) layer = cascadeCount;
 
     vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPos, 1.0);
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -42,9 +41,9 @@ float CalculateShadow() {
     float currentDepth = projCoords.z;
     if (currentDepth > 1.0) return 0.0;
 
-    vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
-    float bias = max(0.05 * (1.0 - dot(normal, -lightDirection)), 0.005);
-    const float biasModifier = 0.5f;
+    //float bias = max(0.05 * (1.0 - dot(normal, -lightDirection)), 0.005);
+    float bias = 0.00125;
+    const float biasModifier = 0.15f;
 
     if (layer == cascadeCount)
         bias *= 1 / (farPlane * biasModifier);

@@ -29,12 +29,12 @@ public partial class GLGraphicsDevice : IGraphicsDevice
         }
     }
 
-    public bool EnableFaceCulling 
-    { 
+    public bool EnableFaceCulling
+    {
         get => field;
         set
         {
-            if (field != value) 
+            if (field != value)
             {
                 field = value;
                 if (value)

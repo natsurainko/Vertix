@@ -47,7 +47,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
         {
             for (int j = 0; j < blockCountAsix; j++)
             {
-                instanceTransforms[i * blockCountAsix + j] = new() 
+                instanceTransforms[i * blockCountAsix + j] = new()
                 {
                     WorldMatirx = Matrix4X4.CreateWorld
                     (
@@ -92,7 +92,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
         }
     }
 
-    protected override void OnUpdate(double deltaTime) 
+    protected override void OnUpdate(double deltaTime)
     {
         Camera.GetViewMatrix(out var view);
         Camera.GetProjectionMatrix(out var projection);

@@ -30,7 +30,7 @@ internal class RenderContext
 
     public SceneManager SceneManager { get; } = new();
 
-    public DirectionalLight DirectionalLight { get; } = new() 
+    public DirectionalLight DirectionalLight { get; } = new()
     {
         Orientation = Quaternion<float>.CreateFromYawPitchRoll(-Scalar<float>.PiOver2 / 2, -Scalar<float>.PiOver2 / 2, 0),
     };
@@ -116,7 +116,7 @@ internal class RenderContext
                     (
                         2.0f * x - 1.0f,
                         2.0f * y - 1.0f,
-                        2.0f * z - 1.0f, // 1.0f * z,
+                        z, // 2.0f * z - 1.0f, // 1.0f * z,
                         1.0f
                     ) * inv;
 
@@ -153,7 +153,7 @@ internal class RenderContext
         }
 
         // Tune this parameter according to the scene
-        const float zMult = 10.0f;
+        const float zMult = 2.0f;
         if (minZ < 0)
             minZ *= zMult;
         else

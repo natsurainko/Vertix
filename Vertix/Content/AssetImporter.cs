@@ -78,7 +78,7 @@ public class AssetImporter : IDisposable
 
     public unsafe Model LoadModel(string filePath, PostProcessSteps? postProcessSteps = null)
     {
-        postProcessSteps ??= 
+        postProcessSteps ??=
             PostProcessSteps.Triangulate |
             PostProcessSteps.FlipUVs |
             PostProcessSteps.JoinIdenticalVertices |

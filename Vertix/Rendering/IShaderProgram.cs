@@ -5,9 +5,9 @@ namespace Vertix.Rendering;
 
 public partial interface IShaderProgram : IDisposable
 {
-    bool IsCompiled { get;}
+    bool IsCompiled { get; }
 
-    Dictionary<string, IShaderParameter> Parameters { get; } 
+    Dictionary<string, IShaderParameter> Parameters { get; }
 
     void Compile();
 

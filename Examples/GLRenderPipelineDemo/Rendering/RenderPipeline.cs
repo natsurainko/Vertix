@@ -16,7 +16,7 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
 {
     private readonly GraphicsResources _graphicsResources;
 
-    public RenderPipeline(IGraphicsDevice d, RenderContext c, GraphicsResources graphicsResources) : base(d,c)
+    public RenderPipeline(IGraphicsDevice d, RenderContext c, GraphicsResources graphicsResources) : base(d, c)
     {
         _graphicsResources = graphicsResources;
 

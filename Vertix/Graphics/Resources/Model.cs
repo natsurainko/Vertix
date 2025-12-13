@@ -15,7 +15,7 @@ public record struct Model
             graphicsDevice.DrawVertexElementsArray
             (
                 mesh.VertexArray,
-                PrimitiveType.Triangles, 
+                PrimitiveType.Triangles,
                 (uint)mesh.Indices.Length
             );
         }

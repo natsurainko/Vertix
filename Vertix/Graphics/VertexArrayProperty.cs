@@ -22,7 +22,7 @@ public abstract record class VertexArrayProperty
 
 public record class VertexArrayProperty<T> : VertexArrayProperty where T : unmanaged
 {
-    public unsafe override uint Size { get; } 
+    public unsafe override uint Size { get; }
 
     public override string TypeName { get; }
 

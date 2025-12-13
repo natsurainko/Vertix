@@ -12,7 +12,7 @@ using Vertix.OpenGL.Windowing;
 
 namespace GLRenderPipelineDemo;
 
-internal class MainWindow(IWindow w, IGraphicsDevice d, 
+internal class MainWindow(IWindow w, IGraphicsDevice d,
     RenderContext renderContext, RenderPipeline renderPipeline, AssetImporter assetImporter) : GLGameWindow(w, d)
 {
     MouseControllerInput? _mouseController;
@@ -20,6 +20,7 @@ internal class MainWindow(IWindow w, IGraphicsDevice d,
 
     protected override void OnLoaded()
     {
+        CoreWindow.WindowBorder = WindowBorder.Fixed;
         Graphics.EnableDepthTest = true;
         IInputContext inputContext = this.CoreWindow.CreateInput();
 

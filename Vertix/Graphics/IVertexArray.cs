@@ -13,7 +13,7 @@ public interface IVertexArray : IDisposable
 
     IReadOnlyDictionary<uint, IGraphicsBuffer> AttachedBuffers { get; }
 
-    void Initialize<T>(in IGraphicsBuffer vertexBuffer, ReadOnlySpan<VertexArrayProperty> properties, 
+    void Initialize<T>(in IGraphicsBuffer vertexBuffer, ReadOnlySpan<VertexArrayProperty> properties,
         in IGraphicsBuffer? indexBuffer = null, nint vertexBufferOffset = 0) where T : unmanaged;
 
     void AttachInstanceBuffer<T>(in IGraphicsBuffer instanceBuffer, ReadOnlySpan<VertexArrayProperty> properties,

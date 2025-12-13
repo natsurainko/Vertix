@@ -24,7 +24,7 @@ public record struct GLVertexArray : IVertexArray
 
     public GLVertexArray(GL gl)
     {
-        _gL = gl; 
+        _gL = gl;
         _handle = gl.CreateVertexArray();
     }
 
@@ -34,7 +34,7 @@ public record struct GLVertexArray : IVertexArray
         _handle = handle;
     }
 
-    public unsafe void Initialize<T>(in IGraphicsBuffer vertexBuffer, ReadOnlySpan<VertexArrayProperty> properties, 
+    public unsafe void Initialize<T>(in IGraphicsBuffer vertexBuffer, ReadOnlySpan<VertexArrayProperty> properties,
         in IGraphicsBuffer? indexBuffer = null, nint vertexBufferOffset = 0) where T : unmanaged
     {
         if (vertexBuffer is not GLGraphicsBuffer gLVertexBuffer) throw new InvalidOperationException();
