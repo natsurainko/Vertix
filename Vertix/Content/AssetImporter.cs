@@ -3,6 +3,7 @@ using Silk.NET.Maths;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
 
@@ -41,7 +42,7 @@ public class AssetImporter : IDisposable
                 vertex.TextureCoord.Y = mesh->MTextureCoords[0][i].Y;
             }
             else
-                vertex.TextureCoord = Vector2D<float>.Zero;
+                vertex.TextureCoord = Vector2.Zero;
 
             modelMesh.Vertices[i] = vertex;
         }

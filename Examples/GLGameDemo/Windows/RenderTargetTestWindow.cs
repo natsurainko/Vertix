@@ -3,6 +3,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
+using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Resources;
@@ -24,11 +25,11 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
     ITextureSampler? textureSampler;
     IRenderTarget? renderTarget;
 
-    Matrix4X4<float> view = Matrix4X4<float>.Identity;
-    Matrix4X4<float> projection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
-    Matrix4X4<float> renderTargetProjection = Matrix4X4.CreateOrthographicOffCenter(0, 800, 0, 600, -100f, 100f);
+    Matrix4x4 view = Matrix4x4.Identity;
+    Matrix4x4 projection = Matrix4x4.CreateOrthographicOffCenter(0, 800, 600, 0, -100f, 100f);
+    Matrix4x4 renderTargetProjection = Matrix4x4.CreateOrthographicOffCenter(0, 800, 0, 600, -100f, 100f);
 
-    Matrix4X4<float> instanceMatrix;
+    Matrix4x4 instanceMatrix;
 
     bool _needRecreateRenderTarget = true;
     bool _needRedrawRenderTarget;
@@ -77,8 +78,8 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
 
         Graphics.Viewport(size);
 
-        projection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
-        renderTargetProjection = Matrix4X4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, 0, CoreWindow.Size.Y, -100f, 100f);
+        projection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
+        renderTargetProjection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, 0, CoreWindow.Size.Y, -100f, 100f);
         instanceMatrix = new Rectangle<float>(0, 0, CoreWindow.Size.X, CoreWindow.Size.Y).ToScreenMatrix();
 
         rectShader?.Parameters["projection"].SetValue(projection);
@@ -121,7 +122,7 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
                 这些度量值精确定义了摆放字形所需的每个字形距离基准线的偏移量，
                 每个字形的大小，以及需要预留多少空间来渲染下一个字形。下面这个表列出了我们需要的所有属性。
                 """,
-                new Vector2D<float>(32, 32),
+                new(32, 32),
                 GameApplication.Unifont!
             );
 
@@ -130,7 +131,7 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
                 """
                 微软雅黑（英语：Microsoft YaHei）
                 """,
-                new Vector2D<float>(32, 144),
+                new(32, 144),
                 GameApplication.Msyh!,
                 64
             );
@@ -161,7 +162,7 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
                 indexBuffer.Initialize(_indices.Length, (uint)BufferStorageMask.None, _indices);
                 vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
                 """,
-                new Vector2D<float>(32, 256),
+                new(32, 256),
                 GameApplication.JetbrainsMono!
             );
 

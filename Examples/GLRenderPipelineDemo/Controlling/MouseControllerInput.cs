@@ -1,25 +1,20 @@
 ﻿using Silk.NET.Input;
-using Silk.NET.Maths;
 using System.Numerics;
 using Vertix.Engine.Controller;
 
 namespace GLRenderPipelineDemo.Controlling;
 
-internal class MouseControllerInput : IControllerInput
+internal class MouseControllerInput : IControllerInput<Vector3>
 {
     private readonly IInputContext _inputContext;
-    private Vector3D<float> _rotatingOffset;
+    private Vector3 _rotatingOffset;
     private Vector2 _lastPosition;
 
     public event EventHandler<double>? OnUpdate;
 
     public IMouse? Mouse { get; private set; }
 
-    public IKeyboard? Keyboard { get; private set; }
-
-    public Vector3D<float> MovingOffset => Vector3D<float>.Zero;
-
-    public Vector3D<float> RotatingOffset => _rotatingOffset;
+    public Vector3 Value => _rotatingOffset;
 
     public MouseControllerInput(IInputContext inputContext)
     {
@@ -51,6 +46,6 @@ internal class MouseControllerInput : IControllerInput
         _rotatingOffset.Y = delta.X;
 
         OnUpdate?.Invoke(this, 0);
-        _rotatingOffset = Vector3D<float>.Zero;
+        _rotatingOffset = Vector3.Zero;
     }
 }

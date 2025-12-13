@@ -1,16 +1,16 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 
 namespace Vertix.Engine.Scene.Lighting;
 
 public class DirectionalLight : GameObject3D
 {
-    public Matrix4X4<float> LightViewMatrix { get; private set; }
+    public Matrix4x4 LightViewMatrix { get; private set; }
 
-    public Matrix4X4<float> LightProjectionMatrix { get; private set; }
+    public Matrix4x4 LightProjectionMatrix { get; private set; }
 
-    public Matrix4X4<float> LightViewProjectionMatrix { get; private set; }
+    public Matrix4x4 LightViewProjectionMatrix { get; private set; }
 
-    public Vector3D<float> LightDirection { get; private set; }
+    public Vector3 LightDirection { get; private set; }
 
     public float NearPlane { get; set; } = 1.0f;
 
@@ -20,17 +20,17 @@ public class DirectionalLight : GameObject3D
 
     protected override void OnWorldMatrixChanged()
     {
-        Vector3D<float> forward = Vector3D.Transform(-Vector3D<float>.UnitZ, Orientation);
-        Vector3D<float> up = Vector3D.Transform(Vector3D<float>.UnitY, Orientation);
-        Vector3D<float> target = Position + forward;
+        Vector3 forward = Vector3.Transform(-Vector3.UnitZ, Orientation);
+        Vector3 up = Vector3.Transform(Vector3.UnitY, Orientation);
+        Vector3 target = Position + forward;
 
         LightDirection = forward;
-        LightViewMatrix = Matrix4X4.CreateLookAt(Position, target, up);
-        LightProjectionMatrix = Matrix4X4.CreateOrthographic(OrthographicSize, OrthographicSize, NearPlane, FarPlane);
+        LightViewMatrix = Matrix4x4.CreateLookAt(Position, target, up);
+        LightProjectionMatrix = Matrix4x4.CreateOrthographic(OrthographicSize, OrthographicSize, NearPlane, FarPlane);
         LightViewProjectionMatrix = LightViewMatrix * LightProjectionMatrix;
     }
 
-    public void FitToScene(Vector3D<float> sceneCenter, float sceneRadius)
+    public void FitToScene(Vector3 sceneCenter, float sceneRadius)
     {
         OrthographicSize = sceneRadius * 2.0f;
         FarPlane = sceneRadius * 3.0f;
