@@ -19,9 +19,30 @@ uniform float cascadePlaneDistances[8];
 uniform int cascadeCount;
 uniform float farPlane;
 
+float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texelSize) {
+    vec3 lightDir = normalize(-lightDirection);
+
+    vec4 shadowPos = lightSpaceMatrices[layer] * vec4(fragPos, 1.0);
+    vec3 shadowCoord = shadowPos.xyz / shadowPos.w;
+    
+    vec3 dx = dFdx(shadowCoord);
+    vec3 dy = dFdy(shadowCoord);
+    
+    float dudx = dx.x * texelSize.x;
+    float dudy = dy.x * texelSize.y;
+    float dvdx = dx.y * texelSize.x;
+    float dvdy = dy.y * texelSize.y;
+    
+    float biasScale = max(abs(dudx), abs(dudy));
+    float normalBias = clamp(1.0 - dot(normal, lightDir), 0.0, 1.0);
+    
+    return biasScale * normalBias * 2.0 + 0.0002;
+}
+
 float CalculateShadow() {
     vec3 fragPos = texture(gPosition, TexCoord).rgb;
     vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
 
     vec4 fragPosViewSpace = view * vec4(fragPos, 1.0);
     float depthValue = abs(fragPosViewSpace.z);
@@ -41,17 +62,10 @@ float CalculateShadow() {
     float currentDepth = projCoords.z;
     if (currentDepth > 1.0) return 0.0;
 
-    //float bias = max(0.05 * (1.0 - dot(normal, -lightDirection)), 0.005);
-    float bias = 0.00125;
-    const float biasModifier = 0.15f;
-
-    if (layer == cascadeCount)
-        bias *= 1 / (farPlane * biasModifier);
-    else
-        bias *= 1 / (cascadePlaneDistances[layer] * biasModifier);
+    float bias = CalculateReceiverPlaneBias(fragPos, normal, layer, texelSize);
+    const float biasModifier = 0.5f;
 
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
             float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
