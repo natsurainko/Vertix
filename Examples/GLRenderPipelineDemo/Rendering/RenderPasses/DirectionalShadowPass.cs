@@ -42,7 +42,6 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
         _graphicsDevice.Viewport(ShadowMapSize);
         _graphicsDevice.UseShaderProgram(_shaderProgram);
         _graphicsDevice.EnableFaceCulling = true;
-        _graphicsDevice.CullFace = CullFaceMode.FrontFace;
 
         _graphicsResources.LightSpaceMatircesBuffer.Fill(0, 5, _context.LightSpaceMatrices);
 
@@ -55,7 +54,6 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
         }
 
         _graphicsDevice.Viewport(_context.WindowRectangle.Size);
-        _graphicsDevice.CullFace = CullFaceMode.BackFace;
     }
 
     public override void Dispose()

@@ -72,6 +72,8 @@ internal class RenderContext
 
             UpdateLightSpaceMatrices();
         }
+
+        //DirectionalLight.Orientation = Quaternion.CreateFromYawPitchRoll(-MathF.PI / 4, MathF.PI * (float)Math.Sin(CoreWindow.Time * 0.1), 0);
     }
 
     private void UpdateLightSpaceMatrices()
@@ -153,7 +155,7 @@ internal class RenderContext
         }
 
         // Tune this parameter according to the scene
-        const float zMult = 2.0f;
+        const float zMult = 5.0f;
         if (minZ < 0)
             minZ *= zMult;
         else

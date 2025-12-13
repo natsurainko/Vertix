@@ -30,7 +30,6 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _context!.DirectionalLightingTarget = _renderTarget;
 
         _shaderProgram.Parameters["cascadeCount"].SetValue(4);
-        _shaderProgram.Parameters["farPlane"].SetValue(_context.PerspectiveCamera.FarPlane);
         _shaderProgram.Parameters["cascadePlaneDistances"].SetValues(_context.CascadePlaneDistances, 4);
     }
 
@@ -45,7 +44,7 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _graphicsDevice.EnableFaceCulling = false;
 
         _shaderProgram.Parameters["view"].SetValue(_context.CameraViewMatrix);
-        //_shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
+        _shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
 
         _graphicsDevice.BindTexture(0, _context.GBufferTarget?.TargetTextures[0]);
         _graphicsDevice.BindTexture(1, _context.GBufferTarget?.TargetTextures[1]);
