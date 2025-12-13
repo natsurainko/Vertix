@@ -1,4 +1,4 @@
-﻿namespace Vertix.Graphics.Resources;
+﻿namespace Vertix.Graphics.Primitives;
 
 public record struct Model
 {

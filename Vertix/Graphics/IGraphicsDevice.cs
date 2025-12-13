@@ -1,7 +1,7 @@
 ﻿using Silk.NET.Maths;
 using System;
 using System.Drawing;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.Rendering;
 
 namespace Vertix.Graphics;
