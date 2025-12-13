@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.Graphics.Text.Extensions;
 using Vertix.OpenGL.Extensions;
 using Vertix.OpenGL.Windowing;

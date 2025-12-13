@@ -7,7 +7,7 @@ using System.Numerics;
 using Vertix.Content;
 using Vertix.Engine.Camera;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Extensions;
 using Vertix.OpenGL.Windowing;
 using Vertix.Rendering;

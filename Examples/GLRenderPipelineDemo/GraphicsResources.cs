@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Extensions;
 using Vertix.Rendering;
 

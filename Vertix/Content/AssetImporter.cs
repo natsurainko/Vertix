@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 
 namespace Vertix.Content;
 
@@ -20,7 +20,7 @@ public class AssetImporter : IDisposable
 
     #region Model Import
 
-    unsafe static void ProcessingMesh(ref Graphics.Resources.Mesh modelMesh, Silk.NET.Assimp.Mesh* mesh, Scene* scene)
+    unsafe static void ProcessingMesh(ref Graphics.Primitives.Mesh modelMesh, Silk.NET.Assimp.Mesh* mesh, Scene* scene)
     {
         for (int i = 0; i < mesh->MNumVertices; i++)
         {
@@ -58,12 +58,12 @@ public class AssetImporter : IDisposable
         modelMesh.Indices = [.. indices];
     }
 
-    unsafe static void ProcessingNode(Scene* scene, Node* node, List<Graphics.Resources.Mesh> meshes)
+    unsafe static void ProcessingNode(Scene* scene, Node* node, List<Graphics.Primitives.Mesh> meshes)
     {
         for (int i = 0; i < node->MNumMeshes; i++)
         {
             Silk.NET.Assimp.Mesh* mesh = scene->MMeshes[node->MMeshes[i]];
-            Graphics.Resources.Mesh modelMesh = new()
+            Graphics.Primitives.Mesh modelMesh = new()
             {
                 Vertices = new Vertex[mesh->MNumVertices],
                 Name = mesh->MName.AsString
@@ -92,7 +92,7 @@ public class AssetImporter : IDisposable
             scene = _assimp.ImportFile(filePath, (uint)postProcessSteps);
 
             Model model = new();
-            List<Graphics.Resources.Mesh> meshes = [];
+            List<Graphics.Primitives.Mesh> meshes = [];
 
             ProcessingNode(scene, scene->MRootNode, meshes);
             model.Name = scene->MRootNode->MName.AsString;

@@ -7,7 +7,7 @@ using Vertix.Content;
 using Vertix.Engine.Controller;
 using Vertix.Engine.Scene;
 using Vertix.Graphics;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Windowing;
 
 namespace GLRenderPipelineDemo;

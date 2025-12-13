@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Vertix.Extensions;
-using Vertix.Graphics.Resources;
+using Vertix.Graphics.Primitives;
 
 namespace Vertix.Graphics.Text.Extensions;
 
