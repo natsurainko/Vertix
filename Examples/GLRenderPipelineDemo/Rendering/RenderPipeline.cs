@@ -1,4 +1,5 @@
 ﻿using GLRenderPipelineDemo.Rendering.RenderPasses;
+using System.Drawing;
 using Vertix.Graphics;
 
 namespace GLRenderPipelineDemo.Rendering;
@@ -32,7 +33,7 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         _graphicsDevice.BindRenderTarget(null);
         _graphicsDevice.EnableFaceCulling = false;
 
-        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
+        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil, Color.CornflowerBlue);
         _graphicsDevice.UseShaderProgram(_graphicsResources.BlendPassShader);
 
         _graphicsResources.BlendPassShader.Parameters["viewPos"].SetValue(RenderContext.PerspectiveCamera.Position);

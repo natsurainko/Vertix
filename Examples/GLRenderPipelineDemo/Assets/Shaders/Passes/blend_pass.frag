@@ -13,18 +13,23 @@ uniform vec3 viewPos;
 uniform vec3 lightDirection;
 
 void main() {
-	vec3 fragPos = texture(gPosition, TexCoord).rgb;
+    vec4 fragPos = texture(gPosition, TexCoord);
     vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
     vec3 color = texture(gAlbedoSpec, TexCoord).rgb;
     
-    vec3 lightColor = vec3(0.3);
+    if (fragPos.a == 0.0) {
+        discard;
+        return;
+    }
+
+    vec3 lightColor = vec3(0.5);
     // ambient
     vec3 ambient = 0.3 * color;
     // diffuse
     float diff = max(dot(-lightDirection, normal), 0.0);
     vec3 diffuse = diff * lightColor;
     // specular
-    vec3 viewDir = normalize(viewPos - fragPos);
+    vec3 viewDir = normalize(viewPos - fragPos.rgb);
     vec3 reflectDir = reflect(lightDirection, normal);
     float spec = 0.0;
     vec3 halfwayDir = normalize(-lightDirection + viewDir);  

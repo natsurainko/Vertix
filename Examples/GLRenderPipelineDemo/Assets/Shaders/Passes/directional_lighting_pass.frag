@@ -19,7 +19,9 @@ uniform float cascadePlaneDistances[8];
 uniform int cascadeCount;
 uniform float farPlane;
 
-const vec2 poissonDisk[16] = vec2[](
+uniform float lightSize = 0.15;
+
+const vec2 poissonDisk[32] = vec2[](
     vec2(-0.94201624, -0.39906216),
     vec2(0.94558609, -0.76890725),
     vec2(-0.094184101, -0.92938870),
@@ -35,8 +37,30 @@ const vec2 poissonDisk[16] = vec2[](
     vec2(-0.24188840, 0.99706507),
     vec2(-0.81409955, 0.91437590),
     vec2(0.19984126, 0.78641367),
-    vec2(0.14383161, -0.14100790)
+    vec2(0.14383161, -0.14100790),
+    vec2(-0.61342514, 0.61513743),
+    vec2(0.17088780, -0.04025297),
+    vec2(0.64568018, 0.49258912),
+    vec2(-0.70537376, -0.66820324),
+    vec2(0.06332609, 0.14236987),
+    vec2(0.20352896, 0.21433118),
+    vec2(-0.88592213, 0.21536890),
+    vec2(0.56663656, 0.60521287),
+    vec2(0.03976609, -0.39610012),
+    vec2(-0.46757436, -0.40543765),
+    vec2(-0.24826765, -0.81475324),
+    vec2(0.35441089, -0.88757098),
+    vec2(0.48787654, -0.06308210),
+    vec2(-0.69689012, -0.54979102),
+    vec2(0.03421098, 0.97998012),
+    vec2(0.50309765, -0.30887654)
 );
+
+vec2 RotateVector(vec2 v, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
 
 float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texelSize) {
     vec3 lightDir = normalize(-lightDirection);
@@ -58,14 +82,36 @@ float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texe
     return biasScale * normalBias * 2.0 + 0.0002;
 }
 
-float PossionSampleShadow(vec3 projCoords, float layer, float depth, float bias, vec2 texelSize) {
-    float searchRadius = 2.0;
+float FindBlockDepth(vec3 projCoords, float layer, vec2 texelSize) {
+    const float c = 75.0;
+
+    float searchWidth = lightSize * projCoords.z * c;
+    float blockerDepth = 0.01; // * projCoords.z;
+    float blockerCount = 0.01;
+
+    for (int i = 0; i < 16; ++i) {
+        vec2 offset = poissonDisk[i] * texelSize * searchWidth;
+        float depth = texture(shadowMap, vec3(projCoords.xy + offset, layer)).r;
+        
+        if (depth < projCoords.z) {
+            blockerDepth += depth;
+            blockerCount += 1.0;
+        }
+    }
+
+    if (blockerCount <= 1) return -1.0;
+    return blockerDepth / blockerCount;
+}
+
+float PossionSampleShadow(vec3 projCoords, float layer, float bias, float searchRadius) {
+    float angle = fract(sin(dot(TexCoord, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831; //8530718;
     float shadow = 0.0;
 
-    for(int i = 0; i < 16; ++i) {
-        vec2 offset = poissonDisk[i] * texelSize * searchRadius;
+    for(int i = 16; i < 32; ++i) {
+        vec2 rotatedOffset = RotateVector(poissonDisk[i], angle);
+        vec2 offset = rotatedOffset * searchRadius;
         float pcfDepth = texture(shadowMap, vec3(projCoords.xy + offset, layer)).r;
-        shadow += (depth - bias) > pcfDepth ? 1.0 : 0.0;
+        shadow += (projCoords.z - bias) > pcfDepth ? 1.0 : 0.0;
     }
     
     return shadow / 16.0;
@@ -91,11 +137,17 @@ float CalculateShadow() {
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    float currentDepth = projCoords.z;
-    if (currentDepth > 1.0) return 0.0;
+    if (projCoords.z > 1.0) return 0.0;
 
     float bias = CalculateReceiverPlaneBias(fragPos, normal, layer, texelSize);
-    return PossionSampleShadow(projCoords, layer, currentDepth, bias, texelSize);
+    float blockDepth = FindBlockDepth(projCoords, layer, texelSize);
+
+    if (blockDepth < 0.0) return 0.0;
+
+    float penumbraWidth = (projCoords.z - blockDepth) / blockDepth * lightSize;
+    penumbraWidth = max(0.0005, penumbraWidth);
+
+    return PossionSampleShadow(projCoords, layer, bias, penumbraWidth);
 }
 
 void main() {
