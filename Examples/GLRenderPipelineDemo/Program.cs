@@ -9,6 +9,7 @@ using Vertix.OpenGL.Windowing;
 
 WindowOptions windowOptions = GLGameWindow.DefaultGLWindowOptions;
 windowOptions.Size = new Silk.NET.Maths.Vector2D<int>(1280, 768);
+windowOptions.Samples = 0;
 
 new GameApplicationBuilder<GLRenderPipelineDemo.GameApplication>()
     .ConfigureWindow<MainWindow>(windowOptions)

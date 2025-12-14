@@ -23,6 +23,8 @@ internal class GraphicsResources : IDisposable
 
     public IShaderProgram GeometryPassShader { get; private set; }
 
+    public IShaderProgram AmbientOcclusionPassShader { get; private set; }
+
     public IShaderProgram DirectionalShadowPassShader { get; private set; }
 
     public IShaderProgram DirectionalLightingPassShader { get; private set; }
@@ -65,6 +67,10 @@ internal class GraphicsResources : IDisposable
         GeometryPassShader = graphicsDevice.CreateShaderProgram();
         GeometryPassShader.LoadGLSLShadersFromFiles(_GEOMETRY_PASS_SHADER);
         GeometryPassShader.Compile();
+
+        AmbientOcclusionPassShader = graphicsDevice.CreateShaderProgram();
+        AmbientOcclusionPassShader.LoadGLSLShadersFromFiles(_AMBIENT_OCCLUSION_PASS_SHADER);
+        AmbientOcclusionPassShader.Compile();
 
         DirectionalShadowPassShader = graphicsDevice.CreateShaderProgram();
         DirectionalShadowPassShader.LoadGLSLShadersFromFiles(_DIRECTIONAL_SHADOW_PASS_SHADER);
@@ -127,6 +133,12 @@ internal class GraphicsResources : IDisposable
     [
         (ShaderType.VertexShader, "Assets/Shaders/Passes/geometry_pass.vert"),
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/geometry_pass.frag"),
+    ];
+
+    internal static readonly (ShaderType, string)[] _AMBIENT_OCCLUSION_PASS_SHADER =
+    [
+        (ShaderType.VertexShader, "Assets/Shaders/screen_sample.vert"),
+        (ShaderType.FragmentShader, "Assets/Shaders/Passes/ambient_occlusion_pass.frag"),
     ];
 
     internal static readonly (ShaderType, string)[] _DIRECTIONAL_SHADOW_PASS_SHADER =

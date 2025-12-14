@@ -22,10 +22,11 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         _graphicsResources = graphicsResources;
 
         AddPass(new GeometryPass(graphicsResources.GeometryPassShader, graphicsResources));
+        AddPass(new AmbientOcclusionPass(graphicsResources.AmbientOcclusionPassShader, graphicsResources));
         AddPass(new DirectionalShadowPass(graphicsResources.DirectionalShadowPassShader, graphicsResources));
         AddPass(new DirectionalLightingPass(graphicsResources.DirectionalLightingPassShader, graphicsResources));
 
-        //_graphicsResources.ScreenSampleShader.Parameters["isSingleValue"].SetValue(true);
+        _graphicsResources.ScreenSampleShader.Parameters["isSingleValue"].SetValue(true);
     }
 
     public override void FinalDraw()
@@ -43,6 +44,10 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         _graphicsDevice.BindTexture(1, RenderContext.GBufferTarget?.TargetTextures[1]);
         _graphicsDevice.BindTexture(2, RenderContext.GBufferTarget?.TargetTextures[2]);
         _graphicsDevice.BindTexture(3, RenderContext.DirectionalLightingTarget?.TargetTextures[0]);
+        _graphicsDevice.BindTexture(4, RenderContext.AmbientOcclusionTarget?.TargetTextures[0]);
+
+        //_graphicsDevice.UseShaderProgram(_graphicsResources.ScreenSampleShader);
+        //_graphicsDevice.BindTexture(0, RenderContext.AmbientOcclusionTarget?.TargetTextures[0]);
 
         _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
         _graphicsDevice.BindTexture(0, null);

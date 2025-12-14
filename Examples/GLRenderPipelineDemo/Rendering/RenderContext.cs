@@ -41,6 +41,8 @@ internal class RenderContext
 
     public IRenderTarget? DirectionalLightingTarget { get; set; }
 
+    public IRenderTarget? AmbientOcclusionTarget { get; set; }
+
     public RenderContext(IWindow window)
     {
         CoreWindow = window;

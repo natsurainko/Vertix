@@ -37,7 +37,7 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
         if (_graphicsDevice == null || _context == null || _renderTarget == null) return;
 
         _graphicsDevice.BindRenderTarget(_renderTarget);
-        _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
+        _graphicsDevice.Clear(ClearBufferMask.Depth);
 
         _graphicsDevice.Viewport(ShadowMapSize);
         _graphicsDevice.UseShaderProgram(_shaderProgram);

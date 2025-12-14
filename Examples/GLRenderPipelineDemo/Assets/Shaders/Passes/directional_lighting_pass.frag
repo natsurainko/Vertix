@@ -119,7 +119,7 @@ float PossionSampleShadow(vec3 projCoords, float layer, float bias, float search
 
 float CalculateShadow() {
     vec3 fragPos = texture(gPosition, TexCoord).rgb;
-    vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
+    vec3 normal = texture(gNormal, TexCoord).rgb;
     vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
 
     vec4 fragPosViewSpace = view * vec4(fragPos, 1.0);

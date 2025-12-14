@@ -255,6 +255,21 @@ public readonly struct GLShaderParameter : IShaderParameter
                     _gL.ProgramUniform1(_handle, _location, length, (double*)ptr);
                 break;
 
+            case UniformType.FloatVec2:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform2(_handle, _location, length, (float*)ptr);
+                break;
+
+            case UniformType.FloatVec3:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform3(_handle, _location, length, (float*)ptr);
+                break;
+
+            case UniformType.FloatVec4:
+                fixed (void* ptr = values)
+                    _gL.ProgramUniform4(_handle, _location, length, (float*)ptr);
+                break;
+
             default:
                 throw new NotSupportedException($"Uniform type {UniformType} is not supported");
         }
