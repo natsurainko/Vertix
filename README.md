@@ -39,16 +39,17 @@ You can refer to the examples in the repository.
 #### Features
 + [x] Using RenderPipeline and RenderPass in rendering  
 + [x] Implement GeometryBuffer for deferred rendering  
-+ [x] Implement CSM (Cascaded Shadow Maps) for shadow maps  
-+ [x] Using possion disk in PCF shadow sample  
++ [x] Implement CSM (Cascaded Shadow Maps) for directional shadow maps  
++ [x] Implement PCSS (Percentage-Closer Soft Shadow) for directional shadow, using possion disk in PCF shadow sample
++ [x] Implement SSAO (Screen Space Ambient Occulsion)  
 + [x] Basic Blinn-Phong lighting model  
 + [x] Free perspective camera (moving mouse to rotate view, pressing wasd,shift to move position)  
 + [x] Configured assembly trimming and enabled AOT for publish  
 
 #### Screenshots
 
-<img width="1332" height="850" alt="img_1" src="https://github.com/user-attachments/assets/ae7bcaea-88c2-46d7-9f0c-886bf57c7e96" />
-<img width="1332" height="850" alt="img_2" src="https://github.com/user-attachments/assets/c056b61d-71fc-427b-a3a2-d493dd59f1df" />
+<img width="1332" height="850" alt="img_1" src="https://github.com/user-attachments/assets/e4fd2e88-bcc7-4c41-a3c0-a9a8a6ea6fc4" />
+<img width="1332" height="850" alt="img_2" src="https://github.com/user-attachments/assets/282815f6-cef5-4d30-89fa-414dd8215a1f" />
 
 ## Roadmap
 - [ ] Complete GUI system
