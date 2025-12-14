@@ -14,6 +14,9 @@ uniform vec3 viewPos;
 uniform vec3 lightDirection;
 
 float SampleAmbientOcclusion() {
+    return texture(gAmbientOcclusion, TexCoord).r;
+
+    /*
     vec2 texelSize = 1.0 / vec2(textureSize(gAmbientOcclusion, 0));
     float result = 0.0;
 
@@ -25,6 +28,7 @@ float SampleAmbientOcclusion() {
     }
 
     return result / 16.0;
+    */
 }
 
 void main() {

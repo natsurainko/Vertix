@@ -16,7 +16,7 @@ uniform int kernelSize = 32;
 uniform vec3 samples[64];
 uniform vec2 noiseScale;
 
-float radius = 0.5;
+float radius = 5;
 float bias = 0.025;
 
 void main() {
@@ -68,5 +68,5 @@ void main() {
     }
     occlusion = 1.0 - (occlusion / float(kernelSize));
 
-    fColor = pow(occlusion, 0.75);
+    fColor = pow(occlusion, 0.35);
 }
