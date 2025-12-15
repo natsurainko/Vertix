@@ -18,6 +18,7 @@ uniform vec3 lightDirection;
 uniform float cascadePlaneDistances[8];
 uniform int cascadeCount;
 uniform float farPlane;
+uniform vec2 shadowMapTexelSize;
 
 uniform float lightSize = 0.15;
 
@@ -62,7 +63,7 @@ vec2 RotateVector(vec2 v, float angle) {
     return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
 }
 
-float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texelSize) {
+float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer) {
     vec3 lightDir = normalize(-lightDirection);
 
     vec4 shadowPos = lightSpaceMatrices[layer] * vec4(fragPos, 1.0);
@@ -71,10 +72,10 @@ float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texe
     vec3 dx = dFdx(shadowCoord);
     vec3 dy = dFdy(shadowCoord);
     
-    float dudx = dx.x * texelSize.x;
-    float dudy = dy.x * texelSize.y;
-    float dvdx = dx.y * texelSize.x;
-    float dvdy = dy.y * texelSize.y;
+    float dudx = dx.x * shadowMapTexelSize.x;
+    float dudy = dy.x * shadowMapTexelSize.y;
+    float dvdx = dx.y * shadowMapTexelSize.x;
+    float dvdy = dy.y * shadowMapTexelSize.y;
     
     float biasScale = max(abs(dudx), abs(dudy));
     float normalBias = clamp(1.0 - dot(normal, lightDir), 0.0, 1.0);
@@ -82,7 +83,7 @@ float CalculateReceiverPlaneBias(vec3 fragPos, vec3 normal, int layer, vec2 texe
     return biasScale * normalBias * 2.0 + 0.0002;
 }
 
-float FindBlockDepth(vec3 projCoords, float layer, vec2 texelSize) {
+float FindBlockDepth(vec3 projCoords, float layer) {
     const float c = 75.0;
 
     float searchWidth = lightSize * projCoords.z * c;
@@ -90,7 +91,7 @@ float FindBlockDepth(vec3 projCoords, float layer, vec2 texelSize) {
     float blockerCount = 0.01;
 
     for (int i = 0; i < 16; ++i) {
-        vec2 offset = poissonDisk[i] * texelSize * searchWidth;
+        vec2 offset = poissonDisk[i] * shadowMapTexelSize * searchWidth;
         float depth = texture(shadowMap, vec3(projCoords.xy + offset, layer)).r;
         
         if (depth < projCoords.z) {
@@ -120,7 +121,6 @@ float PossionSampleShadow(vec3 projCoords, float layer, float bias, float search
 float CalculateShadow() {
     vec3 fragPos = texture(gPosition, TexCoord).rgb;
     vec3 normal = texture(gNormal, TexCoord).rgb;
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
 
     vec4 fragPosViewSpace = view * vec4(fragPos, 1.0);
     float depthValue = abs(fragPosViewSpace.z);
@@ -139,8 +139,8 @@ float CalculateShadow() {
 
     if (projCoords.z > 1.0) return 0.0;
 
-    float bias = CalculateReceiverPlaneBias(fragPos, normal, layer, texelSize);
-    float blockDepth = FindBlockDepth(projCoords, layer, texelSize);
+    float bias = CalculateReceiverPlaneBias(fragPos, normal, layer);
+    float blockDepth = FindBlockDepth(projCoords, layer);
 
     if (blockDepth < 0.0) return 0.0;
 

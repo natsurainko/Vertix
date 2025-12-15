@@ -1,4 +1,5 @@
 ﻿using Silk.NET.Maths;
+using System.Numerics;
 using Vertix.Graphics;
 using Vertix.Rendering;
 
@@ -31,6 +32,7 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
 
         _shaderProgram.Parameters["cascadeCount"].SetValue(4);
         _shaderProgram.Parameters["cascadePlaneDistances"].SetValues(_context.CascadePlaneDistances, 4);
+        _shaderProgram.Parameters["shadowMapTexelSize"].SetValue(new Vector2(1f / _context.ShadowMapSize.X, 1f / _context.ShadowMapSize.Y));
     }
 
     public override void Execute()

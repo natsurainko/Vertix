@@ -24,10 +24,10 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
 
         Vector2D<uint> size = renderContext.WindowRectangle.Size.As<uint>();
 
-        _renderTarget = _graphicsDevice!.CreateRenderTarget(size);
+        _renderTarget = _graphicsDevice!.CreateRenderTarget(size / 2);
         _texture2D = _graphicsDevice.CreateTexture2D();
 
-        _texture2D.Initialize(size, TextureFormat.R32f);
+        _texture2D.Initialize(size, TextureFormat.R16f);
         _renderTarget.AttachTargetTexture(_texture2D, RenderTargetAttachment.Color);
 
         _renderTarget.Initialize();
@@ -38,11 +38,14 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
         _shaderProgram.Parameters["samples"].SetValues(GenerateSsaoKernel(KernelSize), (uint)KernelSize);
         _shaderProgram.Parameters["kernelSize"].SetValue(KernelSize);
         _shaderProgram.Parameters["noiseScale"].SetValue(new Vector2(size.X / 4f, size.Y / 4f));
+
+        _renderTarget.ClearTargetTexture(ClearBufferMask.Color, 0, new Vector4(1, 0, 0, 0));
     }
 
     public override void Execute()
     {
         if (_graphicsDevice == null || _context == null || _renderTarget == null) return;
+        if (!_context.EnableAmbientOcclusion) return;
 
         _graphicsDevice.BindRenderTarget(_renderTarget);
         _graphicsDevice.Clear(ClearBufferMask.Color);
@@ -87,7 +90,7 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
             float scale = i / (float)count;
 
             // scale samples s.t. they're more aligned to center of kernel
-            scale = ourLerp(0.1f, 1.0f, scale * scale);
+            scale = ourLerp(0.15f, 1.0f, scale * scale);
             sample *= scale;
             ssaoKernel.Add(sample);
         }
@@ -98,7 +101,7 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
     private ITexture2D GenerateNoiseTexture(int w = 4, int h = 4)
     {
         int count = w * h;
-        Span<Vector4> ssaoNoise = stackalloc Vector4[count];
+        Span<Vector3> ssaoNoise = stackalloc Vector3[count];
 
         for (int i = 0; i < w * h; i++)
         {
@@ -106,14 +109,13 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
             (
                 Random.Shared.NextSingle() * 2.0f - 1.0f,
                 Random.Shared.NextSingle() * 2.0f - 1.0f,
-                0f,
                 0f
             );
         }
 
         Vector2D<uint> size = new((uint)w, (uint)h);
         ITexture2D noiseTexture = _graphicsDevice!.CreateTexture2D();
-        noiseTexture.Initialize(size, TextureFormat.Rgba32f);
+        noiseTexture.Initialize(size, TextureFormat.Rgb16f);
         noiseTexture.SetData(size, Vector2D<int>.Zero, ssaoNoise);
 
         return noiseTexture;

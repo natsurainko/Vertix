@@ -43,6 +43,10 @@ internal class RenderContext
 
     public IRenderTarget? AmbientOcclusionTarget { get; set; }
 
+    public bool EnableAmbientOcclusion { get; set; } = true;
+
+    public Vector2D<int> ShadowMapSize { get; init; } = new(2048, 2048);
+
     public RenderContext(IWindow window)
     {
         CoreWindow = window;
