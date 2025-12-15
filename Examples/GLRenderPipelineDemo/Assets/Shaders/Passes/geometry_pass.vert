@@ -11,17 +11,20 @@ uniform mat4 world;
 uniform mat4 view;
 uniform mat4 projection;
 
-out vec3 FragPos;
+out vec4 FragPos;
 out vec3 Normal;
 out vec2 TexCoord;
 
 void main()
 {
     vec4 worldPos = world * vec4(vPosition, 1.0);
+    vec4 viewPos = view * worldPos;
 
-    FragPos = worldPos.xyz;
+    FragPos.xyz = worldPos.xyz;
+    FragPos.w = -viewPos.z;
+
     Normal = mat3(transpose(inverse(world))) * vNormal;
     TexCoord = vTexCoord;
 
-    gl_Position = projection * view * worldPos;
+    gl_Position = projection * viewPos;
 }

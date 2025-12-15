@@ -52,8 +52,7 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
 
         _graphicsDevice.BindTexture(0, _context.GBufferTarget?.TargetTextures[0]);
         _graphicsDevice.BindTexture(1, _context.GBufferTarget?.TargetTextures[1]);
-        _graphicsDevice.BindTexture(2, _context.GBufferTarget?.TargetTextures[3]);
-        _graphicsDevice.BindTexture(3, _noiseTexture2D);
+        _graphicsDevice.BindTexture(2, _noiseTexture2D);
 
         _shaderProgram.Parameters["view"].SetValue(_context.CameraViewMatrix);
         _shaderProgram.Parameters["projection"].SetValue(_context.CameraProjectionMatrix);

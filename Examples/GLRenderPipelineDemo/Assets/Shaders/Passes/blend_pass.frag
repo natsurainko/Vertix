@@ -36,7 +36,7 @@ void main() {
     vec3 normal = texture(gNormal, TexCoord).rgb;
     vec3 color = texture(gAlbedoSpec, TexCoord).rgb;
     
-    if (fragPos.a == 0.0) {
+    if (fragPos.a < 0) {
         discard;
         return;
     }

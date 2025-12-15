@@ -6,8 +6,7 @@ layout (location = 0) out float fColor;
 
 layout (binding = 0) uniform sampler2D gPosition;
 layout (binding = 1) uniform sampler2D gNormal;
-layout (binding = 2) uniform sampler2D gDepth;
-layout (binding = 3) uniform sampler2D texNoise;
+layout (binding = 2) uniform sampler2D texNoise;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -21,8 +20,10 @@ float bias = 0.025;
 
 void main() {
     vec4 fragPos = texture(gPosition, TexCoord);
+    vec3 fragPosWorld = fragPos.rgb;
+    float linearDepth = fragPos.a;
 
-    if (fragPos.a == 0.0) {
+    if (fragPos.a < 0) {
         fColor = 1.0;
         return;
     }
@@ -30,13 +31,14 @@ void main() {
     vec3 normal = texture(gNormal, TexCoord).rgb;
     vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz);
 
-    vec4 fragPosViewSpace = view * vec4(fragPos.xyz, 1.0);
+    vec4 fragPosViewSpace = view * vec4(fragPosWorld.xyz, 1.0);
     vec3 viewNormal = normalize(mat3(view) * normal);
 
     // create TBN change-of-basis matrix: from tangent-space to view-space
     vec3 tangent = normalize(randomVec - viewNormal * dot(randomVec, viewNormal));
     vec3 bitangent = cross(viewNormal, tangent);
     mat3 TBN = mat3(tangent, bitangent, viewNormal);
+
     // iterate over the sample kernel and calculate occlusion factor
     float occlusion = 0.0;
     for(int i = 0; i < kernelSize; ++i)
@@ -51,20 +53,16 @@ void main() {
         offset.xyz /= offset.w; // perspective divide
         offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
 
-        if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0)
-            continue;
-
-        float sampledDepth = texture(gDepth, offset.xy).r;
-        if (sampledDepth >= 1.0) continue;
+        if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0) continue;
 
         // get sample depth
-        vec4 samplePosWorld = texture(gPosition, offset.xy);
-        vec4 samplePosView = view * vec4(samplePosWorld.xyz, 1.0);
-        float sampleDepth = samplePosView.z;
+        float neighborLinearDepth = texture(gPosition, offset.xy).a;
+        if (neighborLinearDepth < 0) continue;
 
         // range check & accumulate
-        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPosViewSpace.z - sampleDepth));
-        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;           
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(linearDepth - neighborLinearDepth));
+        if (-samplePos.z >= neighborLinearDepth + bias)
+            occlusion += 1.0 * rangeCheck;
     }
     occlusion = 1.0 - (occlusion / float(kernelSize));
 

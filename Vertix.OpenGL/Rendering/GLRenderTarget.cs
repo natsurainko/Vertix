@@ -2,9 +2,11 @@
 using Silk.NET.OpenGL;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Vertix.Graphics;
 using Vertix.OpenGL.Graphics;
 using Vertix.Rendering;
+using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 
 namespace Vertix.OpenGL.Rendering;
 
@@ -88,6 +90,16 @@ public class GLRenderTarget : IRenderTarget
         }
 
         return framebufferAttachment;
+    }
+
+    public unsafe void ClearTargetTexture(ClearBufferMask buffers, int index, Vector4 color = default, float depth = 1, int stencil = 0)
+    {
+        if ((buffers & ClearBufferMask.Color) == ClearBufferMask.Color)
+            _gL.ClearNamedFramebuffer(FrameBufferHandle, BufferKind.Color, index, &color.X);
+        if ((buffers & ClearBufferMask.Depth) == ClearBufferMask.Depth)
+            _gL.ClearNamedFramebuffer(FrameBufferHandle, BufferKind.Depth, 0, in depth);
+        if ((buffers & ClearBufferMask.Stencil) == ClearBufferMask.Stencil)
+            _gL.ClearNamedFramebuffer(FrameBufferHandle, BufferKind.Stencil, 0, in stencil);
     }
 
     public void Dispose()

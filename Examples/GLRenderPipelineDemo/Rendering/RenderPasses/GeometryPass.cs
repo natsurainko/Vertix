@@ -1,4 +1,5 @@
 ﻿using Silk.NET.Maths;
+using System.Numerics;
 using Vertix.Engine;
 using Vertix.Graphics;
 using Vertix.Rendering;
@@ -14,6 +15,8 @@ internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources grap
     private readonly IShaderProgram _shaderProgram = shaderProgram;
     private readonly GraphicsResources _graphicsResources = graphicsResources;
 
+    private static Vector4 _gPositionClearColor = new(0, 0, 0, -1);
+
     public override string Name => "GeometryPass";
 
     public override void Initialize(IGraphicsDevice graphicsDevice, RenderContext renderContext)
@@ -25,7 +28,7 @@ internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources grap
         _renderTarget = _graphicsDevice!.CreateRenderTarget(size);
         _texture2Ds = _graphicsDevice.CreateTexture2Ds(4);
 
-        // Position - RGB: World Position (xyz) - A: Unused
+        // Position - RGB: World Position (xyz) - A: View Linear Depth
         _texture2Ds[0].Initialize(size, TextureFormat.Rgba16f);
         _renderTarget.AttachTargetTexture(_texture2Ds[0], RenderTargetAttachment.Color);
 
@@ -51,6 +54,7 @@ internal class GeometryPass(IShaderProgram shaderProgram, GraphicsResources grap
 
         _graphicsDevice.BindRenderTarget(_renderTarget);
         _graphicsDevice.Clear(ClearBufferMask.Color | ClearBufferMask.Depth | ClearBufferMask.Stencil);
+        _renderTarget.ClearTargetTexture(ClearBufferMask.Color, 0, _gPositionClearColor);
 
         _graphicsDevice.UseShaderProgram(_shaderProgram);
         _graphicsDevice.EnableFaceCulling = true;
