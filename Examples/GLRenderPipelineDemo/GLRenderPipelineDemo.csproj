@@ -36,6 +36,9 @@
     <None Update="Assets\Models\Plane.fbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Shaders\Passes\ambient_occlusion_pass.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Shaders\Passes\blend_pass.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
