@@ -20,7 +20,7 @@ public class RotationController
 
     public bool DettachObject(GameObject3D gameObject3D) => _object3Ds.Remove(gameObject3D);
 
-    private void OnUpdate(object? sender, double deltaTime)
+    protected virtual void OnUpdate(object? sender, double deltaTime)
     {
         if (_controllerInput.Value == Vector3.Zero)
             return;

@@ -60,7 +60,7 @@ internal class AmbientOcclusionPass(IShaderProgram shaderProgram, GraphicsResour
         _shaderProgram.Parameters["view"].SetValue(_context.CameraViewMatrix);
         _shaderProgram.Parameters["projection"].SetValue(_context.CameraProjectionMatrix);
 
-        _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
+        _graphicsDevice.DrawVertexArray(_graphicsResources.QuadVertexArray, PrimitiveType.TriangleStrip, 0, 4);
     }
 
     public override void Dispose()

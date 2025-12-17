@@ -52,7 +52,7 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _graphicsDevice.BindTexture(2, _context.DirectionalShadowTarget?.TargetTextures[0]);
         _graphicsDevice.BindTextureSampler(2, _graphicsResources.NearestSampler);
 
-        _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
+        _graphicsDevice.DrawVertexArray(_graphicsResources.QuadVertexArray, PrimitiveType.TriangleStrip, 0, 4);
         _graphicsDevice.BindTextureSampler(2, null);
     }
 

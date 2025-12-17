@@ -6,13 +6,13 @@ using Vertix.OpenGL.Helpers;
 
 namespace Vertix.OpenGL.Graphics;
 
-public record struct GLVertexArray : IVertexArray
+public record class GLVertexArray : IVertexArray
 {
     private readonly GL _gL;
     private readonly uint _handle;
     private readonly Dictionary<uint, IGraphicsBuffer> _attachedBuffers = [];
 
-    public readonly uint Handle => _handle;
+    public uint Handle => _handle;
 
     public IGraphicsBuffer? VertexBuffer { get; private set; }
 
@@ -20,7 +20,7 @@ public record struct GLVertexArray : IVertexArray
 
     public bool Initialized { get; private set; }
 
-    public readonly IReadOnlyDictionary<uint, IGraphicsBuffer> AttachedBuffers => _attachedBuffers;
+    public IReadOnlyDictionary<uint, IGraphicsBuffer> AttachedBuffers => _attachedBuffers;
 
     public GLVertexArray(GL gl)
     {
@@ -38,7 +38,7 @@ public record struct GLVertexArray : IVertexArray
         in IGraphicsBuffer? indexBuffer = null, nint vertexBufferOffset = 0) where T : unmanaged
     {
         if (vertexBuffer is not GLGraphicsBuffer gLVertexBuffer) throw new InvalidOperationException();
-        GLGraphicsBuffer? gLIndexBuffer = indexBuffer as GLGraphicsBuffer?;
+        GLGraphicsBuffer? gLIndexBuffer = indexBuffer as GLGraphicsBuffer;
 
         this.VertexBuffer = vertexBuffer;
         this.IndexBuffer = indexBuffer;
@@ -48,7 +48,7 @@ public record struct GLVertexArray : IVertexArray
         _gL.VertexArrayVertexBuffer(_handle, 0, gLVertexBuffer.Handle, vertexBufferOffset, (uint)sizeof(T));
 
         if (gLIndexBuffer != null)
-            _gL.VertexArrayElementBuffer(_handle, gLIndexBuffer.Value.Handle);
+            _gL.VertexArrayElementBuffer(_handle, gLIndexBuffer.Handle);
 
         uint offset = 0;
 
@@ -66,7 +66,7 @@ public record struct GLVertexArray : IVertexArray
         }
     }
 
-    public readonly unsafe void AttachInstanceBuffer<T>(in IGraphicsBuffer instanceBuffer,
+    public unsafe void AttachInstanceBuffer<T>(in IGraphicsBuffer instanceBuffer,
         ReadOnlySpan<VertexArrayProperty> properties, uint instancedDivisor = 1, nint bufferOffset = 0, uint? targetBindingIndex = null) where T : unmanaged
     {
         if (instanceBuffer is not GLGraphicsBuffer gLGraphicsBuffer) throw new InvalidOperationException();
@@ -94,7 +94,7 @@ public record struct GLVertexArray : IVertexArray
         _gL.VertexArrayBindingDivisor(_handle, bindingIndex, instancedDivisor);
     }
 
-    public readonly void DetachBuffer(in IGraphicsBuffer instanceBuffer)
+    public void DetachBuffer(in IGraphicsBuffer instanceBuffer)
     {
         foreach ((uint bindingIndex, IGraphicsBuffer buffer) in _attachedBuffers)
         {
@@ -107,9 +107,9 @@ public record struct GLVertexArray : IVertexArray
         }
     }
 
-    public readonly void Bind() => _gL.BindVertexArray(_handle);
+    public void Bind() => _gL.BindVertexArray(_handle);
 
-    public readonly void Dispose()
+    public void Dispose()
     {
         VertexBuffer?.Dispose();
         IndexBuffer?.Dispose();
@@ -117,7 +117,7 @@ public record struct GLVertexArray : IVertexArray
         _gL?.DeleteVertexArray(_handle);
     }
 
-    private readonly uint GetAvailableBindingIndex()
+    private uint GetAvailableBindingIndex()
     {
         uint start = 1;
 

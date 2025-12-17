@@ -49,7 +49,7 @@ internal class RenderPipeline : Vertix.Rendering.RenderPipeline<RenderContext>
         //_graphicsDevice.UseShaderProgram(_graphicsResources.ScreenSampleShader);
         //_graphicsDevice.BindTexture(0, RenderContext.AmbientOcclusionTarget?.TargetTextures[0]);
 
-        _graphicsDevice.DrawVertexArray(_graphicsResources.RectangleVertexArray, PrimitiveType.TriangleStrip, 0, 4);
+        _graphicsDevice.DrawVertexArray(_graphicsResources.QuadVertexArray, PrimitiveType.TriangleStrip, 0, 4);
         _graphicsDevice.BindTexture(0, null);
     }
 }

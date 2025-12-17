@@ -41,7 +41,7 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
 
         _graphicsDevice.Viewport(_context.ShadowMapSize);
         _graphicsDevice.UseShaderProgram(_shaderProgram);
-        _graphicsDevice.EnableFaceCulling = true;
+        _graphicsDevice.EnableFaceCulling = false;
 
         _graphicsResources.LightSpaceMatircesBuffer.Fill(0, 5, _context.LightSpaceMatrices);
 

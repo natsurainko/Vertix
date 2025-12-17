@@ -4,13 +4,13 @@ using Vertix.Graphics;
 
 namespace Vertix.OpenGL.Graphics;
 
-public partial struct GLGraphicsBuffer : IGraphicsBuffer
+public partial class GLGraphicsBuffer : IGraphicsBuffer
 {
     private readonly GL _gL;
     private readonly uint _handle;
     private BufferStorageMask _storageFlags;
 
-    public readonly uint Handle => _handle;
+    public uint Handle => _handle;
 
     public bool Initialized { get; private set; }
 
@@ -34,7 +34,7 @@ public partial struct GLGraphicsBuffer : IGraphicsBuffer
         this.Initialized = true;
     }
 
-    public readonly unsafe void Fill<T>(nint offset, int length, ReadOnlySpan<T> data) where T : unmanaged
+    public unsafe void Fill<T>(nint offset, int length, ReadOnlySpan<T> data) where T : unmanaged
     {
         if (!Initialized || ((_storageFlags & BufferStorageMask.DynamicStorageBit) != BufferStorageMask.DynamicStorageBit))
             throw new InvalidOperationException("Buffer is not initialized with dynamic storage flag.");
@@ -42,7 +42,7 @@ public partial struct GLGraphicsBuffer : IGraphicsBuffer
         _gL.NamedBufferSubData(_handle, offset, (uint)(length * sizeof(T)), data[..length]);
     }
 
-    public readonly void BindAsUniform(uint bindingIndex) => _gL.BindBufferBase(BufferTargetARB.UniformBuffer, bindingIndex, _handle);
+    public void BindAsUniform(uint bindingIndex) => _gL.BindBufferBase(BufferTargetARB.UniformBuffer, bindingIndex, _handle);
 
     public void Dispose()
     {
@@ -50,7 +50,7 @@ public partial struct GLGraphicsBuffer : IGraphicsBuffer
     }
 }
 
-public partial struct GLGraphicsBuffer
+public partial class GLGraphicsBuffer
 {
     public unsafe void Initialize<T>(int length, BufferStorageMask flags, ReadOnlySpan<T> data) where T : unmanaged
     {

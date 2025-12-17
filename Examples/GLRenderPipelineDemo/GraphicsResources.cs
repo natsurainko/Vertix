@@ -11,7 +11,7 @@ namespace GLRenderPipelineDemo;
 
 internal class GraphicsResources : IDisposable
 {
-    public IVertexArray RectangleVertexArray { get; private set; }
+    public IVertexArray QuadVertexArray { get; private set; }
 
     public IGraphicsBatcher<Vertex2D.InstanceTransform2D> RectangleBatcher { get; private set; }
 
@@ -43,13 +43,13 @@ internal class GraphicsResources : IDisposable
         IGraphicsBuffer vertexBuffer = graphicsDevice.CreateGraphicsBuffer();
         IGraphicsBuffer indexBuffer = graphicsDevice.CreateGraphicsBuffer();
 
-        vertexBuffer.Initialize(RectangleVertices.Length, (uint)BufferStorageMask.None, RectangleVertices);
+        vertexBuffer.Initialize(Vertex2D.QuadVertices.Length, (uint)BufferStorageMask.None, Vertex2D.QuadVertices);
         //indexBuffer.Initialize(RectangleIndices.Length, (uint)BufferStorageMask.None, RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
-        RectangleVertexArray = vertexArray;
+        QuadVertexArray = vertexArray;
         RectangleBatcher = graphicsDevice.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
-            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)RectangleVertices.Length);
+            Vertex2D.InstanceTransform2D.DefaultProperties, (uint)Vertex2D.QuadVertices.Length);
         RectangleBatcher.PrimitiveType = Vertix.Graphics.PrimitiveType.TriangleStrip;
 
         //Basic2DShader = graphicsDevice.CreateShaderProgram();
@@ -158,13 +158,5 @@ internal class GraphicsResources : IDisposable
     [
         (ShaderType.VertexShader, "Assets/Shaders/screen_sample.vert"),
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/blend_pass.frag"),
-    ];
-
-    internal static readonly Vertex2D[] RectangleVertices =
-    [
-        new() { Position = new(-1, 1, 0), TextureCoord = new(0, 1) },
-        new() { Position = new(-1, -1, 0), TextureCoord = new(0, 0) },
-        new() { Position = new(1, 1, 0), TextureCoord = new(1, 1) },
-        new() { Position = new(1, -1, 0), TextureCoord = new(1, 0) },
     ];
 }

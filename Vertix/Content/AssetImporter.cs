@@ -111,7 +111,7 @@ public class AssetImporter : IDisposable
 
     #region Texture Import
 
-    public ITexture2D LoadImageTexture(IGraphicsDevice graphicsDevice, string filePath, TextureFormat textureFormat = TextureFormat.Bgra8)
+    public ITexture2D LoadImageTexture(IGraphicsDevice graphicsDevice, string filePath, TextureFormat textureFormat = TextureFormat.Rgba8)
     {
         ITexture2D texture = graphicsDevice.CreateTexture2D();
 
@@ -164,6 +164,57 @@ public class AssetImporter : IDisposable
         texture.SetData(size, Vector2D<int>.Zero, bitmap.GetPixelSpan());
 
         return texture;
+    }
+
+    public void LoadImageTexture(ITexture2D texture2D, string filePath, TextureFormat textureFormat = TextureFormat.Rgba8)
+    {
+        using SKCodec sKCodec = SKCodec.Create(filePath);
+        SKImageInfo sKImageInfo = sKCodec.Info;
+
+        sKImageInfo.ColorType = textureFormat switch
+        {
+            TextureFormat.R8 => SKColorType.R8Unorm,
+            //TextureFormat.R16 => SKColorType.Alpha16,
+
+            TextureFormat.RG8 => SKColorType.Rg88,
+            TextureFormat.RG16 => SKColorType.Rg1616,
+
+            //TextureFormat.Rgb8 => SKColorType.Rgb888x,
+            //TextureFormat.Bgr8 => SKColorType.Bgr101010x,
+
+            TextureFormat.Rgba8 => SKColorType.Rgba8888,
+            TextureFormat.Bgra8 => SKColorType.Bgra8888,
+            TextureFormat.Rgba16 => SKColorType.Rgba16161616,
+            //TextureFormat.Bgra16 => SKColorType.Rgba16161616,
+
+            //TextureFormat.Srgb8 => SKColorType.Srgba8888,
+            TextureFormat.Srgb8Alpha8 => SKColorType.Srgba8888,
+
+            //TextureFormat.R16f => SKColorType.AlphaF16,
+            TextureFormat.RG16f => SKColorType.RgF16,
+
+            //TextureFormat.Rgb16f => SKColorType.RgbaF16,
+            //TextureFormat.Rgb32f => SKColorType.RgbaF32,
+
+            TextureFormat.Rgba16f => SKColorType.RgbaF16,
+            TextureFormat.Rgba32f => SKColorType.RgbaF32,
+
+            _ => throw new NotSupportedException($"TextureFormat {textureFormat} is not supported")
+        };
+        sKImageInfo.AlphaType = textureFormat switch
+        {
+            TextureFormat.R8 => SKAlphaType.Opaque,
+            TextureFormat.RG8 => SKAlphaType.Opaque,
+            TextureFormat.RG16 => SKAlphaType.Opaque,
+            TextureFormat.RG16f => SKAlphaType.Opaque,
+            _ => sKImageInfo.AlphaType,
+        };
+
+        using SKBitmap bitmap = SKBitmap.Decode(sKCodec, sKImageInfo);
+        Vector2D<uint> size = new((uint)bitmap.Width, (uint)bitmap.Height);
+
+        texture2D.Initialize(size, textureFormat);
+        texture2D.SetData(size, Vector2D<int>.Zero, bitmap.GetPixelSpan());
     }
 
     #endregion

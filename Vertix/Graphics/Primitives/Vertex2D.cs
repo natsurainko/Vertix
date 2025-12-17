@@ -39,4 +39,12 @@ public record struct Vertex2D()
             new VertexArrayProperty<float>(4, 3),
         ];
     }
+
+    public static readonly Vertex2D[] QuadVertices =
+    [
+        new() { Position = new(-1, 1, 0), TextureCoord = new(0, 1) },
+        new() { Position = new(-1, -1, 0), TextureCoord = new(0, 0) },
+        new() { Position = new(1, 1, 0), TextureCoord = new(1, 1) },
+        new() { Position = new(1, -1, 0), TextureCoord = new(1, 0) },
+    ];
 }
