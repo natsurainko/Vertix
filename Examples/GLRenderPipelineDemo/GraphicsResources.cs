@@ -144,7 +144,7 @@ internal class GraphicsResources : IDisposable
     internal static readonly (ShaderType, string)[] _DIRECTIONAL_SHADOW_PASS_SHADER =
     [
         (ShaderType.VertexShader, "Assets/Shaders/Passes/directional_shadow_pass.vert"),
-        (ShaderType.GeometryShader, "Assets/Shaders/Passes/directional_shadow_pass.gemo"),
+        (ShaderType.GeometryShader, "Assets/Shaders/Passes/directional_shadow_pass.geom"),
         (ShaderType.FragmentShader, "Assets/Shaders/Passes/directional_shadow_pass.frag"),
     ];
 

@@ -1,6 +1,6 @@
 #version 450 core
 
-layout (location = 0) out vec4 gShadow;
+layout (location = 0) out float gShadow;
 
 in vec2 TexCoord;
 
@@ -13,11 +13,9 @@ layout (std140, binding = 0) uniform LightSpaceMatrices
     mat4 lightSpaceMatrices[8];
 };
 
-uniform mat4 view;
 uniform vec3 lightDirection;
 uniform float cascadePlaneDistances[8];
 uniform int cascadeCount;
-uniform float farPlane;
 uniform vec2 shadowMapTexelSize;
 
 uniform float lightSize = 0.15;
@@ -118,16 +116,10 @@ float PossionSampleShadow(vec3 projCoords, float layer, float bias, float search
     return shadow / 16.0;
 }
 
-float CalculateShadow() {
-    vec3 fragPos = texture(gPosition, TexCoord).rgb;
-    vec3 normal = texture(gNormal, TexCoord).rgb;
-
-    vec4 fragPosViewSpace = view * vec4(fragPos, 1.0);
-    float depthValue = abs(fragPosViewSpace.z);
-
+float CalculateShadow(vec3 fragPos, vec3 normal, float depth) {
     int layer = cascadeCount;
     for (int i = 0; i < cascadeCount; ++i) {
-        if (depthValue < cascadePlaneDistances[i]) {
+        if (depth < cascadePlaneDistances[i]) {
             layer = i;
             break;
         }
@@ -151,6 +143,9 @@ float CalculateShadow() {
 }
 
 void main() {
-    float shadow = CalculateShadow();
-    gShadow = vec4(vec3(shadow), 1.0);
+    vec4 fragPos = texture(gPosition, TexCoord);
+    if (fragPos.a < 0) return;
+    vec3 normal = texture(gNormal, TexCoord).rgb;
+
+    gShadow = CalculateShadow(fragPos.rgb, normal, fragPos.a);
 }

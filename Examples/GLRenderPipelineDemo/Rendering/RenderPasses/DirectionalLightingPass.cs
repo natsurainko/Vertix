@@ -24,7 +24,7 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _renderTarget = _graphicsDevice!.CreateRenderTarget(size);
         _texture2D = _graphicsDevice.CreateTexture2D();
 
-        _texture2D.Initialize(size, TextureFormat.Rgba16f);
+        _texture2D.Initialize(size, TextureFormat.R16f);
         _renderTarget.AttachTargetTexture(_texture2D, RenderTargetAttachment.Color);
 
         _renderTarget.Initialize();
@@ -45,7 +45,6 @@ internal class DirectionalLightingPass(IShaderProgram shaderProgram, GraphicsRes
         _graphicsDevice.UseShaderProgram(_shaderProgram);
         _graphicsDevice.EnableFaceCulling = false;
 
-        _shaderProgram.Parameters["view"].SetValue(_context.CameraViewMatrix);
         _shaderProgram.Parameters["lightDirection"].SetValue(_context.DirectionalLight.LightDirection);
 
         _graphicsDevice.BindTexture(0, _context.GBufferTarget?.TargetTextures[0]);

@@ -48,7 +48,7 @@
     <None Update="Assets\Shaders\Passes\directional_shadow_pass.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Shaders\Passes\directional_shadow_pass.gemo">
+    <None Update="Assets\Shaders\Passes\directional_shadow_pass.geom">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Shaders\Passes\directional_shadow_pass.vert">
