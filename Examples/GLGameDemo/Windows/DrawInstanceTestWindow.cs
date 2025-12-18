@@ -4,8 +4,8 @@ using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
 using System.Numerics;
-using Vertix.Content;
 using Vertix.Engine.Camera;
+using Vertix.Engine.Content;
 using Vertix.Graphics;
 using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Extensions;
@@ -20,7 +20,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
 {
     const int blockCountAsix = 128;
 
-    Model model;
+    Model? model;
     PerspectiveCamera Camera = new();
     IShaderProgram? shader;
 
@@ -34,8 +34,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
 
         var assetImporter = sp.GetRequiredService<AssetImporter>();
         model = assetImporter.LoadModel("Assets/Models/block.fbx");
-
-        Graphics.InitializeModelMeshesVertexArray(model);
+        model.InitializeMeshesVertexArray(Graphics);
 
         ITexture2D texture2D = Graphics.CreateTexture2D();
         texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
@@ -85,7 +84,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
     {
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.CornflowerBlue);
 
-        for (int i = 0; i < model.Meshes.Length; i++)
+        for (int i = 0; i < model!.Meshes.Length; i++)
         {
             Mesh mesh = model.Meshes[i];
             Graphics.DrawVertexElementsArrayInstanced(in mesh.VertexArray!, PrimitiveType.Triangles,

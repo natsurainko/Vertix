@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using Vertix.Engine.Extensions;
-using Vertix.Graphics.Primitives;
 
 namespace Vertix.Engine.Camera;
 

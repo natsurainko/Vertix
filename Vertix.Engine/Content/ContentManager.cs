@@ -6,7 +6,7 @@ using System.Text.Json;
 using Vertix.Graphics;
 using Vertix.Graphics.Primitives;
 
-namespace Vertix.Content;
+namespace Vertix.Engine.Content;
 
 public class ContentManager : IDisposable
 {
@@ -51,7 +51,7 @@ public class ContentManager : IDisposable
             ContentManifest.ModelContentDeclaration declaration = contentManifest.ModelDeclarations[i];
             Model model = _assetImporter.LoadModel(declaration.FilePath);
 
-            _graphicsDevice.InitializeModelMeshesVertexArray(in model);
+            model.InitializeMeshesVertexArray(_graphicsDevice);
             _models.Add(declaration.Key, model);
         }
     }

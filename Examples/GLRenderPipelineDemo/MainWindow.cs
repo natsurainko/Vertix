@@ -3,7 +3,7 @@ using GLRenderPipelineDemo.Rendering;
 using Silk.NET.Input;
 using Silk.NET.Windowing;
 using System.Numerics;
-using Vertix.Content;
+using Vertix.Engine.Content;
 using Vertix.Engine.Controller;
 using Vertix.Engine.Scene;
 using Vertix.Graphics;
@@ -36,8 +36,8 @@ internal class MainWindow(IWindow w, IGraphicsDevice d,
         Model planeModel = assetImporter.LoadModel("Assets/Models/Plane.fbx");
         Model blockModel = assetImporter.LoadModel("Assets/Models/Block.fbx");
 
-        Graphics.InitializeModelMeshesVertexArray(planeModel);
-        Graphics.InitializeModelMeshesVertexArray(blockModel);
+        planeModel.InitializeMeshesVertexArray(Graphics);
+        blockModel.InitializeMeshesVertexArray(Graphics);
 
         renderContext.SceneManager.AddObject(new SceneObject3D() { Model = planeModel });
         renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(0, 0.5f, 0) });

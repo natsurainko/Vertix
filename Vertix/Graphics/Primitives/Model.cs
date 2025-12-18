@@ -21,6 +21,22 @@ public record class Model
         }
     }
 
+    public void InitializeMeshesVertexArray(IGraphicsDevice graphicsDevice)
+    {
+        for (int i = 0; i < Meshes.Length; i++)
+        {
+            IGraphicsBuffer vertexBuffer = graphicsDevice.CreateGraphicsBuffer();
+            IGraphicsBuffer indexBuffer = graphicsDevice.CreateGraphicsBuffer();
+            IVertexArray vertexArray = graphicsDevice.CreateVertexArray();
+
+            vertexBuffer.Initialize(Meshes[i].Vertices.Length, 0, Meshes[i].Vertices);
+            indexBuffer.Initialize(Meshes[i].Indices.Length, 0, Meshes[i].Indices);
+            vertexArray.Initialize<Vertex>(vertexBuffer, Vertex.DefaultProperties, indexBuffer);
+
+            Meshes[i].VertexArray = vertexArray;
+        }
+    }
+
     public void DisposeMeshesVertexArray()
     {
         for (int i = 0; i < Meshes.Length; i++)

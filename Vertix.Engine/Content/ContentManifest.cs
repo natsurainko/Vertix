@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Vertix.Graphics;
 
-namespace Vertix.Content;
+namespace Vertix.Engine.Content;
 
 public class ContentManifest
 {

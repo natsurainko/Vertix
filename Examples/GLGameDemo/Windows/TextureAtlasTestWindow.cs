@@ -4,7 +4,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Drawing;
 using System.Numerics;
-using Vertix.Content;
+using Vertix.Engine.Content;
 using Vertix.Extensions;
 using Vertix.Graphics;
 using Vertix.Graphics.Primitives;

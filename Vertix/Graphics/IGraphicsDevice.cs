@@ -1,7 +1,6 @@
 ﻿using Silk.NET.Maths;
 using System;
 using System.Drawing;
-using Vertix.Graphics.Primitives;
 using Vertix.Rendering;
 
 namespace Vertix.Graphics;
@@ -44,8 +43,6 @@ public interface IGraphicsDevice : IDisposable
 
     IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 128)
         where TInstance : unmanaged;
-
-    void InitializeModelMeshesVertexArray(in Model model);
 
     void DrawVertexArray(in IVertexArray vertexArray, PrimitiveType primitiveType, int start, uint count);
 

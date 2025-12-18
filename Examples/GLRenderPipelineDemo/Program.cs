@@ -3,7 +3,7 @@ using GLRenderPipelineDemo.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Silk.NET.Windowing;
-using Vertix.Content;
+using Vertix.Engine.Content;
 using Vertix.Host;
 using Vertix.OpenGL.Windowing;
 

@@ -176,29 +176,29 @@ public partial class GLGraphicsDevice : IGraphicsDevice
     public IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 4096)
         where TInstance : unmanaged => new GLGraphicsBatcher<TInstance>(this, vertexArray, properties, verticesOrIndicesCount, capacity);
 
-    public unsafe void InitializeModelMeshesVertexArray(in Model model)
-    {
-        int meshLength = model.Meshes.Length;
-        Span<uint> vertexArrays = stackalloc uint[meshLength];
-        Span<uint> buffers = stackalloc uint[meshLength * 2];
-        GL.CreateVertexArrays((uint)meshLength, vertexArrays);
-        GL.CreateBuffers((uint)(meshLength * 2), buffers);
+    //public unsafe void InitializeModelMeshesVertexArray(in Model model)
+    //{
+    //    int meshLength = model.Meshes.Length;
+    //    Span<uint> vertexArrays = stackalloc uint[meshLength];
+    //    Span<uint> buffers = stackalloc uint[meshLength * 2];
+    //    GL.CreateVertexArrays((uint)meshLength, vertexArrays);
+    //    GL.CreateBuffers((uint)(meshLength * 2), buffers);
 
-        for (int i = 0; i < model.Meshes.Length; i++)
-        {
-            Mesh mesh = model.Meshes[i];
+    //    for (int i = 0; i < model.Meshes.Length; i++)
+    //    {
+    //        Mesh mesh = model.Meshes[i];
 
-            GLGraphicsBuffer vertexBuffer = new(GL, buffers[i * 2]);
-            GLGraphicsBuffer indexBuffer = new(GL, buffers[(i * 2) + 1]);
-            GLVertexArray vertexArray = new(GL, vertexArrays[i]);
+    //        GLGraphicsBuffer vertexBuffer = new(GL, buffers[i * 2]);
+    //        GLGraphicsBuffer indexBuffer = new(GL, buffers[(i * 2) + 1]);
+    //        GLVertexArray vertexArray = new(GL, vertexArrays[i]);
 
-            vertexBuffer.Initialize(mesh.Vertices.Length, (uint)BufferStorageMask.None, mesh.Vertices);
-            indexBuffer.Initialize(mesh.Indices.Length, (uint)BufferStorageMask.None, mesh.Indices);
-            vertexArray.Initialize<Vertex>(vertexBuffer, Vertex.DefaultProperties, indexBuffer);
+    //        vertexBuffer.Initialize(mesh.Vertices.Length, (uint)BufferStorageMask.None, mesh.Vertices);
+    //        indexBuffer.Initialize(mesh.Indices.Length, (uint)BufferStorageMask.None, mesh.Indices);
+    //        vertexArray.Initialize<Vertex>(vertexBuffer, Vertex.DefaultProperties, indexBuffer);
 
-            model.Meshes[i].VertexArray = vertexArray;
-        }
-    }
+    //        model.Meshes[i].VertexArray = vertexArray;
+    //    }
+    //}
 
     public void DrawVertexArray(in IVertexArray vertexArray, PrimitiveType primitiveType, int start, uint count)
     {

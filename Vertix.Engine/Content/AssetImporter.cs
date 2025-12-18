@@ -7,7 +7,7 @@ using System.Numerics;
 using Vertix.Graphics;
 using Vertix.Graphics.Primitives;
 
-namespace Vertix.Content;
+namespace Vertix.Engine.Content;
 
 public class AssetImporter : IDisposable
 {
@@ -20,7 +20,7 @@ public class AssetImporter : IDisposable
 
     #region Model Import
 
-    unsafe static void ProcessingMesh(ref Graphics.Primitives.Mesh modelMesh, Silk.NET.Assimp.Mesh* mesh, Scene* scene)
+    unsafe static void ProcessingMesh(ref Graphics.Primitives.Mesh modelMesh, Silk.NET.Assimp.Mesh* mesh, Silk.NET.Assimp.Scene* scene)
     {
         for (int i = 0; i < mesh->MNumVertices; i++)
         {
@@ -58,7 +58,7 @@ public class AssetImporter : IDisposable
         modelMesh.Indices = [.. indices];
     }
 
-    unsafe static void ProcessingNode(Scene* scene, Node* node, List<Graphics.Primitives.Mesh> meshes)
+    unsafe static void ProcessingNode(Silk.NET.Assimp.Scene* scene, Node* node, List<Graphics.Primitives.Mesh> meshes)
     {
         for (int i = 0; i < node->MNumMeshes; i++)
         {
@@ -85,7 +85,7 @@ public class AssetImporter : IDisposable
             PostProcessSteps.JoinIdenticalVertices |
             PostProcessSteps.CalculateTangentSpace;
 
-        Scene* scene = null;
+        Silk.NET.Assimp.Scene* scene = null;
 
         try
         {

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using Vertix.Content;
+using Vertix.Engine.Content;
 
-namespace Vertix;
+namespace Vertix.Engine;
 
 [JsonSerializable(typeof(ContentManifest))]
 internal partial class SerializerContext : JsonSerializerContext { }

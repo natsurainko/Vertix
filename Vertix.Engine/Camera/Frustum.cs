@@ -1,6 +1,6 @@
 ﻿using Plane = System.Numerics.Plane;
 
-namespace Vertix.Graphics.Primitives;
+namespace Vertix.Engine.Camera;
 
 public struct Frustum
 {
