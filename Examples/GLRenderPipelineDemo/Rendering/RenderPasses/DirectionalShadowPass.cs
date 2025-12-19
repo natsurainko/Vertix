@@ -1,4 +1,6 @@
 ﻿using Silk.NET.Maths;
+using SkiaSharp;
+using System.Drawing;
 using Vertix.Engine;
 using Vertix.Graphics;
 using Vertix.Rendering;
@@ -39,7 +41,7 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
         _graphicsDevice.BindRenderTarget(_renderTarget);
         _graphicsDevice.Clear(ClearBufferMask.Depth);
 
-        _graphicsDevice.Viewport(_context.ShadowMapSize);
+        _graphicsDevice.Viewport(new Rectangle<float>(Vector2D<float>.Zero, _context.ShadowMapSize.As<float>()));
         _graphicsDevice.UseShaderProgram(_shaderProgram);
         _graphicsDevice.EnableFaceCulling = false;
 
@@ -53,7 +55,8 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
             gameObject3D.Draw(_graphicsDevice);
         }
 
-        _graphicsDevice.Viewport(_context.WindowRectangle.Size);
+
+        _graphicsDevice.Viewport(_context.WindowRectangle.As<float>());
     }
 
     public override void Dispose()

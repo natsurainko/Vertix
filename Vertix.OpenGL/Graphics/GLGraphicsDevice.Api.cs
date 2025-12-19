@@ -250,5 +250,5 @@ public partial class GLGraphicsDevice : IGraphicsDevice
         _currentShaderProgram = shaderProgram;
     }
 
-    public void Viewport(Vector2D<int> size) => GL.Viewport(size);
+    public void Viewport(Rectangle<float> rectangle, uint? index = null) => GL.ViewportIndexed(index ?? 0, rectangle.Origin.X, rectangle.Origin.Y, rectangle.Size.X, rectangle.Size.Y);
 }

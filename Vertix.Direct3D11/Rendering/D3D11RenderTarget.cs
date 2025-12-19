@@ -11,15 +11,15 @@ using Vertix.Rendering;
 
 namespace Vertix.Direct3D11.Rendering;
 
-public class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, Vector2D<uint> size) : IRenderTarget
+public unsafe class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, Vector2D<uint> size) : IRenderTarget
 {
     private readonly ComPtr<ID3D11DeviceContext4> _deviceContext = d3D11GraphicsDevice.DeviceContext;
     private readonly ComPtr<ID3D11Device5> _device = d3D11GraphicsDevice.Device;
     private readonly List<ITexture> _targetTextures = [];
     private readonly List<ComPtr<ID3D11RenderTargetView>> _attachingRenderTargets = [];
 
-    private ComPtr<ID3D11RenderTargetView>[] _renderTargetTextures = [];
-    private ComPtr<ID3D11DepthStencilView>? _depthStencilTexture;
+    internal ID3D11RenderTargetView*[] _renderTargetTextures = [];
+    internal ID3D11DepthStencilView* _depthStencilTexture = default;
 
     public Vector2D<uint> Size { get; } = size;
 
@@ -54,7 +54,6 @@ public class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, Vector2D
             if (_depthStencilTexture != null) throw new InvalidOperationException();
 
             DepthStencilViewDesc dsvDesc = new(d3D11Texture.TextureFormat.ToDXGIFormat());
-            ComPtr<ID3D11DepthStencilView> comPtr = default;
             switch (d3D11Texture)
             {
                 case D3D11Texture2D:
@@ -65,8 +64,7 @@ public class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, Vector2D
                     throw new NotSupportedException();
             }
 
-            SilkMarshal.ThrowHResult(_device.CreateDepthStencilView(d3D11Texture._textureResource, in dsvDesc, ref comPtr));
-            _depthStencilTexture = comPtr;
+            SilkMarshal.ThrowHResult(_device.CreateDepthStencilView(d3D11Texture._textureResource, in dsvDesc, ref _depthStencilTexture));
         }
 
         _targetTextures.Add(texture);
@@ -86,7 +84,7 @@ public class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, Vector2D
         Initialized = true;
     }
 
-    public unsafe void ClearTargetTexture(ClearBufferMask buffers, int index, Vector4 color = default, float depth = 1, int stencil = 0)
+    public void ClearTargetTexture(ClearBufferMask buffers, int index, Vector4 color = default, float depth = 1, int stencil = 0)
     {
         if ((buffers & ClearBufferMask.Color) == ClearBufferMask.Color)
         {
@@ -106,20 +104,23 @@ public class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, Vector2D
             if (_depthStencilTexture == null || index != 0)
                 throw new InvalidOperationException();
 
-            _deviceContext.ClearDepthStencilView(_depthStencilTexture.Value, (uint)clearFlag, depth, (byte)stencil);
+            _deviceContext.ClearDepthStencilView(_depthStencilTexture, (uint)clearFlag, depth, (byte)stencil);
         }
     }
 
     public void Dispose()
     {
-        foreach (ComPtr<ID3D11RenderTargetView> rtv in _renderTargetTextures)
-            rtv.Dispose();
+        for (int i = 0; i < _renderTargetTextures.Length; i++)
+        {
+            _renderTargetTextures[i]->Release();
+            _renderTargetTextures[i] = null;
+        }
 
         _renderTargetTextures = [];
 
-        if (_depthStencilTexture.HasValue)
+        if (_depthStencilTexture == null)
         {
-            _depthStencilTexture.Value.Dispose();
+            _depthStencilTexture->Release();
             _depthStencilTexture = null;
         }
 

@@ -1,9 +1,11 @@
-﻿using Silk.NET.Maths;
+﻿using Silk.NET.Direct3D11;
+using Silk.NET.Maths;
 using System;
 using System.Drawing;
 using Vertix.Direct3D11.Rendering;
 using Vertix.Graphics;
 using Vertix.Rendering;
+using ShaderType = Vertix.Rendering.ShaderType;
 
 namespace Vertix.Direct3D11.Graphics;
 
@@ -16,9 +18,39 @@ public partial class D3D11GraphicsDevice : IGraphicsDevice
 
     public bool Disposed => throw new NotImplementedException();
 
-    public void BindRenderTarget(IRenderTarget? renderTarget)
+    public unsafe void BindRenderTarget(IRenderTarget? renderTarget)
     {
-        throw new NotImplementedException();
+        if (renderTarget == _currentRenderTarget) return;
+        if (renderTarget == null)
+        {
+            _currentRenderTarget = null;
+            if (_defaultRenderTarget == null)
+                throw new InvalidOperationException("Default render target is not initialized.");
+
+            fixed (ID3D11RenderTargetView** renderTargetViews = _defaultRenderTarget._renderTargetTextures)
+            {
+                DeviceContext.OMSetRenderTargets
+                (
+                    (uint)_defaultRenderTarget._renderTargetTextures.Length,
+                    renderTargetViews,
+                    _defaultRenderTarget._depthStencilTexture
+                );
+            }
+            return;
+        }
+
+        if (renderTarget is not D3D11RenderTarget d3d11RenderTarget)
+            throw new InvalidOperationException();
+
+        fixed (ID3D11RenderTargetView** renderTargetViews = d3d11RenderTarget._renderTargetTextures)
+        {
+            DeviceContext.OMSetRenderTargets
+            (
+                (uint)d3d11RenderTarget._renderTargetTextures.Length,
+                renderTargetViews,
+                d3d11RenderTarget._depthStencilTexture
+            );
+        }
     }
 
     public void BindTexture(uint bindingIndex, ITexture? texture, ShaderType? shaderType = null)
@@ -103,8 +135,17 @@ public partial class D3D11GraphicsDevice : IGraphicsDevice
         throw new NotImplementedException();
     }
 
-    public void Viewport(Vector2D<int> size)
+    public unsafe void Viewport(Rectangle<float> rectangle, uint? index = null)
     {
-        throw new NotImplementedException();
+        Viewport viewport = new()
+        {
+            TopLeftX = rectangle.Origin.X,
+            TopLeftY = rectangle.Origin.Y,
+            Width = rectangle.Size.X,
+            Height = rectangle.Size.Y,
+            MinDepth = 0f,
+            MaxDepth = 1f
+        };
+        DeviceContext.RSSetViewports(index ?? 1, in viewport);
     }
 }

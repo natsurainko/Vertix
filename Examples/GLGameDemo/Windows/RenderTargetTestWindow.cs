@@ -76,7 +76,7 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
         if (CoreWindow.WindowState == WindowState.Minimized)
             return;
 
-        Graphics.Viewport(size);
+        Graphics.Viewport(new Rectangle<float>(Vector2D<float>.Zero, size.As<float>()));
 
         projection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
         renderTargetProjection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, 0, CoreWindow.Size.Y, -100f, 100f);

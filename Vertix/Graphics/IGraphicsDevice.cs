@@ -56,5 +56,5 @@ public interface IGraphicsDevice : IDisposable
 
     void UseShaderProgram(IShaderProgram? shaderProgram);
 
-    void Viewport(Vector2D<int> size);
+    void Viewport(Rectangle<float> rectangle, uint? index = null);
 }

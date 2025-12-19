@@ -6,6 +6,7 @@ using Silk.NET.Windowing;
 using System;
 using System.Runtime.CompilerServices;
 using Vertix.Direct3D11.Rendering;
+using Vertix.Graphics;
 
 namespace Vertix.Direct3D11.Graphics;
 
@@ -13,6 +14,7 @@ public partial class D3D11GraphicsDevice : IDisposable
 {
     private readonly IWindow _window;
     private D3D11Texture2D? _defaultFrameTexture;
+    private D3D11Texture2D? _defaultDepthStencilTexture;
     private D3D11RenderTarget? _defaultRenderTarget;
     private D3D11RenderTarget? _currentRenderTarget = null;
 
@@ -90,15 +92,44 @@ public partial class D3D11GraphicsDevice : IDisposable
 
     private void CreateDefaultRenderTarget()
     {
-        _defaultFrameTexture = new D3D11Texture2D(this, SwapChain.GetBuffer<ID3D11Texture2D>(0));
         _defaultRenderTarget = new D3D11RenderTarget(this, _window.Size.As<uint>());
+        _defaultFrameTexture = new D3D11Texture2D(this, SwapChain.GetBuffer<ID3D11Texture2D>(0));
+
+        (int, int) depthStencilFormat = 
+        (
+            _window.PreferredDepthBufferBits ?? 24,
+            _window.PreferredStencilBufferBits ?? 8
+        );
+
+        _defaultDepthStencilTexture = new D3D11Texture2D(this);
+        _defaultDepthStencilTexture.Initialize
+        (
+            _window.Size.As<uint>(),
+            depthStencilFormat switch
+            {
+                (16, 0) => TextureFormat.Depth16,
+                (24, 0) => TextureFormat.Depth24,
+                (32, 0) => TextureFormat.Depth32,
+
+                (24, 8) => TextureFormat.Depth24Stencil8,
+                (32, 8) => TextureFormat.Depth32fStencil8,
+
+                _ => TextureFormat.Depth24Stencil8
+            }
+        );
 
         _defaultRenderTarget.AttachTargetTexture(_defaultFrameTexture);
+        _defaultRenderTarget.AttachTargetTexture(_defaultDepthStencilTexture, RenderTargetAttachment.DepthStencil);
         _defaultRenderTarget.Initialize();
     }
 
     public void Dispose()
     {
-        
+        _defaultFrameTexture?.Dispose();
+        _defaultRenderTarget?.Dispose();
+
+        DXGI.Dispose();
+        D3D11.Dispose();
+        D3DCompiler.Dispose();
     }
 }

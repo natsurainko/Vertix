@@ -76,7 +76,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
 
     private void CoreWindow_Resize(Vector2D<int> size)
     {
-        Graphics.Viewport(size);
+        Graphics.Viewport(new Rectangle<float>(Vector2D<float>.Zero, size.As<float>()));
         Camera.AspectRatio = (float)size.X / size.Y;
     }
 

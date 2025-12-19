@@ -75,7 +75,7 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
 
     private void CoreWindow_Resize(Vector2D<int> size)
     {
-        Graphics.Viewport(size);
+        Graphics.Viewport(new Rectangle<float>(Vector2D<float>.Zero, size.As<float>()));
 
         projection = Matrix4x4.CreateOrthographicOffCenter(0, CoreWindow.Size.X, CoreWindow.Size.Y, 0, -100f, 100f);
         shader?.Parameters["projection"].SetValue(projection);
