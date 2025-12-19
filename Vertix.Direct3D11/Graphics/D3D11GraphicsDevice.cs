@@ -1,36 +1,38 @@
-﻿using Silk.NET.Core.Contexts;
-using Silk.NET.Core.Native;
+﻿using Silk.NET.Core.Native;
 using Silk.NET.Direct3D.Compilers;
 using Silk.NET.Direct3D11;
 using Silk.NET.DXGI;
+using Silk.NET.Windowing;
 using System;
 using System.Runtime.CompilerServices;
-using Vertix.Rendering;
+using Vertix.Direct3D11.Rendering;
 
 namespace Vertix.Direct3D11.Graphics;
 
 public partial class D3D11GraphicsDevice : IDisposable
 {
-    public DXGI DXGI { get; }
-
-    public D3D11 D3D11 { get; }
-
-    public D3DCompiler D3DCompiler { get; }
+    private readonly IWindow _window;
+    private D3D11Texture2D? _defaultFrameTexture;
+    private D3D11RenderTarget? _defaultRenderTarget;
+    private D3D11RenderTarget? _currentRenderTarget = null;
 
     public ComPtr<IDXGIFactory4> Factory;
     public ComPtr<IDXGISwapChain4> SwapChain;
     public ComPtr<ID3D11Device5> Device;
     public ComPtr<ID3D11DeviceContext4> DeviceContext;
 
-    public ComPtr<ID3D11RenderTargetView> DefaultRenderTargetView;
-    public ComPtr<ID3D11Texture2D> DefaultFrameBuffer;
+    public DXGI DXGI { get; }
 
-    private IRenderTarget? _currentRenderTarget = null;
+    public D3D11 D3D11 { get; }
 
-    internal unsafe D3D11GraphicsDevice(INativeWindowSource windowSource, bool dxvk = false)
+    public D3DCompiler D3DCompiler { get; }
+
+    internal unsafe D3D11GraphicsDevice(IWindow window, bool dxvk = false)
     {
-        DXGI = DXGI.GetApi(windowSource, dxvk);
-        D3D11 = D3D11.GetApi(windowSource, dxvk);
+        _window = window;
+
+        DXGI = DXGI.GetApi(window, dxvk);
+        D3D11 = D3D11.GetApi(window, dxvk);
         D3DCompiler = D3DCompiler.GetApi();
 
         Factory = DXGI.CreateDXGIFactory<IDXGIFactory4>();
@@ -75,7 +77,7 @@ public partial class D3D11GraphicsDevice : IDisposable
             Factory.CreateSwapChainForHwnd
             (
                 device,
-                windowSource.Native!.DXHandle!.Value,
+                window.Native!.DXHandle!.Value,
                 in swapChainDesc,
                 null,
                 ref Unsafe.NullRef<IDXGIOutput>(),
@@ -83,8 +85,16 @@ public partial class D3D11GraphicsDevice : IDisposable
             )
         );
 
-        DefaultFrameBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
-        SilkMarshal.ThrowHResult(device.CreateRenderTargetView(DefaultFrameBuffer, null, ref DefaultRenderTargetView));
+        CreateDefaultRenderTarget();
+    }
+
+    private void CreateDefaultRenderTarget()
+    {
+        _defaultFrameTexture = new D3D11Texture2D(this, SwapChain.GetBuffer<ID3D11Texture2D>(0));
+        _defaultRenderTarget = new D3D11RenderTarget(this, _window.Size.As<uint>());
+
+        _defaultRenderTarget.AttachTargetTexture(_defaultFrameTexture);
+        _defaultRenderTarget.Initialize();
     }
 
     public void Dispose()

@@ -15,7 +15,7 @@ public class GLRenderTarget : IRenderTarget
     private readonly GL _gL;
     private readonly List<ITexture> _targetTextures = [];
     private readonly bool[] _colorAttachments = new bool[32];
-    private ColorBuffer[] _colorBuffers = [];
+    internal ColorBuffer[] _colorBuffers = [];
 
     public Vector2D<uint> Size { get; }
 
@@ -59,12 +59,6 @@ public class GLRenderTarget : IRenderTarget
                 colorBuffers.Add(ColorBuffer.ColorAttachment0 + i);
 
         _colorBuffers = [.. colorBuffers];
-    }
-
-    public void BindRenderTarget()
-    {
-        _gL.BindFramebuffer(FramebufferTarget.Framebuffer, FrameBufferHandle);
-        _gL.NamedFramebufferDrawBuffers(FrameBufferHandle, _colorBuffers);
     }
 
     private FramebufferAttachment GetFramebufferAttachment(RenderTargetAttachment renderTargetAttachment)

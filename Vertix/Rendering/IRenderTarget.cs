@@ -16,8 +16,6 @@ public interface IRenderTarget : IDisposable
 
     void Initialize();
 
-    void BindRenderTarget();
-
     void AttachTargetTexture(ITexture texture, RenderTargetAttachment renderTargetAttachment = RenderTargetAttachment.Color, int mipmapIndex = 0);
 
     void ClearTargetTexture(ClearBufferMask buffers, int index, Vector4 color = default, float depth = 1f, int stencil = 0);

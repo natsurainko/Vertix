@@ -7,12 +7,27 @@ using Vertix.Graphics;
 
 namespace Vertix.Direct3D11.Graphics;
 
-public unsafe class D3D11Texture2D(ComPtr<ID3D11Device5> device, ComPtr<ID3D11DeviceContext> context) : D3D11Texture(device, context), ITexture2D
+public unsafe class D3D11Texture2D : D3D11Texture, ITexture2D
 {
     internal Texture2DDesc _texture2DDesc;
-    private ComPtr<ID3D11Texture2D> _texture2D;
+    internal ComPtr<ID3D11Texture2D> _texture2D;
 
     public Vector2D<uint> Size { get; private set; }
+
+    public D3D11Texture2D(D3D11GraphicsDevice d3D11GraphicsDevice) : base(d3D11GraphicsDevice.Device, d3D11GraphicsDevice.DeviceContext) { }
+
+    public D3D11Texture2D(D3D11GraphicsDevice d3D11GraphicsDevice, ComPtr<ID3D11Texture2D> texturePtr) : base(d3D11GraphicsDevice.Device, d3D11GraphicsDevice.DeviceContext) 
+    {
+        _texture2D = texturePtr;
+        _texture2D.GetDesc(ref _texture2DDesc);
+
+        Size = new Vector2D<uint>(_texture2DDesc.Width, _texture2DDesc.Height);
+        TextureFormat = _texture2DDesc.Format.ToTextureFormat();
+        MipmapLevels = _texture2DDesc.MipLevels;
+
+        _textureResource = ComPtr.Downcast<ID3D11Texture2D, ID3D11Resource>(_texture2D);
+        Initialized = true;
+    }
 
     public void Initialize(Vector2D<uint> size, TextureFormat format, uint mipmapLevels = 1)
     {
@@ -38,6 +53,7 @@ public unsafe class D3D11Texture2D(ComPtr<ID3D11Device5> device, ComPtr<ID3D11De
             _texture2DDesc.BindFlags = (uint)(BindFlag.RenderTarget | BindFlag.ShaderResource);
 
         SilkMarshal.ThrowHResult(_device.CreateTexture2D(in _texture2DDesc, (SubresourceData*)null, ref _texture2D));
+        _textureResource = ComPtr.Downcast<ID3D11Texture2D, ID3D11Resource>(_texture2D);
         Initialized = true;
     }
 
@@ -72,15 +88,15 @@ public unsafe class D3D11Texture2D(ComPtr<ID3D11Device5> device, ComPtr<ID3D11De
         }
     }
 
-    public override void BindTexture(uint bindingIndex)
-    {
-
-    }
-
     public override void Dispose()
     {
+        if ((IntPtr)_texture2D.Handle == IntPtr.Zero) return;
+
+        _textureResource.Dispose();
+        _textureResource = default;
+
         _texture2D.Dispose();
-        _texture2D = null;
+        _texture2D = default;
     }
 
     private static uint D3D11CalcSubresource(uint mipSlice, uint arraySlice, uint mipLevels) => mipSlice + arraySlice * mipLevels;

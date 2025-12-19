@@ -1,6 +1,7 @@
 ﻿using Silk.NET.Maths;
 using System;
 using System.Drawing;
+using Vertix.Direct3D11.Rendering;
 using Vertix.Graphics;
 using Vertix.Rendering;
 
@@ -32,7 +33,10 @@ public partial class D3D11GraphicsDevice : IGraphicsDevice
 
     public void Clear(ClearBufferMask buffers, Color color = default, float depth = 1, int stencil = 0)
     {
-        throw new NotImplementedException();
+        D3D11RenderTarget? renderTarget = (_currentRenderTarget ?? _defaultRenderTarget) 
+            ?? throw new InvalidOperationException("No render target is currently bound.");
+
+        renderTarget.ClearTargetTexture(buffers, 0, new(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f), depth, stencil);
     }
 
     public IGraphicsBatcher<TInstance> CreateGraphicsBatcher<TInstance>(in IVertexArray vertexArray, ReadOnlySpan<VertexArrayProperty> properties, uint verticesOrIndicesCount, int capacity = 128) where TInstance : unmanaged
@@ -45,20 +49,14 @@ public partial class D3D11GraphicsDevice : IGraphicsDevice
         throw new NotImplementedException();
     }
 
-    public IRenderTarget CreateRenderTarget(Vector2D<uint> size)
-    {
-        throw new NotImplementedException();
-    }
+    public IRenderTarget CreateRenderTarget(Vector2D<uint> size) => new D3D11RenderTarget(this, size);
 
     public IShaderProgram CreateShaderProgram()
     {
         throw new NotImplementedException();
     }
 
-    public ITexture2D CreateTexture2D()
-    {
-        throw new NotImplementedException();
-    }
+    public ITexture2D CreateTexture2D() => new D3D11Texture2D(this);
 
     public ITexture2DArray CreateTexture2DArray()
     {

@@ -2,7 +2,6 @@
 using Silk.NET.OpenGL;
 using System;
 using System.Drawing;
-using System.Reflection.Metadata;
 using Vertix.Graphics;
 using Vertix.OpenGL.Helpers;
 using Vertix.OpenGL.Rendering;
@@ -90,7 +89,12 @@ public partial class GLGraphicsDevice : IGraphicsDevice
             return;
         }
 
-        renderTarget.BindRenderTarget();
+        if (renderTarget is not GLRenderTarget gLRenderTarget)
+            throw new InvalidOperationException();
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, gLRenderTarget.FrameBufferHandle);
+        GL.NamedFramebufferDrawBuffers(gLRenderTarget.FrameBufferHandle, gLRenderTarget._colorBuffers);
+
         _currentRenderTarget = renderTarget;
     }
 
