@@ -6,6 +6,7 @@ using Vertix.Graphics;
 
 [assembly: InternalsVisibleTo("Vertix.OpenGL")]
 [assembly: InternalsVisibleTo("Vertix.Direct3D12")]
+[assembly: InternalsVisibleTo("Vertix.Direct3D11")]
 
 namespace Vertix.Windowing;
 
@@ -19,7 +20,7 @@ public abstract partial class GameWindow : IDisposable
     {
         CoreWindow = window;
         CoreWindow.Update += OnUpdate;
-        CoreWindow.Render += OnRender;
+        CoreWindow.Render += OnInternalRender;
     }
 
     public abstract void Dispose();
@@ -31,6 +32,8 @@ public abstract partial class GameWindow : IDisposable
     protected virtual void OnUpdate(double deltaTime) { }
 
     protected virtual void OnRender(double delateTime) { }
+
+    internal virtual void OnInternalRender(double delateTime) => OnRender(delateTime);
 }
 
 public partial class GameWindow

@@ -39,7 +39,7 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
         ITexture2D texture2D = Graphics.CreateTexture2D();
         texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
         texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 255, 255, 255 });
-        texture2D.BindTexture(0);
+        Graphics.BindTexture(0, texture2D);
 
         Vertex.InstanceTransform3D[] instanceTransforms = new Vertex.InstanceTransform3D[blockCountAsix * blockCountAsix];
         float spacing = 1.5f;

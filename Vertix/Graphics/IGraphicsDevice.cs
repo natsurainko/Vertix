@@ -19,7 +19,7 @@ public interface IGraphicsDevice : IDisposable
 
     void BindRenderTarget(IRenderTarget? renderTarget);
 
-    void BindTexture(uint bindingIndex, ITexture? texture);
+    void BindTexture(uint bindingIndex, ITexture? texture, ShaderType? shaderType = null);
 
     void BindTextureSampler(uint bindingIndex, ITextureSampler? texture);
 

@@ -10,8 +10,6 @@ public interface ITexture : IDisposable
     bool Initialized { get; }
 
     TextureFormat TextureFormat { get; }
-
-    void BindTexture(uint bindingIndex);
 }
 
 public interface ITexture2D : ITexture

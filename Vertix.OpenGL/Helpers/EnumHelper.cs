@@ -215,6 +215,20 @@ public static class EnumHelper
         };
     }
 
+    extension(Vertix.Rendering.ShaderType shaderType)
+    {
+        public ShaderType ToGLShaderType() => shaderType switch
+        {
+            Vertix.Rendering.ShaderType.VertexShader => ShaderType.VertexShader,
+            Vertix.Rendering.ShaderType.FragmentShader => ShaderType.FragmentShader,
+            Vertix.Rendering.ShaderType.GeometryShader => ShaderType.GeometryShader,
+            Vertix.Rendering.ShaderType.ComputeShader => ShaderType.ComputeShader,
+            Vertix.Rendering.ShaderType.TessellationControlShader => ShaderType.TessControlShader,
+            Vertix.Rendering.ShaderType.TessellationEvaluationShader => ShaderType.TessEvaluationShader,
+            _ => throw new NotSupportedException(),
+        };
+    }
+
     public static VertexAttribType? GetVertexAttribType(string typeName)
     {
         return typeName switch

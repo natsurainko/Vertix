@@ -44,7 +44,7 @@ internal class TextureAtlasTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/Images/chicken.png");
-        texture.BindTexture(0);
+        Graphics.BindTexture(0, texture);
 
         ITextureSampler textureSampler = Graphics.CreateTextureSampler();
         textureSampler.MinFilter = TextureFilter.Nearest;

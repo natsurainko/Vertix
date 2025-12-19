@@ -171,7 +171,7 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
 
             Graphics.BindRenderTarget(null);
             Graphics.UseShaderProgram(rectShader);
-            texture2D?.BindTexture(0);
+            Graphics.BindTexture(0, texture2D);
         }
 
         Graphics.Clear(ClearBufferMask.Color | ClearBufferMask.Depth, Color.Black);

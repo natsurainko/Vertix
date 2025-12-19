@@ -1,6 +1,6 @@
-﻿using Silk.NET.OpenGL;
-using System;
+﻿using System;
 using System.IO;
+using Vertix.OpenGL.Helpers;
 using Vertix.OpenGL.Rendering;
 using Vertix.Rendering;
 
@@ -22,7 +22,7 @@ public static class IShaderProgramExtensions
                 gLShaderProgram.GLShaders.Add(new GLShader
                 {
                     GLSL = File.ReadAllText(shader.Item2),
-                    ShaderType = shader.Item1
+                    ShaderType = shader.Item1.ToGLShaderType()
                 });
             }
         }

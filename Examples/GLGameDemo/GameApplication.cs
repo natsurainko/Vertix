@@ -1,6 +1,6 @@
-﻿using Silk.NET.OpenGL;
-using Vertix.Graphics.Primitives;
+﻿using Vertix.Graphics.Primitives;
 using Vertix.Graphics.Text;
+using Vertix.Rendering;
 
 namespace GLGameDemo;
 

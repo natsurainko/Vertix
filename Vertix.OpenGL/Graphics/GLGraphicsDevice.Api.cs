@@ -2,13 +2,14 @@
 using Silk.NET.OpenGL;
 using System;
 using System.Drawing;
+using System.Reflection.Metadata;
 using Vertix.Graphics;
-using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Helpers;
 using Vertix.OpenGL.Rendering;
 using Vertix.Rendering;
 using ClearBufferMask = Vertix.Graphics.ClearBufferMask;
 using PrimitiveType = Vertix.Graphics.PrimitiveType;
+using ShaderType = Vertix.Rendering.ShaderType;
 
 namespace Vertix.OpenGL.Graphics;
 
@@ -93,7 +94,7 @@ public partial class GLGraphicsDevice : IGraphicsDevice
         _currentRenderTarget = renderTarget;
     }
 
-    public void BindTexture(uint bindingIndex, ITexture? texture)
+    public void BindTexture(uint bindingIndex, ITexture? texture, ShaderType? _ = null)
     {
         if (texture == null)
         {
@@ -104,7 +105,7 @@ public partial class GLGraphicsDevice : IGraphicsDevice
         if (texture is not GLTexture gLTexture)
             throw new InvalidOperationException();
 
-        gLTexture.BindTexture(bindingIndex);
+        GL.BindTextureUnit(bindingIndex, gLTexture.Handle);
     }
 
     public void BindTextureSampler(uint bindingIndex, ITextureSampler? textureSampler)

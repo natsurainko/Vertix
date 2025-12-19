@@ -63,7 +63,7 @@ public static class IGraphicsBatcherExtensions
                     if (texture2D != null) graphicsBatcher.Flush();
 
                     texture2D = fontTextures[textureIndex].Texture;
-                    texture2D.BindTexture(0);
+                    graphicsBatcher.GraphicsDevice.BindTexture(0, texture2D, Rendering.ShaderType.PixelShader);
                 }
 
                 Vector2 origin = position + offset + new Vector2(fontGlyph.Bearing.X, lineHeight - fontGlyph.Bearing.Y) * scale;

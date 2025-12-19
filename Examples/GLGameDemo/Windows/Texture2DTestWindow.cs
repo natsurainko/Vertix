@@ -42,7 +42,7 @@ internal class Texture2DTestWindow(IWindow w, IGraphicsDevice d, IServiceProvide
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         ITexture2D texture = sp.GetRequiredService<AssetImporter>().LoadImageTexture(Graphics, "Assets/Images/Shed..png");
-        texture.BindTexture(0);
+        Graphics.BindTexture(0, texture);
 
         ITextureSampler textureSampler = Graphics.CreateTextureSampler();
         textureSampler.MinFilter = TextureFilter.Nearest;

@@ -6,6 +6,7 @@ using Vertix.Graphics;
 using Vertix.Graphics.Primitives;
 using Vertix.OpenGL.Extensions;
 using Vertix.Rendering;
+using ShaderType = Vertix.Rendering.ShaderType;
 
 namespace GLRenderPipelineDemo;
 

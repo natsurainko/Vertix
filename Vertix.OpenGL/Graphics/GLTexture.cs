@@ -15,7 +15,5 @@ public abstract class GLTexture(GL gL, uint handle) : ITexture
 
     public uint MipmapLevels { get; protected set; }
 
-    public virtual void BindTexture(uint bindingIndex) => _gL.BindTextureUnit(bindingIndex, Handle);
-
     public virtual void Dispose() => _gL.DeleteTexture(Handle);
 }
