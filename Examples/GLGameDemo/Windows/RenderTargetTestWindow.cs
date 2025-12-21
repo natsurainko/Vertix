@@ -46,11 +46,11 @@ internal class RenderTargetTestWindow(IWindow w, IGraphicsDevice d) : GLGameWind
         _gL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         IVertexArray vertexArray = Graphics.CreateVertexArray();
-        IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
-        IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
+        IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer(GraphicsBufferUsage.VertexBuffer);
+        IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer(GraphicsBufferUsage.IndexBuffer);
 
-        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
-        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, data: GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, data: GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,

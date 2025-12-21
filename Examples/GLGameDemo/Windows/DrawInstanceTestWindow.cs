@@ -59,8 +59,8 @@ internal class DrawInstanceTestWindow(IWindow w, IGraphicsDevice d, IServiceProv
             }
         }
 
-        IGraphicsBuffer instanceBuffer = Graphics.CreateGraphicsBuffer();
-        instanceBuffer.Initialize(blockCountAsix * blockCountAsix, (uint)BufferStorageMask.None, instanceTransforms);
+        IGraphicsBuffer instanceBuffer = Graphics.CreateGraphicsBuffer(GraphicsBufferUsage.VertexBuffer);
+        instanceBuffer.Initialize(blockCountAsix * blockCountAsix, data: instanceTransforms);
 
         for (int i = 0; i < model.Meshes.Length; i++)
             model.Meshes[i].VertexArray?.AttachInstanceBuffer<Vertex.InstanceTransform3D>(instanceBuffer, Vertex.InstanceTransform3D.DefaultProperties);

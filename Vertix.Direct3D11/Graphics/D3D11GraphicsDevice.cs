@@ -2,6 +2,7 @@
 using Silk.NET.Direct3D.Compilers;
 using Silk.NET.Direct3D11;
 using Silk.NET.DXGI;
+using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using System;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,8 @@ public partial class D3D11GraphicsDevice : IDisposable
     private D3D11RenderTarget? _defaultRenderTarget;
     private D3D11RenderTarget? _currentRenderTarget = null;
 
+    private Vector2D<uint> _frameBufferSize;
+
     public ComPtr<IDXGIFactory4> Factory;
     public ComPtr<IDXGISwapChain4> SwapChain;
     public ComPtr<ID3D11Device5> Device;
@@ -32,6 +35,7 @@ public partial class D3D11GraphicsDevice : IDisposable
     internal unsafe D3D11GraphicsDevice(IWindow window, bool dxvk = false)
     {
         _window = window;
+        _window.Resize += OnFramebufferResize;
 
         DXGI = DXGI.GetApi(window, dxvk);
         D3D11 = D3D11.GetApi(window, dxvk);
@@ -92,7 +96,8 @@ public partial class D3D11GraphicsDevice : IDisposable
 
     private void CreateDefaultRenderTarget()
     {
-        _defaultRenderTarget = new D3D11RenderTarget(this, _window.Size.As<uint>());
+        _frameBufferSize = _window.Size.As<uint>();
+        _defaultRenderTarget = new D3D11RenderTarget(this, _frameBufferSize);
         _defaultFrameTexture = new D3D11Texture2D(this, SwapChain.GetBuffer<ID3D11Texture2D>(0));
 
         (int, int) depthStencilFormat = 
@@ -104,7 +109,7 @@ public partial class D3D11GraphicsDevice : IDisposable
         _defaultDepthStencilTexture = new D3D11Texture2D(this);
         _defaultDepthStencilTexture.Initialize
         (
-            _window.Size.As<uint>(),
+            _frameBufferSize,
             depthStencilFormat switch
             {
                 (16, 0) => TextureFormat.Depth16,
@@ -121,6 +126,25 @@ public partial class D3D11GraphicsDevice : IDisposable
         _defaultRenderTarget.AttachTargetTexture(_defaultFrameTexture);
         _defaultRenderTarget.AttachTargetTexture(_defaultDepthStencilTexture, RenderTargetAttachment.DepthStencil);
         _defaultRenderTarget.Initialize();
+    }
+
+    private unsafe void OnFramebufferResize(Vector2D<int> size)
+    {
+        Vector2D<uint> uintSize = size.As<uint>();
+        if (uintSize == _frameBufferSize) return;
+
+        if (_currentRenderTarget == null)
+        {
+            DeviceContext.OMSetRenderTargets(0, (ID3D11RenderTargetView**)null, (ID3D11DepthStencilView*)null);
+            DeviceContext.Flush();
+        }
+
+        _defaultRenderTarget?.Dispose();
+        _defaultFrameTexture?.Dispose();
+        _defaultDepthStencilTexture?.Dispose();
+
+        SilkMarshal.ThrowHResult(SwapChain.ResizeBuffers(0, uintSize.X, uintSize.Y, Format.FormatUnknown, 0));
+        CreateDefaultRenderTarget();
     }
 
     public void Dispose()

@@ -33,17 +33,7 @@ internal class MainWindow(IWindow w, IGraphicsDevice d,
         rotationController.AttachObject(renderContext.PerspectiveCamera);
         positionController.AttachObject(renderContext.PerspectiveCamera);
 
-        //Model planeModel = assetImporter.LoadModel("Assets/Models/Plane.fbx");
-        //Model blockModel = assetImporter.LoadModel("Assets/Models/Block.fbx");
-
-        //planeModel.InitializeMeshesVertexArray(Graphics);
-        //blockModel.InitializeMeshesVertexArray(Graphics);
-
-        //renderContext.SceneManager.AddObject(new SceneObject3D() { Model = planeModel });
-        //renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(0, 0.5f, 0) });
-        //renderContext.SceneManager.AddObject(new SceneObject3D() { Model = blockModel, Position = new(2, 3, 2) });
-
-        Model model = assetImporter.LoadModel(@"C:\Users\Natsurainko\Desktop\test.fbx");
+        Model model = assetImporter.LoadModel(@"Assets/Models/Pool.fbx");
         model.InitializeMeshesVertexArray(Graphics);
         renderContext.SceneManager.AddObject(new SceneObject3D() { Model = model, Scale = Vector3.One * 0.025f });
 

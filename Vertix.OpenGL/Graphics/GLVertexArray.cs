@@ -37,18 +37,26 @@ public record class GLVertexArray : IVertexArray
     public unsafe void Initialize<T>(in IGraphicsBuffer vertexBuffer, ReadOnlySpan<VertexArrayProperty> properties,
         in IGraphicsBuffer? indexBuffer = null, nint vertexBufferOffset = 0) where T : unmanaged
     {
-        if (vertexBuffer is not GLGraphicsBuffer gLVertexBuffer) throw new InvalidOperationException();
-        GLGraphicsBuffer? gLIndexBuffer = indexBuffer as GLGraphicsBuffer;
+        if (vertexBuffer is not GLGraphicsBuffer gLVertexBuffer) 
+            throw new InvalidOperationException();
 
         this.VertexBuffer = vertexBuffer;
         this.IndexBuffer = indexBuffer;
         this.Initialized = true;
 
+        if ((gLVertexBuffer.BufferUsage & GraphicsBufferUsage.VertexBuffer) != GraphicsBufferUsage.VertexBuffer)
+            throw new InvalidOperationException("The provided buffer is not initialized as a vertex buffer.");
+
         _attachedBuffers[0] = gLVertexBuffer;
         _gL.VertexArrayVertexBuffer(_handle, 0, gLVertexBuffer.Handle, vertexBufferOffset, (uint)sizeof(T));
 
-        if (gLIndexBuffer != null)
+        if (indexBuffer is GLGraphicsBuffer gLIndexBuffer)
+        {
+            if ((gLIndexBuffer.BufferUsage & GraphicsBufferUsage.IndexBuffer) != GraphicsBufferUsage.IndexBuffer)
+                throw new InvalidOperationException("The provided buffer is not initialized as an index buffer.");
+
             _gL.VertexArrayElementBuffer(_handle, gLIndexBuffer.Handle);
+        }
 
         uint offset = 0;
 
@@ -71,6 +79,8 @@ public record class GLVertexArray : IVertexArray
     {
         if (instanceBuffer is not GLGraphicsBuffer gLGraphicsBuffer) throw new InvalidOperationException();
         if (instancedDivisor < 1) throw new ArgumentException("The instancedDivisor must be at least 1.");
+        if ((gLGraphicsBuffer.BufferUsage & GraphicsBufferUsage.VertexBuffer) != GraphicsBufferUsage.VertexBuffer)
+            throw new InvalidOperationException("The provided buffer is not initialized as a vertex buffer.");
 
         uint bindingIndex = targetBindingIndex ?? GetAvailableBindingIndex();
         _attachedBuffers[bindingIndex] = gLGraphicsBuffer;

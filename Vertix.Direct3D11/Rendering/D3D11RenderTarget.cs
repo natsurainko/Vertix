@@ -118,7 +118,7 @@ public unsafe class D3D11RenderTarget(D3D11GraphicsDevice d3D11GraphicsDevice, V
 
         _renderTargetTextures = [];
 
-        if (_depthStencilTexture == null)
+        if (_depthStencilTexture != null)
         {
             _depthStencilTexture->Release();
             _depthStencilTexture = null;

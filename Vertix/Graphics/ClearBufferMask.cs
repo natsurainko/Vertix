@@ -2,7 +2,7 @@
 
 public enum ClearBufferMask
 {
-    Color = 1,
-    Depth = 2,
-    Stencil = 4,
+    Color = 0x1,
+    Depth = 0x2,
+    Stencil = 0x3,
 }

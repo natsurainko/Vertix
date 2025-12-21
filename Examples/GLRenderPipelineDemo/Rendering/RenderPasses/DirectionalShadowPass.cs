@@ -1,6 +1,4 @@
 ﻿using Silk.NET.Maths;
-using SkiaSharp;
-using System.Drawing;
 using Vertix.Engine;
 using Vertix.Graphics;
 using Vertix.Rendering;
@@ -54,7 +52,6 @@ internal class DirectionalShadowPass(IShaderProgram shaderProgram, GraphicsResou
             _shaderProgram.Parameters["world"].SetValue(gameObject3D.WorldMatrix);
             gameObject3D.Draw(_graphicsDevice);
         }
-
 
         _graphicsDevice.Viewport(_context.WindowRectangle.As<float>());
     }

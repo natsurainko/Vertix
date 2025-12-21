@@ -1,5 +1,4 @@
 ﻿using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 using System.Numerics;
 using Vertix.Extensions;
 using Vertix.Graphics;
@@ -15,10 +14,6 @@ internal class GraphicsResources : IDisposable
     public IVertexArray QuadVertexArray { get; private set; }
 
     public IGraphicsBatcher<Vertex2D.InstanceTransform2D> RectangleBatcher { get; private set; }
-
-    //public IShaderProgram Basic2DShader { get; private set; }
-
-    //public IShaderProgram Basic3DShader { get; private set; }
 
     public IShaderProgram ScreenSampleShader { get; private set; }
 
@@ -41,25 +36,15 @@ internal class GraphicsResources : IDisposable
     public GraphicsResources(IGraphicsDevice graphicsDevice)
     {
         IVertexArray vertexArray = graphicsDevice.CreateVertexArray();
-        IGraphicsBuffer vertexBuffer = graphicsDevice.CreateGraphicsBuffer();
-        IGraphicsBuffer indexBuffer = graphicsDevice.CreateGraphicsBuffer();
+        IGraphicsBuffer vertexBuffer = graphicsDevice.CreateGraphicsBuffer(GraphicsBufferUsage.VertexBuffer);
 
-        vertexBuffer.Initialize(Vertex2D.QuadVertices.Length, (uint)BufferStorageMask.None, Vertex2D.QuadVertices);
-        //indexBuffer.Initialize(RectangleIndices.Length, (uint)BufferStorageMask.None, RectangleIndices);
-        vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
+        vertexBuffer.Initialize(Vertex2D.QuadVertices.Length, data: Vertex2D.QuadVertices);
+        vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties);
 
         QuadVertexArray = vertexArray;
         RectangleBatcher = graphicsDevice.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,
             Vertex2D.InstanceTransform2D.DefaultProperties, (uint)Vertex2D.QuadVertices.Length);
-        RectangleBatcher.PrimitiveType = Vertix.Graphics.PrimitiveType.TriangleStrip;
-
-        //Basic2DShader = graphicsDevice.CreateShaderProgram();
-        //Basic2DShader.LoadGLSLShadersFromFiles(_2D_BASIC_SHADER);
-        //Basic2DShader.Compile();
-
-        //Basic3DShader = graphicsDevice.CreateShaderProgram();
-        //Basic3DShader.LoadGLSLShadersFromFiles(_3D_BASIC_SHADER);
-        //Basic3DShader.Compile();
+        RectangleBatcher.PrimitiveType = PrimitiveType.TriangleStrip;
 
         ScreenSampleShader = graphicsDevice.CreateShaderProgram();
         ScreenSampleShader.LoadGLSLShadersFromFiles(_SCREEN_SAMPLE_SHADER);
@@ -100,10 +85,8 @@ internal class GraphicsResources : IDisposable
 
         NearestSampler = textureSampler;
 
-        IGraphicsBuffer graphicsBuffer = graphicsDevice.CreateGraphicsBuffer();
-        graphicsBuffer.Initialize<Matrix4X4<float>>(8, BufferStorageMask.DynamicStorageBit, []);
-
-        LightSpaceMatircesBuffer = graphicsBuffer;
+        LightSpaceMatircesBuffer = graphicsDevice.CreateGraphicsBuffer(GraphicsBufferUsage.UniformBuffer);
+        LightSpaceMatircesBuffer.Initialize<Matrix4X4<float>>(8, true);
         LightSpaceMatircesBuffer.BindAsUniform(0);
     }
 
@@ -111,18 +94,6 @@ internal class GraphicsResources : IDisposable
     {
 
     }
-
-    //internal static readonly (ShaderType, string)[] _3D_BASIC_SHADER =
-    //[
-    //    (ShaderType.VertexShader, "Assets/Shaders/shader3D.vert"),
-    //    (ShaderType.FragmentShader, "Assets/Shaders/shader3D.frag"),
-    //];
-
-    //internal static readonly (ShaderType, string)[] _2D_BASIC_SHADER =
-    //[
-    //    (ShaderType.VertexShader, "Assets/Shaders/shader2D.vert"),
-    //    (ShaderType.FragmentShader, "Assets/Shaders/shader2D.frag"),
-    //];
 
     internal static readonly (ShaderType, string)[] _SCREEN_SAMPLE_SHADER =
     [

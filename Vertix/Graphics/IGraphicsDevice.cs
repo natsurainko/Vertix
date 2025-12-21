@@ -29,7 +29,7 @@ public interface IGraphicsDevice : IDisposable
 
     IVertexArray CreateVertexArray();
 
-    IGraphicsBuffer CreateGraphicsBuffer();
+    IGraphicsBuffer CreateGraphicsBuffer(GraphicsBufferUsage bufferUsage, GraphicsBufferMapAccess bufferMapAccess = GraphicsBufferMapAccess.None);
 
     IRenderTarget CreateRenderTarget(Vector2D<uint> size);
 

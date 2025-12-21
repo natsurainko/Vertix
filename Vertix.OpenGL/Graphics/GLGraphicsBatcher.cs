@@ -1,5 +1,4 @@
-﻿using Silk.NET.OpenGL;
-using System;
+﻿using System;
 using System.Threading;
 using Vertix.Graphics;
 using PrimitiveType = Vertix.Graphics.PrimitiveType;
@@ -33,8 +32,8 @@ public class GLGraphicsBatcher<TInstance> : IGraphicsBatcher<TInstance> where TI
 
         VerticesOrIndicesCount = verticesOrIndicesCount;
 
-        _instanceBuffer = graphicsDevice.CreateGraphicsBuffer();
-        _instanceBuffer.Initialize(capacity, (uint)BufferStorageMask.DynamicStorageBit, ReadOnlySpan<TInstance>.Empty);
+        _instanceBuffer = graphicsDevice.CreateGraphicsBuffer(GraphicsBufferUsage.VertexBuffer);
+        _instanceBuffer.Initialize<TInstance>(capacity, true);
         _vertexArray.AttachInstanceBuffer<TInstance>(_instanceBuffer, properties);
     }
 

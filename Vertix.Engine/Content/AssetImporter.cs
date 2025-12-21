@@ -3,6 +3,7 @@ using Silk.NET.Maths;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using Vertix.Graphics;
 using Vertix.Graphics.Primitives;
@@ -89,6 +90,9 @@ public class AssetImporter : IDisposable
 
         try
         {
+            if (!System.IO.File.Exists(filePath))
+                throw new FileNotFoundException(filePath);
+
             scene = _assimp.ImportFile(filePath, (uint)postProcessSteps);
 
             Model model = new();

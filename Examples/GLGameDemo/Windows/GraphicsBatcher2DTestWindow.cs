@@ -41,16 +41,16 @@ internal class GraphicsBatcher2DTestWindow(IWindow w, IGraphicsDevice d) : GLGam
         _gL.Enable(EnableCap.DepthTest);
 
         IVertexArray vertexArray = Graphics.CreateVertexArray();
-        IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer();
-        IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer();
+        IGraphicsBuffer vertexBuffer = Graphics.CreateGraphicsBuffer(GraphicsBufferUsage.VertexBuffer);
+        IGraphicsBuffer indexBuffer = Graphics.CreateGraphicsBuffer(GraphicsBufferUsage.IndexBuffer);
 
         ITexture2D texture2D = Graphics.CreateTexture2D();
         texture2D.Initialize(Vector2D<uint>.One, TextureFormat.Rgba8);
         texture2D.SetData(Vector2D<uint>.One, Vector2D<int>.Zero, stackalloc byte[] { 255, 255, 255, 255 });
         Graphics.BindTexture(0, texture2D);
 
-        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleVertices);
-        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, (uint)BufferStorageMask.None, GameApplication.RectangleIndices);
+        vertexBuffer.Initialize(GameApplication.RectangleVertices.Length, data: GameApplication.RectangleVertices);
+        indexBuffer.Initialize(GameApplication.RectangleIndices.Length, data: GameApplication.RectangleIndices);
         vertexArray.Initialize<Vertex2D>(vertexBuffer, Vertex2D.DefaultProperties, indexBuffer);
 
         graphicsBatcher = Graphics.CreateGraphicsBatcher<Vertex2D.InstanceTransform2D>(in vertexArray,

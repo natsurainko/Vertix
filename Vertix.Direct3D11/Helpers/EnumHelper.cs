@@ -1,4 +1,5 @@
-﻿using Silk.NET.DXGI;
+﻿using Silk.NET.Direct3D11;
+using Silk.NET.DXGI;
 using System;
 using Vertix.Graphics;
 
@@ -109,6 +110,27 @@ public static class EnumHelper
             Format.FormatD32FloatS8X24Uint => TextureFormat.Depth32fStencil8,
 
             _ => throw new NotSupportedException($"Unsupported DXGI format: {dxgiFormat}")
+        };
+    }
+
+    extension(GraphicsBufferUsage bufferUsage)
+    {
+        public BindFlag ToBindFlag() => bufferUsage switch
+        {
+            GraphicsBufferUsage.VertexBuffer => BindFlag.VertexBuffer,
+            GraphicsBufferUsage.IndexBuffer => BindFlag.IndexBuffer,
+            GraphicsBufferUsage.UniformBuffer => BindFlag.ConstantBuffer,
+            _ => BindFlag.None,
+        };
+    }
+
+    extension(GraphicsBufferMapAccess bufferAccess)
+    {
+        public CpuAccessFlag ToCpuAccessFlag() => bufferAccess switch
+        {
+            GraphicsBufferMapAccess.Read => CpuAccessFlag.Read,
+            GraphicsBufferMapAccess.Write => CpuAccessFlag.Write,
+            _ => CpuAccessFlag.None,
         };
     }
 }

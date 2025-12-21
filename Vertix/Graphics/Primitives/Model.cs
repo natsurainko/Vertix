@@ -25,12 +25,12 @@ public record class Model
     {
         for (int i = 0; i < Meshes.Length; i++)
         {
-            IGraphicsBuffer vertexBuffer = graphicsDevice.CreateGraphicsBuffer();
-            IGraphicsBuffer indexBuffer = graphicsDevice.CreateGraphicsBuffer();
+            IGraphicsBuffer vertexBuffer = graphicsDevice.CreateGraphicsBuffer(GraphicsBufferUsage.VertexBuffer);
+            IGraphicsBuffer indexBuffer = graphicsDevice.CreateGraphicsBuffer(GraphicsBufferUsage.IndexBuffer);
             IVertexArray vertexArray = graphicsDevice.CreateVertexArray();
 
-            vertexBuffer.Initialize(Meshes[i].Vertices.Length, 0, Meshes[i].Vertices);
-            indexBuffer.Initialize(Meshes[i].Indices.Length, 0, Meshes[i].Indices);
+            vertexBuffer.Initialize(Meshes[i].Vertices.Length, data: Meshes[i].Vertices);
+            indexBuffer.Initialize(Meshes[i].Indices.Length, data: Meshes[i].Indices);
             vertexArray.Initialize<Vertex>(vertexBuffer, Vertex.DefaultProperties, indexBuffer);
 
             Meshes[i].VertexArray = vertexArray;

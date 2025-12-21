@@ -76,10 +76,8 @@ public partial class D3D11GraphicsDevice : IGraphicsDevice
         throw new NotImplementedException();
     }
 
-    public IGraphicsBuffer CreateGraphicsBuffer()
-    {
-        throw new NotImplementedException();
-    }
+    public IGraphicsBuffer CreateGraphicsBuffer(GraphicsBufferUsage bufferUsage, GraphicsBufferMapAccess bufferMapAccess = GraphicsBufferMapAccess.None) 
+        => new D3D11GraphicsBuffer(this, bufferUsage, bufferMapAccess);
 
     public IRenderTarget CreateRenderTarget(Vector2D<uint> size) => new D3D11RenderTarget(this, size);
 
