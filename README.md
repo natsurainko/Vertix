@@ -1,3 +1,6 @@
+> [!CAUTION]
+> I am migrating to C++ and providing a game framework that only targets the Direct3D 12 graphics API. After careful consideration, I have come to realize that abstracting multiple graphics APIs (OpenGL, D3D11, D3D12, Vulkan) into a unified interface is nearly impossible — if at all possible, it would inevitably sacrifice performance on certain platforms or force the abstraction to adopt the style of a specific platform's API (which I am unwilling to do). Therefore, I have decided to focus exclusively on D3D12 for the Windows platform. For both development convenience and performance reasons, I have chosen C++ over C#. I will soon complete the first D3D12 demo and then re‑upload the framework. Stay tuned!
+
 # Vertix
 [![.NET Version](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)  
