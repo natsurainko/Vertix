@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/natsurainko/Vertix.Dependencies",
+  "commit": "5d75fd5",
+  "targetDirectory": "libraries",
+  "files": [
+    "libraries/assimp-vc145-mt.dll",
+    "libraries/assimp-vc145-mt.lib",
+    "libraries/GameInput.lib"
+  ]
+}
