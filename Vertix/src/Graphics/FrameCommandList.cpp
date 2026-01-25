@@ -10,9 +10,8 @@
 
 using Microsoft::WRL::ComPtr;
 
-Vertix::FrameCommandList::FrameCommandList(
-    const GraphicsDevice* graphicsDevice,
-    const UINT frameCount) : GraphicsCommandList(graphicsDevice), frameCount(frameCount), fenceValue(0) {
+Vertix::FrameCommandList::FrameCommandList(const GraphicsDevice* graphicsDevice,
+                                           const UINT frameCount) : GraphicsCommandList(graphicsDevice), frameCount(frameCount), fenceValue(0) {
 
     if (frameCount == 0) throw std::exception("frameCount cannot be zero");
 

@@ -4,6 +4,7 @@
 
 #ifndef VERTIX_GENERALMOUSEDEVICE_H
 #define VERTIX_GENERALMOUSEDEVICE_H
+
 #include "MouseDevice.h"
 
 namespace Vertix::Engine {

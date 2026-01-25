@@ -10,41 +10,17 @@
 namespace Vertix::Engine {
     class KeyboardDevice : public InputDevice {
     public:
-        KeyboardDevice() = default;
-        ~KeyboardDevice() override {
-            if (initialized) {
-                input->UnregisterCallback(callbackToken);
-                delete[] activeKeysArray;
-            }
-        }
+        KeyboardDevice();
+        ~KeyboardDevice() override;
 
         void InitializeDevice(const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
-                              const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) override {
-            const GameInput::v3::GameInputDeviceInfo* deviceInfo = nullptr;
-            ThrowIfFailed(gameInputDevice->GetDeviceInfo(&deviceInfo));
-            maxSimultaneousKeys = deviceInfo->keyboardInfo->maxSimultaneousKeys;
-            activeKeysArray = new GameInput::v3::GameInputKeyState[maxSimultaneousKeys];
+                              const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) override;
 
-            ThrowIfFailed(gameInput->RegisterReadingCallback(
-               gameInputDevice.Get(),
-               GameInput::v3::GameInputKindKeyboard,
-               this,
-               OnKeyboardReadingCallback,
-               &callbackToken));
+        [[nodiscard]]
+        bool IsKeyPressed(const UINT &virtualKey) const;
 
-            InputDevice::InitializeDevice(gameInput, gameInputDevice);
-        }
-
-        [[nodiscard]] bool IsKeyPressed(const UINT &virtualKey) const {
-            for (UINT i = 0; i < activeKeyCount; i++)
-                if (activeKeysArray[i].virtualKey == virtualKey)
-                    return true;
-
-            return false;
-        }
-
-        void GetActiveKeys(const GameInput::v3::GameInputKeyState** keys, UINT &keyCount) const {
-            *keys = activeKeysArray;
+        void GetActiveKeys(const GameInput::v3::GameInputKeyState* &keys, UINT &keyCount) const {
+            keys = activeKeysArray;
             keyCount = activeKeyCount;
         }
 
@@ -55,12 +31,9 @@ namespace Vertix::Engine {
         GameInput::v3::GameInputCallbackToken callbackToken{};
 
         static void CALLBACK OnKeyboardReadingCallback(
-            _In_ const GameInput::v3::GameInputCallbackToken callbackToken,
+            _In_ GameInput::v3::GameInputCallbackToken callbackToken,
             _In_ void* contextPtr,
-            _In_ GameInput::v3::IGameInputReading* reading) {
-            const auto keyboard = static_cast<KeyboardDevice*>(contextPtr);
-            keyboard->activeKeyCount = reading->GetKeyState(keyboard->maxSimultaneousKeys, keyboard->activeKeysArray);
-        }
+            _In_ GameInput::v3::IGameInputReading* reading);
     };
 }
 #endif //VERTIX_KEYBOARDDEVICE_H

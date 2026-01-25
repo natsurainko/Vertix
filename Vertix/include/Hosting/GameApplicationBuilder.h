@@ -5,42 +5,49 @@
 #ifndef VERTIX_GAMEAPPLICATIONBUILDER_H
 #define VERTIX_GAMEAPPLICATIONBUILDER_H
 
-#include <stdexcept>
-
 #include "GameApplication.h"
 
 namespace Vertix {
     template<typename TWindow>
-        concept GameWindowType =
-            std::derived_from<TWindow, GameWindow>;
+    concept GameWindowType = std::derived_from<TWindow, GameWindow>;
 
     class GameApplicationBuilder {
     public:
-        GameApplicationBuilder(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-            : hInstance(hInstance), hPrevInstance(hPrevInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow) {
+        GameApplicationBuilder(const HINSTANCE &hInstance,
+                               const LPSTR &lpCmdLine,
+                               const int &nCmdShow)
+            : hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow) {}
+
+        template <GameWindowType TWindow>
+        GameApplicationBuilder ConfigureWindow() {
+            gameWindow = new TWindow();
+            return *this;
         }
 
         template <GameWindowType TWindow>
-        void ConfigureWindow() {
-            gameWindow = new TWindow();
+        GameApplicationBuilder ConfigureWindow(const WindowOptions &options) {
+            gameWindow = new TWindow(options);
+            return *this;
         }
 
-        [[nodiscard]] GameApplication* Build() const {
-            if (gameWindow == nullptr)
+        template <GameWindowType TWindow>
+        GameApplicationBuilder ConfigureWindow(TWindow* window) {
+            gameWindow = window;
+            return *this;
+        }
+
+        [[nodiscard]]
+        GameApplication Build() const {
+            if (!gameWindow)
                 throw std::invalid_argument("GameWindow is null");
 
-            return new GameApplication(
-                hInstance,
-                hPrevInstance,
-                lpCmdLine,
-                nCmdShow,
-                gameWindow);
+            return {hInstance, lpCmdLine, nCmdShow, gameWindow};
         }
+
     private:
         GameWindow* gameWindow = nullptr;
 
         HINSTANCE hInstance;
-        HINSTANCE hPrevInstance;
         LPSTR lpCmdLine;
         int nCmdShow;
     };

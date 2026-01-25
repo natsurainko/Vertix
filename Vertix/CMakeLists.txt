@@ -15,8 +15,10 @@
         include/Primitive/Mesh.h
         include/Primitive/Model.h
         include/Rendering/DepthStencilView.h
+        include/Rendering/RenderTargetView.h
         include/Rendering/HlslShader.h
         include/Windowing/GameWindow.h
+        include/Windowing/WindowOptions.h
 
         src/Graphics/FrameCommandList.cpp
         src/Graphics/GraphicsCommandList.cpp

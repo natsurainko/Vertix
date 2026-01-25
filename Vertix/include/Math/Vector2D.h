@@ -10,8 +10,8 @@ namespace Vertix {
     struct Vector2D {
         T X;
         T Y;
-        Vector2D() : X(0), Y(0) {}
-        Vector2D(T x, T y) : X(x), Y(y) {}
+        constexpr Vector2D() : X(0), Y(0) {}
+        constexpr Vector2D(T x, T y) : X(x), Y(y) {}
 
         template <typename TCast>
         Vector2D<TCast> Cast() const {
@@ -28,8 +28,16 @@ namespace Vertix {
         Vector2D operator-(const Vector2D & vector2) const {
             return Vector2D(X - vector2.X, Y - vector2.Y);
         }
+        Vector2D operator*(const T & number) const {
+            return Vector2D(X * number, Y * number);
+        }
         Vector2D operator- () const noexcept { return Vector2D(-X, -Y); }
+
+        static const Vector2D Zero;
     };
+
+    template <typename T>
+    constexpr Vector2D<T> Vector2D<T>::Zero{ T(0), T(0) };
 }
 
 #endif //VERTIX_VECTOR2_H

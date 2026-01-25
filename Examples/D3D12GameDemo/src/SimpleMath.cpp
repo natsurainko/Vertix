@@ -8,7 +8,7 @@
 // http://go.microsoft.com/fwlink/?LinkID=615561
 //-------------------------------------------------------------------------------------
 
-#include "directXTK/simpleMath/SimpleMath.h"
+#include <directXTK/simpleMath/SimpleMath.h>
 
 /****************************************************************************
  *

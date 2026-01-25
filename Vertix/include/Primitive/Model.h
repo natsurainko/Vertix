@@ -17,8 +17,8 @@ namespace Vertix {
         std::vector<Mesh> Meshes;
 
         void UploadToGPU(const GraphicsDevice* graphicsDevice,
-            const GraphicsCommandList* graphicsCommandList,
-            TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
+                         const GraphicsCommandList* graphicsCommandList,
+                         TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
     };

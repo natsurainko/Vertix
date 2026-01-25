@@ -11,11 +11,10 @@
 #include <chrono>
 #include <string>
 #include <windows.h>
+#include <d3d12/d3dx12_core.h>
 
 #include "Math/Vector2D.h"
-
-struct CD3DX12_VIEWPORT;
-struct CD3DX12_RECT;
+#include "Windowing/WindowOptions.h"
 
 namespace Vertix {
     struct KeyboardEventArgs;
@@ -24,9 +23,11 @@ namespace Vertix {
     class SwapChain;
     class GameWindow {
     public:
+        GameWindow();
+        explicit GameWindow(const WindowOptions &options);
         virtual ~GameWindow();
 
-        void NativeInitialize(HINSTANCE hInstance);
+        void NativeInitialize(const HINSTANCE &hInstance);
         void InitializeDevice(GraphicsDevice* device);
 
         virtual void RunMessageLoop(WPARAM &result);
@@ -34,17 +35,42 @@ namespace Vertix {
         virtual void OnInitialize() {}
         virtual void OnDestroy() {}
 
-        [[nodiscard]] LRESULT HitTest(const Vector2D<UINT> &point) const;
-        void Show(int nCmdShow) const;
+        [[nodiscard]]
+        LRESULT HitTest(const Vector2D<UINT> &point) const;
 
-        [[nodiscard]] Vector2D<UINT> GetWindowSize() const;
-        [[nodiscard]] std::wstring GetWindowTitle() const;
-        [[nodiscard]] HWND GetWindowHandle() const;
+        void Show(int nCmdShow = SW_SHOW) const;
 
-        [[nodiscard]] bool GetDraggingState() const;
-        [[nodiscard]] bool GetFocusingState() const;
+        [[nodiscard]]
+        Vector2D<UINT> GetWindowSize() const {
+            return windowSize;
+        }
 
-        void GetD3D12ViewportAndScissorRect(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const;
+        [[nodiscard]]
+        std::wstring GetWindowTitle() const {
+            return windowTitle;
+        }
+
+        [[nodiscard]]
+        HWND GetWindowHandle() const {
+            return m_hwnd;
+        }
+
+        [[nodiscard]]
+        bool GetDraggingState() const {
+            return isDraggingWindow;
+        }
+
+        [[nodiscard]]
+        bool GetFocusingState() const {
+            return isFocused;
+        }
+
+        void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const {
+            viewport.Width = static_cast<float>(windowSize.X);
+            viewport.Height = static_cast<float>(windowSize.Y);
+            scissorRect.right = static_cast<LONG>(windowSize.X);
+            scissorRect.bottom = static_cast<LONG>(windowSize.Y);
+        }
 
         void SetWindowTitle(const std::wstring& title);
         void SetCursorCenterWindow() const;
@@ -54,8 +80,6 @@ namespace Vertix {
         FrameCommandList* frameCommandList = nullptr;
         SwapChain* swapChain = nullptr;
 
-        UINT frameCount = 2;
-
         virtual void InitializeSwapChain();
 
         virtual void OnTick();
@@ -64,8 +88,8 @@ namespace Vertix {
         virtual void OnUpdate(double deltaTime) {}
         virtual void OnRender(double deltaTime) {}
 
-        virtual void OnResizing(Vector2D<UINT> size) {}
-        virtual void OnResized(Vector2D<UINT> size) {}
+        virtual void OnResizing(const Vector2D<UINT> &size) {}
+        virtual void OnResized(const Vector2D<UINT> &size) {}
 
         virtual void OnFocusLost() {}
         virtual void OnFocusGot() {}
@@ -74,17 +98,19 @@ namespace Vertix {
         virtual void OnDragExit() {}
 
     private:
-        Vector2D<UINT> windowSize = Vector2D<UINT>(800, 600);
-        std::wstring windowTitle = L"Vertix.GameWindow";
+        WindowOptions windowOptions;
+        Vector2D<UINT> windowSize;
+        std::wstring windowTitle;
 
         bool isDraggingWindow = false;
         bool isFocused = false;
 
-        HINSTANCE hInstance = nullptr;
-        HWND m_hwnd = nullptr;
         std::chrono::steady_clock::time_point lastTickTime;
 
+        HWND m_hwnd = nullptr;
+
         static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+        static void RegisterDefaultWindowClass(const HINSTANCE &hInstance);
     };
 }
 

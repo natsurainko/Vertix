@@ -8,8 +8,8 @@
 #include "Windowing/GameWindow.h"
 
 namespace Vertix {
-    GameApplication::GameApplication(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow,
-        GameWindow *gameWindow): hInstance(hInstance), hPrevInstance(hPrevInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow),
+    GameApplication::GameApplication(const HINSTANCE &hInstance, const LPSTR &lpCmdLine, const int &nCmdShow,
+        GameWindow *gameWindow): hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow),
             gameWindow(gameWindow) {
         graphicsDevice = new GraphicsDevice();
         gameWindow->InitializeDevice(graphicsDevice);
@@ -23,6 +23,7 @@ namespace Vertix {
         WPARAM result;
         gameWindow->RunMessageLoop(result);
         gameWindow->OnDestroy();
+
         return static_cast<char>(result);
     }
 

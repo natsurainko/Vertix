@@ -5,25 +5,22 @@
 #ifndef VERTIX_GAMEAPPLICATION_H
 #define VERTIX_GAMEAPPLICATION_H
 
-#include "Hosting/GameApplication.h"
 #include "Windowing/GameWindow.h"
 
 namespace Vertix {
     class GameApplication {
     public:
-        explicit GameApplication(
-            HINSTANCE hInstance,
-            HINSTANCE hPrevInstance,
-            LPSTR lpCmdLine,
-            int nCmdShow,
-            GameWindow* gameWindow);
+        GameApplication(const HINSTANCE &hInstance,
+                        const LPSTR &lpCmdLine,
+                        const int &nCmdShow,
+                        GameWindow* gameWindow);
 
-        [[nodiscard]] int Run() const;
+        [[nodiscard]]
+        int Run() const;
 
         ~GameApplication();
     private:
         HINSTANCE hInstance;
-        HINSTANCE hPrevInstance;
         LPSTR lpCmdLine;
         int nCmdShow;
 

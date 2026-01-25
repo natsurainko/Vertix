@@ -7,8 +7,7 @@
 
 #include <dxgi1_6.h>
 #include <wrl.h>
-
-#include "d3d12/d3d12.h"
+#include <d3d12/d3d12.h>
 
 namespace Vertix {
     class GameWindow;

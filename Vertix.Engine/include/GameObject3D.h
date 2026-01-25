@@ -5,12 +5,15 @@
 #ifndef VERTIX_GAMEOBJECT3D_H
 #define VERTIX_GAMEOBJECT3D_H
 
-#include "directXTK/simpleMath/SimpleMath.h"
+#include <directXTK/simpleMath/SimpleMath.h>
 
 namespace Vertix::Engine {
     class GameObject3D {
     public:
-        void Move(const DirectX::SimpleMath::Vector3 &offset, bool relative = true, bool allowRoll = false);
+        void Move(const DirectX::SimpleMath::Vector3 &offset,
+                  bool relative = true,
+                  bool allowRoll = false);
+
         void Rotate(const DirectX::SimpleMath::Vector3 &angles, bool allowRoll = false);
 
     protected:

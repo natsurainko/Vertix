@@ -5,9 +5,8 @@
 #ifndef VERTIX_COMMANDLIST_H
 #define VERTIX_COMMANDLIST_H
 
+#include <d3d12/d3d12.h>
 #include <wrl/client.h>
-
-#include "d3d12/d3d12.h"
 
 namespace Vertix {
     class GraphicsDevice;
@@ -25,7 +24,6 @@ namespace Vertix {
         }
     protected:
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
-
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> graphicsCommandList;
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;

@@ -5,9 +5,8 @@
 #ifndef VERTIX_VERTEXBUFFER_H
 #define VERTIX_VERTEXBUFFER_H
 
+#include <d3d12/d3d12.h>
 #include <wrl/client.h>
-
-#include "d3d12/d3d12.h"
 
 namespace Vertix {
     class VertexBuffer {

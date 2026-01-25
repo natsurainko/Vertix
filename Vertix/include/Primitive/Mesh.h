@@ -7,10 +7,10 @@
 
 #include <string>
 #include <vector>
+#include <d3d12/d3d12.h>
 #include <wrl/client.h>
 
 #include "Vertex.h"
-#include "d3d12/d3d12.h"
 #include "Graphics/TempGraphicsResourceHeap.h"
 #include "Graphics/Buffers/IndexBuffer.h"
 #include "Graphics/Buffers/VertexBuffer.h"
@@ -29,8 +29,8 @@ namespace Vertix {
         ~Mesh();
 
         void UploadToGPU(const Microsoft::WRL::ComPtr<ID3D12Device10> &device,
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
-            TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
+                         const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+                         TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
     };

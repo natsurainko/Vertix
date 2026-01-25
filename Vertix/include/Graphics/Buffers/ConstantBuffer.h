@@ -5,10 +5,10 @@
 #ifndef VERTIX_CONSTANTBUFFER_H
 #define VERTIX_CONSTANTBUFFER_H
 
+#include <d3d12/d3d12.h>
+#include <d3d12/d3dx12_core.h>
 #include <wrl/client.h>
 
-#include "d3d12/d3d12.h"
-#include "d3d12/d3dx12_core.h"
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsDevice.h"
 
@@ -38,7 +38,7 @@ namespace Vertix {
         }
 
         ~ConstantBuffer() {
-            if (bufferDataBegin != nullptr) {
+            if (bufferDataBegin) {
                 d3d12Resource->Unmap(0, nullptr);
                 bufferDataBegin = nullptr;
             }
@@ -48,6 +48,12 @@ namespace Vertix {
             memcpy(bufferDataBegin, &value, sizeof(T));
         }
 
+        [[nodiscard]]
+        Microsoft::WRL::ComPtr<ID3D12Resource> GetD3D12Resource() const {
+            return d3d12Resource;
+        }
+
+    private:
         Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
         UINT8* bufferDataBegin = nullptr;
     };

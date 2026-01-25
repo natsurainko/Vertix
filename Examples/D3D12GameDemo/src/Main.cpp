@@ -11,18 +11,18 @@
 
 _Use_decl_annotations_
 
-int WINAPI WinMain(
-    const HINSTANCE hInstance,
-    const HINSTANCE hPrevInstance,
-    const LPSTR lpCmdLine,
-    const int nCmdShow)
-{
-    Vertix::GameApplicationBuilder builder(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-    builder.ConfigureWindow<DemoMainWindow>();
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nShowCmd) {
+    int exitCode;
+    {
+        Vertix::WindowOptions windowOptions = Vertix::WindowOptions::GetDefaultWindowOptions();
+        windowOptions.windowTitle = L"D3D12GameDemo.MainWindow";
+        windowOptions.windowSize = { 1280, 720 };
 
-    const auto application = builder.Build();
-    const auto exitCode = application->Run();
-    delete application;
+        exitCode = Vertix::GameApplicationBuilder(hInstance, lpCmdLine, nShowCmd)
+            .ConfigureWindow<DemoMainWindow>(windowOptions)
+            .Build()
+            .Run();
+    }
 
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     _CrtDumpMemoryLeaks();

@@ -5,9 +5,10 @@
 #ifndef VERTIX_DEMOMAINWINDOW_H
 #define VERTIX_DEMOMAINWINDOW_H
 
+#include <d3d12/d3dx12_core.h>
+#include <d3d12/d3dx12_root_signature.h>
+
 #include "Camera/PerspectiveCamera.h"
-#include "d3d12/d3dx12_core.h"
-#include "d3d12/d3dx12_root_signature.h"
 #include "Graphics/Buffers/ConstantBuffer.h"
 #include "Helpers/FrameCounter.h"
 #include "Input/GameInputInterface.h"
@@ -27,9 +28,8 @@ struct RootConstants {
 
 class DemoMainWindow : public Vertix::GameWindow {
 public:
-    DemoMainWindow() {
-        SetWindowTitle(L"D3D12GameDemo.MainWindow");
-        GetD3D12ViewportAndScissorRect(viewport, scissorRect);
+    explicit DemoMainWindow(const Vertix::WindowOptions &options) : GameWindow(options) {
+        GetD3D12ViewportRectSize(viewport, scissorRect);
     }
 
     ~DemoMainWindow() override {
@@ -41,23 +41,10 @@ private:
 
     void OnUpdate(double deltaTime) override;
     void OnRender(double deltaTime) override;
-    void OnResized(Vertix::Vector2D<UINT> size) override;
+    void OnResized(const Vertix::Vector2D<UINT> &size) override;
+    void OnFocusLost() override;
 
-    void OnFocusLost() override {
-        if (enableRotating) {
-            ShowCursor(true);
-            enableRotating = false;
-        }
-    }
-
-    void FillConstantBuffer() const {
-        RootConstants constants = {};
-        constants.WorldViewProjection = worldMatrix * viewMatrix * projectionMatrix;
-        worldMatrix.Invert(constants.WorldInverseTranspose);
-        constants.WorldInverseTranspose.Transpose(constants.WorldInverseTranspose);
-
-        constantBuffer->Fill(constants);
-    }
+    void FillConstantBuffer() const;
 
     bool enableRotating = false;
 
@@ -79,13 +66,12 @@ private:
     ComPtr<ID3D12DescriptorHeap> depthStencilDescriptorHeap;
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle{};
-    CD3DX12_VIEWPORT viewport{0.0,0.0,800.0,600.0};
+    CD3DX12_VIEWPORT viewport{0.0,0.0, 0.0, 0.0};
     CD3DX12_RECT scissorRect{};
 
     Vertix::Engine::GameInputInterface inputInterface;
     Vertix::Engine::GeneralKeyboardDevice keyboardDevice {inputInterface};
     Vertix::Engine::GeneralMouseDevice mouseDevice {inputInterface};
-
 #ifndef NDEBUG
     FrameCounter frameCounter;
 #endif

@@ -6,10 +6,10 @@
 #define VERTIX_COMMANDQUEUE_H
 
 #include <vector>
+#include <d3d12/d3d12.h>
 #include <wrl/client.h>
 
 #include "GraphicsCommandList.h"
-#include "d3d12/d3d12.h"
 
 namespace Vertix {
     class GraphicsDevice;

@@ -5,8 +5,7 @@
 #ifndef VERTIX_INPUTDEVICE_H
 #define VERTIX_INPUTDEVICE_H
 
-#include "GameInput/GameInput.h"
-
+#include <GameInput/GameInput.h>
 #include <wrl/client.h>
 
 namespace Vertix::Engine {
@@ -22,9 +21,11 @@ namespace Vertix::Engine {
             initialized = true;
         }
 
-        [[nodiscard]] bool IsInitialized() const {
+        [[nodiscard]]
+        bool IsInitialized() const {
             return initialized;
         }
+
     protected:
         bool initialized = false;
         Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> input;

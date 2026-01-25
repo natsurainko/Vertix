@@ -9,11 +9,9 @@
 
 using Microsoft::WRL::ComPtr;
 
-Vertix::SwapChain::SwapChain(
-    const GraphicsDevice* graphicsDevice,
-    const HWND hwnd,
-    const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) {
-
+Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
+                             const HWND hwnd,
+                             const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) {
     const UINT frameCount = swapChainDesc.BufferCount;
     const ComPtr<IDXGIFactory6> dxgiFactory = graphicsDevice->GetDxgiFactory();
     d3d12Device = graphicsDevice->GetD3D12Device();
@@ -30,6 +28,7 @@ Vertix::SwapChain::SwapChain(
 
         ThrowIfFailed(dxgiSwapChain1.As(&dxgiSwapChain));
         currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();
+        frameSize = {swapChainDesc.Width, swapChainDesc.Height};
     }
 
     {
@@ -55,20 +54,8 @@ Vertix::SwapChain::SwapChain(
     }
 }
 
-ComPtr<ID3D12Resource> Vertix::SwapChain::GetCurrentFrameRenderTargetResource() {
-    return renderTargets[currentFrameIndex];
-}
-
-CD3DX12_CPU_DESCRIPTOR_HANDLE Vertix::SwapChain::GetCurrentFrameRenderTargetHandle() const {
-    return {descriptorHandleForHeapStart, static_cast<int>(currentFrameIndex), renderTargetsDescriptorLength};
-}
-
-UINT Vertix::SwapChain::GetCurrentFrameIndex() const {
-    return currentFrameIndex;
-}
-
 void Vertix::SwapChain::PresentFrame() {
-    ThrowIfFailed(dxgiSwapChain->Present(1, 0));
+    ThrowIfFailed(dxgiSwapChain->Present(presentSyncInterval, presentFlags));
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();
 }
 
@@ -95,10 +82,17 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
     }
 
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();
+    frameSize = size;
 }
 
-Vertix::Vector2D<UINT> Vertix::SwapChain::GetFrameSize() const {
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    ThrowIfFailed(dxgiSwapChain->GetDesc1(&swapChainDesc));
-    return { swapChainDesc.Width, swapChainDesc.Height };
+void Vertix::SwapChain::SetEnableVSync(const bool &enable) {
+    enableVSync = enable;
+
+    if (enable) {
+        presentSyncInterval = 1;
+        presentFlags = 0;
+    } else {
+        presentSyncInterval = 0;
+        presentFlags = DXGI_PRESENT_ALLOW_TEARING;
+    }
 }

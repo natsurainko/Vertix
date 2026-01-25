@@ -4,16 +4,17 @@
 
 #include "DemoMainWindow.h"
 
+#include <d3d12/d3dx12_barriers.h>
+
 #include "Content/ModelImporter.h"
-#include "d3d12/d3dx12_barriers.h"
 #include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
 #include "Graphics/SwapChain.h"
-#include "Input/GameInputInterface.h"
 
 void DemoMainWindow::OnInitialize() {
     const auto device = graphicsDevice->GetD3D12Device();
+    const auto windowSize = GetWindowSize();
 
     {
         commandList = frameCommandList->GetD3D12GraphicsCommandList();
@@ -57,13 +58,11 @@ void DemoMainWindow::OnInitialize() {
         };
         ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&depthStencilDescriptorHeap)));
 
-        const auto size = GetWindowSize();
         dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-        depthStencilView = new Vertix::DepthStencilView(
-            graphicsDevice,
+        depthStencilView = new Vertix::DepthStencilView(graphicsDevice,
             CD3DX12_RESOURCE_DESC::Tex2D(
                 DXGI_FORMAT_D24_UNORM_S8_UINT,
-                size.X, size.Y,
+                windowSize.X, windowSize.Y,
                 1, 0, 1, 0,
                 D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
             ),
@@ -101,6 +100,7 @@ void DemoMainWindow::OnInitialize() {
     }
 
     {
+        perspectiveCamera.SetAspect(static_cast<float>(windowSize.X) / static_cast<float>(windowSize.Y));
         perspectiveCamera.Move({-5,0,0});
         perspectiveCamera.GetProjectionMatrix(projectionMatrix);
         perspectiveCamera.GetViewMatrix(viewMatrix);
@@ -129,13 +129,13 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
             && !enableRotating) {
             ShowCursor(false);
             enableRotating = true;
-            }
+        }
 
         if (enableRotating) {
             SetCursorCenterWindow();
             const Vertix::Vector2D<float> mouseDeltaOffset = -mouseDevice.GetDeltaOffset().Cast<float>();
             const DirectX::SimpleMath::Vector3 rotationOffset {mouseDeltaOffset.Y, mouseDeltaOffset.X, 0.0};
-            perspectiveCamera.Rotate(rotationOffset * (static_cast<float>(deltaTime) * 0.1f));
+            perspectiveCamera.Rotate(rotationOffset * 0.002);
         }
     }
 
@@ -146,7 +146,7 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
     if (keyboardDevice.IsKeyPressed(VK_LSHIFT)) movingOffset.y -= 1;
     if (keyboardDevice.IsKeyPressed('D')) movingOffset.z += 1;
     if (keyboardDevice.IsKeyPressed('A')) movingOffset.z -= 1;
-    perspectiveCamera.Move(movingOffset * (static_cast<float>(deltaTime) * 1.5f));
+    perspectiveCamera.Move(movingOffset * static_cast<float>(deltaTime * 1.5));
     perspectiveCamera.GetViewMatrix(viewMatrix);
 }
 
@@ -165,7 +165,7 @@ void DemoMainWindow::OnRender(const double deltaTime) {
     commandList->RSSetScissorRects(1, &scissorRect);
     commandList->ResourceBarrier(1, &presentToRenderTargetBarrier);
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->d3d12Resource->GetGPUVirtualAddress());
+    commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetD3D12Resource()->GetGPUVirtualAddress());
     commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
     commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH , 1.0f, 0, 0, nullptr);
@@ -175,8 +175,10 @@ void DemoMainWindow::OnRender(const double deltaTime) {
     commandList->ResourceBarrier(1, &renderTargetToPresentBarrier);
 }
 
-void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> size) {
-    GetD3D12ViewportAndScissorRect(viewport, scissorRect);
+void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
+    if (size == Vertix::Vector2D<UINT>::Zero) return;
+
+    GetD3D12ViewportRectSize(viewport, scissorRect);
 
     frameCommandList->WaitAllFrames();
     swapChain->Resize(size);
@@ -184,4 +186,20 @@ void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> size) {
 
     perspectiveCamera.SetAspect(static_cast<float>(size.X) / static_cast<float>(size.Y));
     perspectiveCamera.GetProjectionMatrix(projectionMatrix);
+}
+
+void DemoMainWindow::OnFocusLost() {
+    if (enableRotating) {
+        ShowCursor(true);
+        enableRotating = false;
+    }
+}
+
+void DemoMainWindow::FillConstantBuffer() const {
+    RootConstants constants = {};
+    constants.WorldViewProjection = worldMatrix * viewMatrix * projectionMatrix;
+    worldMatrix.Invert(constants.WorldInverseTranspose);
+    constants.WorldInverseTranspose.Transpose(constants.WorldInverseTranspose);
+
+    constantBuffer->Fill(constants);
 }

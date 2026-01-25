@@ -4,6 +4,7 @@
 
 #ifndef VERTIX_GENERALKEYBOARDDEVICE_H
 #define VERTIX_GENERALKEYBOARDDEVICE_H
+
 #include "KeyboardDevice.h"
 #include "Exceptions/HResultException.h"
 

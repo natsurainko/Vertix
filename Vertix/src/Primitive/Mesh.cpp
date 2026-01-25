@@ -4,9 +4,10 @@
 
 #include "Primitive/Mesh.h"
 
-#include "d3d12/d3dx12_barriers.h"
-#include "d3d12/d3dx12_core.h"
-#include "d3d12/d3dx12_resource_helpers.h"
+#include <d3d12/d3dx12_barriers.h>
+#include <d3d12/d3dx12_core.h>
+#include <d3d12/d3dx12_resource_helpers.h>
+
 #include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
@@ -19,8 +20,8 @@ Vertix::Mesh::~Mesh() {
 }
 
 void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
-    const ComPtr<ID3D12GraphicsCommandList5> &commandList,
-    TempGraphicsResourceHeap<ComPtr<ID3D12Resource>> &tempResourceHeap) {
+                               const ComPtr<ID3D12GraphicsCommandList5> &commandList,
+                               TempGraphicsResourceHeap<ComPtr<ID3D12Resource>> &tempResourceHeap) {
     const auto defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     const auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
