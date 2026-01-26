@@ -2,17 +2,13 @@
         src/main.cpp
         src/DemoMainWindow.cpp
         src/DemoMainWindow.h
-        src/Helpers/FrameCounter.h
         src/SimpleMath.cpp
 )
 
 add_dependencies(D3D12GameDemo Vertix)
 add_dependencies(D3D12GameDemo Vertix.Engine)
 
-target_include_directories(Vertix BEFORE PUBLIC ${INCLUDES_DIR})
-
-target_link_libraries(D3D12GameDemo PRIVATE Vertix)
-target_link_libraries(D3D12GameDemo PRIVATE Vertix.Engine)
+target_link_libraries(D3D12GameDemo PRIVATE Vertix Vertix.Engine)
 
 add_custom_command(TARGET D3D12GameDemo POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

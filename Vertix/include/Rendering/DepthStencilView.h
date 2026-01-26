@@ -15,9 +15,10 @@ namespace Vertix {
     class DepthStencilView {
     public:
         DepthStencilView(GraphicsDevice* graphicsDevice,
-                         const D3D12_RESOURCE_DESC &depthStencilDesc,
+                         const D3D12_RESOURCE_DESC &dsvResourceDesc,
                          const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
-                         const D3D12_DEPTH_STENCIL_VIEW_DESC* depthStencilViewDesc = nullptr);
+                         const D3D12_DEPTH_STENCIL_VIEW_DESC* dsvDesc = nullptr,
+                         const D3D12_CLEAR_VALUE &clearValue = { .DepthStencil = { 1.0f, 0 } });
 
         void Resize(const Vector2D<UINT> &size);
 
@@ -35,10 +36,10 @@ namespace Vertix {
         Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
 
         D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
-        D3D12_RESOURCE_DESC depthStencilDesc;
+        D3D12_RESOURCE_DESC dsvResourceDesc;
         D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc{};
-        D3D12_CLEAR_VALUE clearValue { .DepthStencil = { 1.0f, 0 } };
-        bool hasDepthStencilViewDesc = false;
+        D3D12_CLEAR_VALUE clearValue;
+        bool hasDsvDesc = false;
     };
 }
 

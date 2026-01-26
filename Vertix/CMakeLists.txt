@@ -30,10 +30,11 @@
         src/Rendering/DepthStencilView.cpp
         src/Rendering/HlslShader.cpp
         src/Windowing/GameWindow.cpp
+        src/Rendering/RenderTargetView.cpp
 )
 
 target_compile_definitions(Vertix PRIVATE UNICODE _UNICODE)
-target_link_libraries(Vertix PUBLIC d3d12 dxgi dxguid d3dcompiler)
+target_link_libraries(Vertix PUBLIC d3d12 d3dcompiler dxgi dxguid dwmapi)
 
 target_include_directories(Vertix BEFORE PUBLIC ${INCLUDES_DIR})
 target_include_directories(Vertix PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

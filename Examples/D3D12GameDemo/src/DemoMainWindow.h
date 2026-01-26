@@ -73,7 +73,7 @@ private:
     Vertix::Engine::GeneralKeyboardDevice keyboardDevice {inputInterface};
     Vertix::Engine::GeneralMouseDevice mouseDevice {inputInterface};
 #ifndef NDEBUG
-    FrameCounter frameCounter;
+    Vertix::Engine::FrameCounter frameCounter;
 #endif
 };
 

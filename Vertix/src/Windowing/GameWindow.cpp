@@ -6,6 +6,8 @@
 
 #include "Windowing/GameWindow.h"
 
+#include <dwmapi.h>
+
 #include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
@@ -57,6 +59,8 @@ void Vertix::GameWindow::NativeInitialize(const HINSTANCE &hInstance) {
         nullptr,
         hInstance,
         this);
+
+    ApplySystemThemeMode(m_hwnd);
 
     InitializeSwapChain();
 }
@@ -180,9 +184,11 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
 
         case WM_SIZE:
             if (gameWindow) {
-                if (const auto newSize = Vector2D<UINT>(LOWORD(lParam), HIWORD(lParam)); newSize != gameWindow->windowSize) {
-                    gameWindow->windowSize = newSize;
-                    gameWindow->OnResized(gameWindow->windowSize);
+                if (wParam != SIZE_MINIMIZED) {
+                    if (const auto newSize = Vector2D<UINT>(LOWORD(lParam), HIWORD(lParam)); newSize != gameWindow->windowSize) {
+                        gameWindow->windowSize = newSize;
+                        gameWindow->OnResized(gameWindow->windowSize);
+                    }
                 }
             }
             return 0;
@@ -214,6 +220,12 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
             if (gameWindow) {
                 gameWindow->isFocused = false;
                 gameWindow->OnFocusLost();
+            }
+            return 0;
+
+        case WM_SETTINGCHANGE:
+            if (gameWindow) {
+                ApplySystemThemeMode(gameWindow->m_hwnd);
             }
             return 0;
 
@@ -249,4 +261,44 @@ void Vertix::GameWindow::RegisterDefaultWindowClass(const HINSTANCE &hInstance) 
     RegisterClassEx(&windowClass);
 
     defaultWindowClassRegistered = true;
+}
+
+void Vertix::GameWindow::ApplySystemThemeMode(const HWND &hwnd) {
+    static int Support_DWMWA_USE_IMMERSIVE_DARK_MODE = -1;
+    static BOOL use_immersive_dark_mode = false;
+
+    if (Support_DWMWA_USE_IMMERSIVE_DARK_MODE == 0) return;
+
+    {
+        DWORD value = 0;
+        DWORD size = sizeof(value);
+
+        const LSTATUS result = RegGetValueW(
+            HKEY_CURRENT_USER,
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            L"AppsUseLightTheme",
+            RRF_RT_REG_DWORD,
+            nullptr,
+            &value,
+            &size
+        );
+
+        if (result == ERROR_SUCCESS) {
+            if (use_immersive_dark_mode == (value == 0)) return;
+            use_immersive_dark_mode = value == 0;
+        }
+    }
+
+    {
+        const HRESULT hr = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_USE_IMMERSIVE_DARK_MODE,
+            &use_immersive_dark_mode,
+            sizeof(use_immersive_dark_mode)
+        );
+
+        if (Support_DWMWA_USE_IMMERSIVE_DARK_MODE == -1) {
+            Support_DWMWA_USE_IMMERSIVE_DARK_MODE = hr == E_INVALIDARG ? 0 : 1;
+        }
+    }
 }

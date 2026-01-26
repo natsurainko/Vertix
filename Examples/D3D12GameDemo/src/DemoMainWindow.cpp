@@ -120,7 +120,9 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
     if (mouseDevice.IsInitialized()) {
         mouseDevice.Update();
 
-        if (mouseDevice.WasButtonReleased(GameInput::v3::GameInputMouseRightButton) && enableRotating) {
+        if (mouseDevice.WasButtonReleased(GameInput::v3::GameInputMouseRightButton)
+            && HitTest(mouseDevice.GetPosition().Cast<UINT>()) == HTCLIENT
+            && enableRotating) {
             ShowCursor(true);
             enableRotating = false;
         }
@@ -176,8 +178,6 @@ void DemoMainWindow::OnRender(const double deltaTime) {
 }
 
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
-    if (size == Vertix::Vector2D<UINT>::Zero) return;
-
     GetD3D12ViewportRectSize(viewport, scissorRect);
 
     frameCommandList->WaitAllFrames();

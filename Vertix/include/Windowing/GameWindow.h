@@ -111,6 +111,9 @@ namespace Vertix {
 
         static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
         static void RegisterDefaultWindowClass(const HINSTANCE &hInstance);
+
+    public:
+        static void ApplySystemThemeMode(const HWND &hwnd);
     };
 }
 

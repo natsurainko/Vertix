@@ -2,6 +2,7 @@
         include/Camera/PerspectiveCamera.h
         include/Content/ModelImporter.h
         include/Math/FloatExtensions.h
+        include/Helpers/FrameCounter.h
         include/Input/GeneralKeyboardDevice.h
         include/Input/GeneralMouseDevice.h
         include/Input/GameInputInterface.h

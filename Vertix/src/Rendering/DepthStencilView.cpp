@@ -10,16 +10,17 @@
 #include "Graphics/GraphicsDevice.h"
 
 Vertix::DepthStencilView::DepthStencilView(GraphicsDevice *graphicsDevice,
-                                           const D3D12_RESOURCE_DESC &depthStencilDesc,
+                                           const D3D12_RESOURCE_DESC &dsvResourceDesc,
                                            const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
-                                           const D3D12_DEPTH_STENCIL_VIEW_DESC* depthStencilViewDesc)
-        : graphicsDevice(graphicsDevice), dsvHandle(descriptorHandle), depthStencilDesc(depthStencilDesc) {
-    if (depthStencilViewDesc) {
-        hasDepthStencilViewDesc = true;
-        this->depthStencilViewDesc = *depthStencilViewDesc;
+                                           const D3D12_DEPTH_STENCIL_VIEW_DESC* dsvDesc,
+                                           const D3D12_CLEAR_VALUE &clearValue)
+    : graphicsDevice(graphicsDevice), dsvHandle(descriptorHandle), dsvResourceDesc(dsvResourceDesc), clearValue(clearValue) {
+    if (dsvDesc) {
+        hasDsvDesc = true;
+        this->depthStencilViewDesc = *dsvDesc;
     }
 
-    clearValue.Format = depthStencilDesc.Format;
+    this->clearValue.Format = dsvResourceDesc.Format;
 
     const auto device = graphicsDevice->GetD3D12Device();
     const CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
@@ -27,18 +28,18 @@ Vertix::DepthStencilView::DepthStencilView(GraphicsDevice *graphicsDevice,
     ThrowIfFailed(device->CreateCommittedResource(
         &defaultHeapProps,
         D3D12_HEAP_FLAG_NONE,
-        &depthStencilDesc,
+        &dsvResourceDesc,
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &clearValue,
+        &this->clearValue,
         IID_PPV_ARGS(&d3d12Resource)
     ));
 
-    device->CreateDepthStencilView(d3d12Resource.Get(), depthStencilViewDesc, dsvHandle);
+    device->CreateDepthStencilView(d3d12Resource.Get(), dsvDesc, dsvHandle);
 }
 
 void Vertix::DepthStencilView::Resize(const Vector2D<UINT> &size) {
-    depthStencilDesc.Width = size.X;
-    depthStencilDesc.Height = size.Y;
+    dsvResourceDesc.Width = size.X;
+    dsvResourceDesc.Height = size.Y;
 
     d3d12Resource.Reset();
     const auto device = graphicsDevice->GetD3D12Device();
@@ -47,11 +48,11 @@ void Vertix::DepthStencilView::Resize(const Vector2D<UINT> &size) {
     ThrowIfFailed(device->CreateCommittedResource(
         &defaultHeapProps,
         D3D12_HEAP_FLAG_NONE,
-        &depthStencilDesc,
+        &dsvResourceDesc,
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
         &clearValue,
         IID_PPV_ARGS(&d3d12Resource)
     ));
 
-    device->CreateDepthStencilView(d3d12Resource.Get(), hasDepthStencilViewDesc ? &depthStencilViewDesc : nullptr, dsvHandle);
+    device->CreateDepthStencilView(d3d12Resource.Get(), hasDsvDesc ? &depthStencilViewDesc : nullptr, dsvHandle);
 }
