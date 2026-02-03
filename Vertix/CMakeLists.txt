@@ -1,5 +1,6 @@
 ﻿add_library(Vertix SHARED
         include/Exceptions/HResultException.h
+        include/Graphics/DescriptorHeap.h
         include/Graphics/FrameCommandList.h
         include/Graphics/GraphicsCommandList.h
         include/Graphics/GraphicsDevice.h
@@ -8,6 +9,7 @@
         include/Graphics/Buffers/VertexBuffer.h
         include/Graphics/Buffers/IndexBuffer.h
         include/Graphics/Buffers/ConstantBuffer.h
+        include/Graphics/Buffers/ConstantBufferPageArray.h
         include/Hosting/GameApplication.h
         include/Hosting/GameApplicationBuilder.h
         include/Math/Vector2D.h
@@ -17,20 +19,24 @@
         include/Rendering/DepthStencilView.h
         include/Rendering/RenderTargetView.h
         include/Rendering/HlslShader.h
+        include/Rendering/RenderPass.h
+        include/Rendering/RenderPipeline.h
         include/Windowing/GameWindow.h
         include/Windowing/WindowOptions.h
 
+        src/Graphics/DescriptorHeap.cpp
         src/Graphics/FrameCommandList.cpp
         src/Graphics/GraphicsCommandList.cpp
         src/Graphics/GraphicsDevice.cpp
         src/Graphics/SwapChain.cpp
+        src/Graphics/Buffers/VertexBuffer.cpp
         src/Hosting/GameApplication.cpp
         src/Primitive/Mesh.cpp
         src/Primitive/Model.cpp
         src/Rendering/DepthStencilView.cpp
         src/Rendering/HlslShader.cpp
-        src/Windowing/GameWindow.cpp
         src/Rendering/RenderTargetView.cpp
+        src/Windowing/GameWindow.cpp
 )
 
 target_compile_definitions(Vertix PRIVATE UNICODE _UNICODE)

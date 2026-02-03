@@ -15,14 +15,24 @@ namespace Vertix {
     class GraphicsDevice {
     public:
         explicit GraphicsDevice(bool useSoftware = false);
+        ~GraphicsDevice();
 
         void WaitForGPU() const;
 
-        [[nodiscard]] Microsoft::WRL::ComPtr<IDXGIFactory6> GetDxgiFactory() const;
-        [[nodiscard]] Microsoft::WRL::ComPtr<ID3D12Device10> GetD3D12Device() const;
-        [[nodiscard]] Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetD3D12CommandQueue() const;
+        [[nodiscard]]
+        const Microsoft::WRL::ComPtr<IDXGIFactory6>& GetDxgiFactory() const {
+            return dxgiFactory;
+        }
 
-        ~GraphicsDevice();
+        [[nodiscard]]
+        const Microsoft::WRL::ComPtr<ID3D12Device10>& GetD3D12Device() const {
+            return d3d12Device;
+        }
+
+        [[nodiscard]]
+        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetD3D12CommandQueue() const {
+            return d3d12CommandQueue;
+        }
 
     private:
         bool useSoftwareRendering = false;

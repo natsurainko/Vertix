@@ -22,7 +22,7 @@ Vertix::RenderTargetView::RenderTargetView(GraphicsDevice* graphicsDevice,
 
     this->clearValue.Format = rtvResourceDesc.Format;
 
-    const auto device = graphicsDevice->GetD3D12Device();
+    const auto &device = graphicsDevice->GetD3D12Device();
     const CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 
     ThrowIfFailed(device->CreateCommittedResource(
@@ -38,11 +38,11 @@ Vertix::RenderTargetView::RenderTargetView(GraphicsDevice* graphicsDevice,
 }
 
 void Vertix::RenderTargetView::Resize(const Vector2D<UINT> &size) {
-    rtvResourceDesc.Width = size.X;
-    rtvResourceDesc.Height = size.Y;
+    rtvResourceDesc.Width = (std::max)(size.X, static_cast<UINT>(1));
+    rtvResourceDesc.Height = (std::max)(size.Y, static_cast<UINT>(1));
 
     d3d12Resource.Reset();
-    const auto device = graphicsDevice->GetD3D12Device();
+    const auto &device = graphicsDevice->GetD3D12Device();
     const CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 
     ThrowIfFailed(device->CreateCommittedResource(

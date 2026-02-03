@@ -19,7 +19,8 @@ namespace Vertix {
         virtual void EndCommand() const;
         void WaitForCommand() const;
 
-        [[nodiscard]] Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> GetD3D12GraphicsCommandList() const {
+        [[nodiscard]]
+        const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5>& GetD3D12GraphicsCommandList() const {
             return graphicsCommandList;
         }
     protected:

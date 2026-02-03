@@ -5,16 +5,42 @@
 #ifndef VERTIX_GAMEOBJECT3D_H
 #define VERTIX_GAMEOBJECT3D_H
 
+#include <d3d12/d3d12.h>
 #include <directXTK/simpleMath/SimpleMath.h>
+#include <wrl/client.h>
 
 namespace Vertix::Engine {
     class GameObject3D {
     public:
-        void Move(const DirectX::SimpleMath::Vector3 &offset,
-                  bool relative = true,
-                  bool allowRoll = false);
+        virtual ~GameObject3D() = default;
 
-        void Rotate(const DirectX::SimpleMath::Vector3 &angles, bool allowRoll = false);
+        virtual void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const {}
+
+        virtual void Move(const DirectX::SimpleMath::Vector3 &offset,
+                          bool relative = true,
+                          bool allowRoll = false);
+
+        virtual void Rotate(const DirectX::SimpleMath::Vector3 &angles, bool allowRoll = false);
+
+        [[nodiscard]]
+        const DirectX::SimpleMath::Matrix& GetWorldMatrix() const {
+            return world;
+        }
+
+        [[nodiscard]]
+        const DirectX::SimpleMath::Vector3& GetPosition() const {
+            return position;
+        }
+
+        [[nodiscard]]
+        const DirectX::SimpleMath::Quaternion& GetOrientation() const {
+            return orientation;
+        }
+
+        void SetPosition(const DirectX::SimpleMath::Vector3 &newPosition) {
+            this->position = newPosition;
+            UpdateWorldMatrix();
+        }
 
     protected:
         void UpdateWorldMatrix() {

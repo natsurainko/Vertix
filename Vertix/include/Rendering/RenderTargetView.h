@@ -18,17 +18,17 @@ namespace Vertix {
                                   const D3D12_RESOURCE_DESC &rtvResourceDesc,
                                   const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
                                   const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc = nullptr,
-                                  const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } });
+                                  const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } });
 
         void Resize(const Vector2D<UINT> &size);
 
         [[nodiscard]]
-        Microsoft::WRL::ComPtr<ID3D12Resource> GetD3D12Resource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const {
             return d3d12Resource;
         }
 
         [[nodiscard]]
-        D3D12_CPU_DESCRIPTOR_HANDLE GetHandle() const {
+        const D3D12_CPU_DESCRIPTOR_HANDLE& GetHandle() const {
             return rtvHandle;
         }
 

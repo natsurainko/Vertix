@@ -20,7 +20,7 @@ Vertix::Engine::PerspectiveCamera::PerspectiveCamera(const float aspect,
     up = Vector3::Transform(Vector3::Up, orientation);
 }
 
-Vertix::Engine::PerspectiveCamera::PerspectiveCamera() : aspect(4.0 / 3.0) , fov(DegreesToRadians(45)) , nearPlane(0.1f) , farPlane(100) {
+Vertix::Engine::PerspectiveCamera::PerspectiveCamera() : aspect(4.0 / 3.0) , fov(DegreesToRadians(45)) , nearPlane(0.1f) , farPlane(500) {
     projectionMatrix = Matrix::CreatePerspectiveFieldOfView(fov, aspect, nearPlane, farPlane);
 
     forward = Vector3::Transform(Vector3::Forward, orientation);

@@ -45,18 +45,6 @@ Vertix::GraphicsDevice::GraphicsDevice(const bool useSoftware): useSoftwareRende
     ThrowIfFailed(d3d12Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&d3d12CommandQueue)));
 }
 
-ComPtr<IDXGIFactory6> Vertix::GraphicsDevice::GetDxgiFactory() const {
-    return dxgiFactory;
-}
-
-ComPtr<ID3D12Device10> Vertix::GraphicsDevice::GetD3D12Device() const {
-    return d3d12Device;
-}
-
-ComPtr<ID3D12CommandQueue> Vertix::GraphicsDevice::GetD3D12CommandQueue() const {
-    return d3d12CommandQueue;
-}
-
 void Vertix::GraphicsDevice::WaitForGPU() const {
     ComPtr<ID3D12Fence> fence;
     ThrowIfFailed(d3d12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));

@@ -13,7 +13,6 @@
 #include "Graphics/GraphicsDevice.h"
 
 namespace Vertix {
-    class GraphicsDevice;
     template <typename T>
     class ConstantBuffer {
     public:
@@ -35,6 +34,8 @@ namespace Vertix {
             const CD3DX12_RANGE readRange(0, 0);
             ThrowIfFailed(d3d12Resource->Map(0, &readRange,
                 reinterpret_cast<void**>(&bufferDataBegin)));
+
+            gpuVirtualAddress = d3d12Resource->GetGPUVirtualAddress();
         }
 
         ~ConstantBuffer() {
@@ -49,12 +50,18 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        Microsoft::WRL::ComPtr<ID3D12Resource> GetD3D12Resource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const {
             return d3d12Resource;
+        }
+
+        [[nodiscard]]
+        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const {
+            return gpuVirtualAddress;
         }
 
     private:
         Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+        D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress;
         UINT8* bufferDataBegin = nullptr;
     };
 }

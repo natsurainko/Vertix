@@ -23,12 +23,12 @@ namespace Vertix {
         void Resize(const Vector2D<UINT> &size);
 
         [[nodiscard]]
-        Microsoft::WRL::ComPtr<ID3D12Resource> GetD3D12Resource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const {
             return d3d12Resource;
         }
 
         [[nodiscard]]
-        D3D12_CPU_DESCRIPTOR_HANDLE GetHandle() const {
+        const D3D12_CPU_DESCRIPTOR_HANDLE& GetHandle() const {
             return dsvHandle;
         }
     private:

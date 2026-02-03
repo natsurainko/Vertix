@@ -26,7 +26,7 @@ namespace Vertix::Engine {
         void InitializeDevice(InputDevice &inputDevice, const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) const;
 
         [[nodiscard]]
-        Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> GetInterface() const {
+        const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput>& GetInterface() const {
             return gameInput;
         }
 

@@ -41,12 +41,12 @@ namespace Vertix {
         void Show(int nCmdShow = SW_SHOW) const;
 
         [[nodiscard]]
-        Vector2D<UINT> GetWindowSize() const {
+        const Vector2D<UINT>& GetWindowSize() const {
             return windowSize;
         }
 
         [[nodiscard]]
-        std::wstring GetWindowTitle() const {
+        const std::wstring& GetWindowTitle() const {
             return windowTitle;
         }
 
@@ -63,6 +63,11 @@ namespace Vertix {
         [[nodiscard]]
         bool GetFocusingState() const {
             return isFocused;
+        }
+
+        [[nodiscard]]
+        SwapChain* GetSwapChain() const {
+            return swapChain;
         }
 
         void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const {

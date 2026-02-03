@@ -1,7 +1,11 @@
 ﻿add_library(Vertix.Engine SHARED
         include/Camera/PerspectiveCamera.h
         include/Content/ModelImporter.h
+        include/Controlling/IControllerInput.h
+        include/Controlling/DefaultPositionController.h
+        include/Controlling/DefaultRotationController.h
         include/Math/FloatExtensions.h
+        include/Math/MatrixExtensions.h
         include/Helpers/FrameCounter.h
         include/Input/GeneralKeyboardDevice.h
         include/Input/GeneralMouseDevice.h
@@ -9,15 +13,18 @@
         include/Input/KeyboardDevice.h
         include/Input/MouseDevice.h
         include/Input/InputDevice.h
+        include/Scene/DirectionalLight.h
+        include/Scene/SceneObject3D.h
         include/GameObject3D.h
 
         src/Camera/PerspectiveCamera.cpp
         src/Content/ModelImporter.cpp
-        src/GameObject3D.cpp
-        src/SimpleMath.cpp
         src/Input/GameInputInterface.cpp
         src/Input/KeyboardDevice.cpp
         src/Input/MouseDevice.cpp
+        src/Scene/SceneObject3D.cpp
+        src/GameObject3D.cpp
+        src/SimpleMath.cpp
 )
 
 target_link_libraries(Vertix.Engine PUBLIC Vertix assimp-vc145-mt.lib GameInput.lib)

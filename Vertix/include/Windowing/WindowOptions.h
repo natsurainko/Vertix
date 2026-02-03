@@ -18,6 +18,7 @@ namespace Vertix {
         std::wstring windowClassName;
         bool enableVSync{};
 
+        [[nodiscard]]
         static WindowOptions GetDefaultWindowOptions() {
             WindowOptions options;
             options.swapChainFrameCount = 2;

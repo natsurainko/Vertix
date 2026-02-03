@@ -10,8 +10,8 @@
 void Vertix::Model::UploadToGPU(const GraphicsDevice* graphicsDevice,
                                 const GraphicsCommandList* graphicsCommandList,
                                 TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap) {
-    const auto device = graphicsDevice->GetD3D12Device();
-    const auto commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
+    const auto &device = graphicsDevice->GetD3D12Device();
+    const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
 
     for (auto &mesh: Meshes) {
         mesh.UploadToGPU(device, commandList, tempResourceHeap);

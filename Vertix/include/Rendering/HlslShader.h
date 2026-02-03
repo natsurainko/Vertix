@@ -20,7 +20,7 @@ namespace Vertix {
                      ID3DInclude* include = nullptr);
 
         [[nodiscard]]
-        Microsoft::WRL::ComPtr<ID3DBlob> GetShaderBlob() const {
+        const Microsoft::WRL::ComPtr<ID3DBlob>& GetShaderBlob() const {
             return shaderBlob;
         }
 

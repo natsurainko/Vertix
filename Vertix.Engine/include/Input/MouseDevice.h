@@ -30,12 +30,12 @@ namespace Vertix::Engine {
         }
 
         [[nodiscard]]
-        bool IsButtonDown(const GameInput::v3::GameInputMouseButtons &button) const {
+        bool IsButtonDown(const GameInput::v3::GameInputMouseButtons button) const {
             return (currentMouseState.buttons & button) != 0;
         }
 
         [[nodiscard]]
-        bool IsButtonUp(const GameInput::v3::GameInputMouseButtons &button) const {
+        bool IsButtonUp(const GameInput::v3::GameInputMouseButtons button) const {
             return (currentMouseState.buttons & button) == 0;
         }
 

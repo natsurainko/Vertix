@@ -59,8 +59,8 @@ void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
 
         D3D12_SUBRESOURCE_DATA subresourceData = {};
         subresourceData.pData = Vertices.data();
-        subresourceData.RowPitch = vertexBufferSize;
-        subresourceData.SlicePitch = vertexBufferSize;
+        subresourceData.RowPitch = static_cast<LONG_PTR>(vertexBufferSize);
+        subresourceData.SlicePitch = static_cast<LONG_PTR>(vertexBufferSize);
 
         UpdateSubresources(commandList.Get(),
             VertexBuffer->d3d12Resource.Get(),
@@ -109,8 +109,8 @@ void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
 
         D3D12_SUBRESOURCE_DATA subresourceData = {};
         subresourceData.pData = Indices.data();
-        subresourceData.RowPitch = indexBufferSize;
-        subresourceData.SlicePitch = indexBufferSize;
+        subresourceData.RowPitch = static_cast<LONG_PTR>(indexBufferSize);
+        subresourceData.SlicePitch = static_cast<LONG_PTR>(indexBufferSize);
 
         UpdateSubresources(commandList.Get(),
             IndexBuffer->d3d12Resource.Get(),

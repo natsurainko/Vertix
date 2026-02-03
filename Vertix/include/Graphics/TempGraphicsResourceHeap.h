@@ -19,6 +19,7 @@ namespace Vertix {
             resources.clear();
         }
 
+        [[nodiscard]]
         size_t Size() const {
             return resources.size();
         }

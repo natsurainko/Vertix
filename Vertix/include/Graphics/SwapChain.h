@@ -17,7 +17,7 @@ namespace Vertix {
     class SwapChain {
     public:
         SwapChain(const GraphicsDevice *graphicsDevice,
-                  HWND hwnd,
+                  const HWND &hwnd,
                   const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc);
 
         void PresentFrame();
@@ -31,7 +31,7 @@ namespace Vertix {
 
         [[nodiscard]]
         Vector2D<UINT> GetFrameSize() const {
-            return frameSize;
+            return { swapChainDesc.Width, swapChainDesc.Height };
         }
 
         [[nodiscard]]
@@ -40,30 +40,27 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        Microsoft::WRL::ComPtr<ID3D12Resource> GetCurrentFrameRenderTargetResource() const {
-            return renderTargets[currentFrameIndex];
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCurrentFrameRenderTargetResource() const {
+            return rtvResources[currentFrameIndex];
         }
 
         [[nodiscard]]
-        CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentFrameRenderTargetHandle() const {
-            return {
-                descriptorHandleForHeapStart,
-                static_cast<int>(currentFrameIndex),
-                renderTargetsDescriptorLength
-            };
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE& GetCurrentFrameRenderTargetHandle() const {
+            return rtvHandles[currentFrameIndex];
         }
     private:
-        D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandleForHeapStart{};
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
+        std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<IDXGISwapChain3> dxgiSwapChain;
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> renderTargetsDescriptorHeap;
-        std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> renderTargets;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
+        std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> rtvResources;
 
-        Vector2D<UINT> frameSize;
         UINT currentFrameIndex = 0;
         UINT presentFlags = 0;
         UINT presentSyncInterval = 1;
-        UINT renderTargetsDescriptorLength = 0;
+
         bool enableVSync = true;
     };
 }

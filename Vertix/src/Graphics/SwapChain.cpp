@@ -10,8 +10,8 @@
 using Microsoft::WRL::ComPtr;
 
 Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
-                             const HWND hwnd,
-                             const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) {
+                             const HWND &hwnd,
+                             const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) : swapChainDesc(swapChainDesc) {
     const UINT frameCount = swapChainDesc.BufferCount;
     const ComPtr<IDXGIFactory6> dxgiFactory = graphicsDevice->GetDxgiFactory();
     d3d12Device = graphicsDevice->GetD3D12Device();
@@ -28,7 +28,6 @@ Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
 
         ThrowIfFailed(dxgiSwapChain1.As(&dxgiSwapChain));
         currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();
-        frameSize = {swapChainDesc.Width, swapChainDesc.Height};
     }
 
     {
@@ -37,18 +36,18 @@ Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-        ThrowIfFailed(d3d12Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&renderTargetsDescriptorHeap)));
-        renderTargetsDescriptorLength = d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        descriptorHandleForHeapStart = renderTargetsDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        ThrowIfFailed(d3d12Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap)));
     }
 
     {
-        renderTargets = std::vector<ComPtr<ID3D12Resource>>(frameCount);
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(descriptorHandleForHeapStart);
+        rtvResources = std::vector<ComPtr<ID3D12Resource>>(frameCount);
+        const UINT renderTargetsDescriptorLength = d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
         for (UINT i = 0; i < frameCount; i++) {
-            ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])));
-            d3d12Device->CreateRenderTargetView(renderTargets[i].Get(), nullptr, rtvHandle);
+            ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
+            d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), nullptr, rtvHandle);
+            rtvHandles.push_back(rtvHandle);
             rtvHandle.Offset(1, renderTargetsDescriptorLength);
         }
     }
@@ -60,29 +59,26 @@ void Vertix::SwapChain::PresentFrame() {
 }
 
 void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
-    DXGI_SWAP_CHAIN_DESC desc = {};
-    ThrowIfFailed(dxgiSwapChain->GetDesc(&desc));
+	swapChainDesc.Width = (std::max)(size.X, static_cast<UINT>(1));
+	swapChainDesc.Height = (std::max)(size.Y, static_cast<UINT>(1));
 
-    for (UINT i = 0; i < desc.BufferCount; i++) {
-        renderTargets[i].Reset();
+    for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
+        rtvResources[i].Reset();
     }
 
     ThrowIfFailed(dxgiSwapChain->ResizeBuffers(
-        desc.BufferCount,
-        size.X,
-        size.Y,
-        desc.BufferDesc.Format,
-        desc.Flags));
+        swapChainDesc.BufferCount,
+        swapChainDesc.Width,
+        swapChainDesc.Height,
+        swapChainDesc.Format,
+        swapChainDesc.Flags));
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(descriptorHandleForHeapStart);
-    for (UINT i = 0; i < desc.BufferCount; i++) {
-        ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])));
-        d3d12Device->CreateRenderTargetView(renderTargets[i].Get(), nullptr, rtvHandle);
-        rtvHandle.Offset(1, renderTargetsDescriptorLength);
+    for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
+        ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
+        d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), nullptr, rtvHandles[i]);
     }
 
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();
-    frameSize = size;
 }
 
 void Vertix::SwapChain::SetEnableVSync(const bool &enable) {

@@ -13,7 +13,7 @@
 #include "Graphics/SwapChain.h"
 
 void DemoMainWindow::OnInitialize() {
-    const auto device = graphicsDevice->GetD3D12Device();
+    const auto &device = graphicsDevice->GetD3D12Device();
     const auto windowSize = GetWindowSize();
 
     {
@@ -134,10 +134,10 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
         }
 
         if (enableRotating) {
-            SetCursorCenterWindow();
             const Vertix::Vector2D<float> mouseDeltaOffset = -mouseDevice.GetDeltaOffset().Cast<float>();
-            const DirectX::SimpleMath::Vector3 rotationOffset {mouseDeltaOffset.Y, mouseDeltaOffset.X, 0.0};
+            const DirectX::SimpleMath::Vector3 rotationOffset {mouseDeltaOffset.Y, mouseDeltaOffset.X, 0.0f};
             perspectiveCamera.Rotate(rotationOffset * 0.002);
+            SetCursorCenterWindow();
         }
     }
 

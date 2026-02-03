@@ -11,8 +11,8 @@ namespace Vertix {
     class GameApplication {
     public:
         GameApplication(const HINSTANCE &hInstance,
-                        const LPSTR &lpCmdLine,
-                        const int &nCmdShow,
+                        LPSTR lpCmdLine,
+                        int nCmdShow,
                         GameWindow* gameWindow);
 
         [[nodiscard]]
