@@ -11,6 +11,7 @@
 #include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
+#include "Graphics/ResourceUploadHeap.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -21,7 +22,7 @@ Vertix::Mesh::~Mesh() {
 
 void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
                                const ComPtr<ID3D12GraphicsCommandList5> &commandList,
-                               TempGraphicsResourceHeap<ComPtr<ID3D12Resource>> &tempResourceHeap) {
+                               ResourceUploadHeap &resourceUploadHeap) {
     const auto defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     const auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
@@ -78,7 +79,7 @@ void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
         VertexBuffer->d3d12VertexBufferView.SizeInBytes = static_cast<UINT>(vertexBufferSize);
         VertexBuffer->vertexCount = Vertices.size();
 
-        tempResourceHeap.Store(std::move(vertexBufferUpload));
+        resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(vertexBufferUpload));
     }
 
     {
@@ -128,7 +129,7 @@ void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
         IndexBuffer->d3d12IndexBufferView.SizeInBytes = static_cast<UINT>(indexBufferSize);
         IndexBuffer->indexCount = Indices.size();
 
-        tempResourceHeap.Store(std::move(indexBufferUpload));
+        resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(indexBufferUpload));
     }
 }
 

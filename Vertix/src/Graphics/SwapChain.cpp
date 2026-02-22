@@ -19,7 +19,7 @@ Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
     {
         ComPtr<IDXGISwapChain1> dxgiSwapChain1;
         ThrowIfFailed(dxgiFactory->CreateSwapChainForHwnd(
-            graphicsDevice->GetD3D12CommandQueue().Get(),
+            graphicsDevice->GetDefaultD3D12CommandQueue().Get(),
             hwnd,
             &swapChainDesc,
             nullptr,

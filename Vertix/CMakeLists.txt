@@ -4,8 +4,8 @@
         include/Graphics/FrameCommandList.h
         include/Graphics/GraphicsCommandList.h
         include/Graphics/GraphicsDevice.h
+        include/Graphics/ResourceUploadHeap.h
         include/Graphics/SwapChain.h
-        include/Graphics/TempGraphicsResourceHeap.h
         include/Graphics/Buffers/VertexBuffer.h
         include/Graphics/Buffers/IndexBuffer.h
         include/Graphics/Buffers/ConstantBuffer.h
@@ -21,6 +21,7 @@
         include/Rendering/HlslShader.h
         include/Rendering/RenderPass.h
         include/Rendering/RenderPipeline.h
+        include/Rendering/Texture.h
         include/Windowing/GameWindow.h
         include/Windowing/WindowOptions.h
 
@@ -36,11 +37,17 @@
         src/Rendering/DepthStencilView.cpp
         src/Rendering/HlslShader.cpp
         src/Rendering/RenderTargetView.cpp
+        src/Rendering/Texture.cpp
         src/Windowing/GameWindow.cpp
+
 )
 
 target_compile_definitions(Vertix PRIVATE UNICODE _UNICODE)
-target_link_libraries(Vertix PUBLIC d3d12 d3dcompiler dxgi dxguid dwmapi)
+target_link_libraries(Vertix PUBLIC d3d12 d3dcompiler dxcompiler dxgi dxguid dwmapi)
+target_link_libraries(Vertix PUBLIC
+        $<$<CONFIG:Debug>: DirectXTK12-vc145-MDd.lib>
+        $<$<CONFIG:Release>: DirectXTK12-vc145-MD.lib>
+)
 
 target_include_directories(Vertix BEFORE PUBLIC ${INCLUDES_DIR})
 target_include_directories(Vertix PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

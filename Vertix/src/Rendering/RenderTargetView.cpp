@@ -15,6 +15,7 @@ Vertix::RenderTargetView::RenderTargetView(GraphicsDevice* graphicsDevice,
                                            const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc,
                                            const D3D12_CLEAR_VALUE &clearValue)
     : graphicsDevice(graphicsDevice), rtvHandle(descriptorHandle), rtvResourceDesc(rtvResourceDesc), clearValue(clearValue) {
+
     if (rtvDesc) {
         hasRtvDesc = true;
         this->rtvDesc = *rtvDesc;

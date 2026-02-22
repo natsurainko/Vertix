@@ -11,11 +11,11 @@
 #include <wrl/client.h>
 
 #include "Vertex.h"
-#include "Graphics/TempGraphicsResourceHeap.h"
 #include "Graphics/Buffers/IndexBuffer.h"
 #include "Graphics/Buffers/VertexBuffer.h"
 
 namespace Vertix {
+    class ResourceUploadHeap;
     class GraphicsDevice;
     class Mesh {
     public:
@@ -30,7 +30,7 @@ namespace Vertix {
 
         void UploadToGPU(const Microsoft::WRL::ComPtr<ID3D12Device10> &device,
                          const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
-                         TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
+                         ResourceUploadHeap &resourceUploadHeap);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
     };

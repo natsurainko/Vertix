@@ -9,22 +9,20 @@
 
 using Microsoft::WRL::ComPtr;
 
-Vertix::GraphicsCommandList::GraphicsCommandList(const GraphicsDevice *graphicsDevice) {
-    commandQueue = graphicsDevice->GetD3D12CommandQueue();
-    d3d12Device = graphicsDevice->GetD3D12Device();
+Vertix::GraphicsCommandList::GraphicsCommandList(const ComPtr<ID3D12Device10> &d3d12Device,
+                                                 const ComPtr<ID3D12CommandQueue> &commandQueue,
+                                                 const D3D12_COMMAND_LIST_TYPE commandListType)
+    : d3d12Device(d3d12Device), commandQueue(commandQueue), commandListType(commandListType) {
+    
+    ThrowIfFailed(d3d12Device->CreateCommandList1(
+        0,
+        commandListType,
+        D3D12_COMMAND_LIST_FLAG_NONE,
+        IID_PPV_ARGS(&graphicsCommandList)));
 
-    {
-        ThrowIfFailed(d3d12Device->CreateCommandList1(
-           0,
-           D3D12_COMMAND_LIST_TYPE_DIRECT,
-           D3D12_COMMAND_LIST_FLAG_NONE,
-           IID_PPV_ARGS(&graphicsCommandList)));
-    }
-    {
-        ThrowIfFailed(d3d12Device->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(&commandAllocator)));
-    }
+    ThrowIfFailed(d3d12Device->CreateCommandAllocator(
+        commandListType,
+        IID_PPV_ARGS(&commandAllocator)));
 }
 
 void Vertix::GraphicsCommandList::BeginCommand(const ComPtr<ID3D12PipelineState> &pipelineState) const {

@@ -21,10 +21,9 @@ void DemoMainWindow::OnInitialize() {
         frameCommandList->BeginCommand(nullptr);
 
         // release after command list executed
-        Vertix::TempGraphicsResourceHeap<ComPtr<ID3D12Resource>> tempHeap;
-
+        Vertix::ResourceUploadHeap resourceUploadHeap;
         if (Vertix::Engine::ModelImporter::TryLoadFromFile(cubeModel, "assets/models/block.fbx")) {
-            cubeModel.UploadToGPU(graphicsDevice, frameCommandList, tempHeap);
+            cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
         }
 
         frameCommandList->EndCommand();

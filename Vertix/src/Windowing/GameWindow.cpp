@@ -111,6 +111,10 @@ LRESULT Vertix::GameWindow::HitTest(const Vector2D<UINT> &point) const {
     return SendMessage(m_hwnd, WM_NCHITTEST, 0, MAKELPARAM(point.X, point.Y));
 }
 
+LRESULT Vertix::GameWindow::HitTest(const POINT &point) const {
+    return SendMessage(m_hwnd, WM_NCHITTEST, 0, MAKELPARAM(point.x, point.y));
+}
+
 void Vertix::GameWindow::Show(const int nCmdShow) const {
     ShowWindow(m_hwnd, nCmdShow);
     UpdateWindow(m_hwnd);

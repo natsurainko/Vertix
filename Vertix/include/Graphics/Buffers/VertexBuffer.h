@@ -10,7 +10,7 @@
 #include <wrl/client.h>
 
 #include "Graphics/GraphicsCommandList.h"
-#include "Graphics/TempGraphicsResourceHeap.h"
+#include "Graphics/ResourceUploadHeap.h"
 #include "Primitive/Vertex.h"
 
 namespace Vertix {
@@ -23,7 +23,7 @@ namespace Vertix {
         static VertexBuffer* Create(const std::vector<Vertex> &vertices,
                                     const GraphicsDevice* graphicsDevice,
                                     const GraphicsCommandList* graphicsCommandList,
-                                    TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
+                                    ResourceUploadHeap &resourceUploadHeap);
     };
 }
 

@@ -20,13 +20,16 @@ namespace Vertix::Engine {
         void Update();
 
         [[nodiscard]]
-        Vector2D<int64_t> GetDeltaOffset() const {
+        Vector2D<int> GetDeltaOffset() const {
             return delta;
         }
 
         [[nodiscard]]
-        Vector2D<int64_t> GetPosition() const {
-            return {currentMouseState.absolutePositionX, currentMouseState.absolutePositionY};
+        Vector2D<int> GetPosition() const {
+            return {
+                static_cast<int>(currentMouseState.absolutePositionX),
+                static_cast<int>(currentMouseState.absolutePositionY)
+            };
         }
 
         [[nodiscard]]
@@ -51,7 +54,7 @@ namespace Vertix::Engine {
                    (currentMouseState.buttons & button) == 0;
         }
     protected:
-        Vector2D<int64_t> delta;
+        Vector2D<int> delta;
 
         GameInput::v3::GameInputMouseState previousMouseState{};
         GameInput::v3::GameInputMouseState currentMouseState{};

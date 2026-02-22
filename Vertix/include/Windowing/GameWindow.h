@@ -38,6 +38,9 @@ namespace Vertix {
         [[nodiscard]]
         LRESULT HitTest(const Vector2D<UINT> &point) const;
 
+        [[nodiscard]]
+        LRESULT HitTest(const POINT &point) const;
+
         void Show(int nCmdShow = SW_SHOW) const;
 
         [[nodiscard]]

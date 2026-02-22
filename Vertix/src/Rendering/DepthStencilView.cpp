@@ -17,7 +17,6 @@ Vertix::DepthStencilView::DepthStencilView(GraphicsDevice *graphicsDevice,
                                            const D3D12_CLEAR_VALUE &clearValue)
     : graphicsDevice(graphicsDevice), dsvHandle(descriptorHandle), dsvResourceDesc(dsvResourceDesc), clearValue(clearValue) {
 
-
     if (dsvDesc) {
         hasDsvDesc = true;
         this->depthStencilViewDesc = *dsvDesc;

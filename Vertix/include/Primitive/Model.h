@@ -18,7 +18,7 @@ namespace Vertix {
 
         void UploadToGPU(const GraphicsDevice* graphicsDevice,
                          const GraphicsCommandList* graphicsCommandList,
-                         TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap);
+                         ResourceUploadHeap &resourceUploadHeap);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
     };

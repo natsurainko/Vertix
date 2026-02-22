@@ -30,7 +30,7 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetD3D12CommandQueue() const {
+        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetDefaultD3D12CommandQueue() const {
             return d3d12CommandQueue;
         }
 

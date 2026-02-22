@@ -10,11 +10,12 @@
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsCommandList.h"
 #include "Graphics/GraphicsDevice.h"
+#include "Graphics/ResourceUploadHeap.h"
 
 Vertix::VertexBuffer* Vertix::VertexBuffer::Create(const std::vector<Vertex> &vertices,
                                                    const GraphicsDevice* graphicsDevice,
                                                    const GraphicsCommandList* graphicsCommandList,
-                                                   TempGraphicsResourceHeap<Microsoft::WRL::ComPtr<ID3D12Resource>> &tempResourceHeap) {
+                                                   ResourceUploadHeap &resourceUploadHeap) {
     const auto defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     const auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
@@ -71,7 +72,7 @@ Vertix::VertexBuffer* Vertix::VertexBuffer::Create(const std::vector<Vertex> &ve
         buffer->d3d12VertexBufferView.SizeInBytes = static_cast<UINT>(vertexBufferSize);
         buffer->vertexCount = vertices.size();
 
-        tempResourceHeap.Store(std::move(uploadResource));
+        resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(uploadResource));
     }
 
     return buffer;

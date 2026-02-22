@@ -12,7 +12,10 @@ namespace Vertix {
     class GraphicsDevice;
     class GraphicsCommandList {
     public:
-        explicit GraphicsCommandList(const GraphicsDevice* graphicsDevice);
+        GraphicsCommandList(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
+                            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue,
+                            D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT);
+
         virtual ~GraphicsCommandList() = default;
 
         virtual void BeginCommand(const Microsoft::WRL::ComPtr<ID3D12PipelineState> &pipelineState) const;
@@ -28,6 +31,7 @@ namespace Vertix {
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> graphicsCommandList;
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
+        D3D12_COMMAND_LIST_TYPE commandListType;
     };
 }
 

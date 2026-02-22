@@ -2,7 +2,7 @@
         src/main.cpp
         src/DemoMainWindow.cpp
         src/DemoMainWindow.h
-        src/SimpleMath.cpp
+        
 )
 
 add_dependencies(D3D12GameDemo Vertix)

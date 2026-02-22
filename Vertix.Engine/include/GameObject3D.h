@@ -6,7 +6,7 @@
 #define VERTIX_GAMEOBJECT3D_H
 
 #include <d3d12/d3d12.h>
-#include <directXTK/simpleMath/SimpleMath.h>
+#include <DirectXTK12/SimpleMath.h>
 #include <wrl/client.h>
 
 namespace Vertix::Engine {

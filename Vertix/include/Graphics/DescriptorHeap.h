@@ -30,6 +30,26 @@ namespace Vertix {
             return descriptorHeap;
         }
 
+        [[nodiscard]]
+        bool IsFull() const {
+            return currentHandles == maxDescriptors;
+        }
+
+        [[nodiscard]]
+        UINT GetCurrentHandleCount() const {
+            return currentHandles;
+        }
+
+        [[nodiscard]]
+        CD3DX12_CPU_DESCRIPTOR_HANDLE GetCpuDescriptorHandleForHeapStart() const {
+            return CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+        }
+
+        [[nodiscard]]
+        CD3DX12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandleForHeapStart() const {
+            return CD3DX12_GPU_DESCRIPTOR_HANDLE(descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        }
+
     private:
         UINT maxDescriptors;
         UINT descriptorLength;

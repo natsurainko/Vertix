@@ -5,6 +5,8 @@
   "files": [
     "libraries/assimp-vc145-mt.dll",
     "libraries/assimp-vc145-mt.lib",
-    "libraries/GameInput.lib"
+    "libraries/GameInput.lib",
+    "DirectXTK12-vc145-MD.lib",
+    "DirectXTK12-vc145-MDd.lib"
   ]
 }

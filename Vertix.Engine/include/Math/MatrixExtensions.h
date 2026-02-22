@@ -5,7 +5,7 @@
 #ifndef VERTIX_MATRIXEXTENSIONS_H
 #define VERTIX_MATRIXEXTENSIONS_H
 
-#include <directXTK/simpleMath/SimpleMath.h>
+#include <DirectXTK12/SimpleMath.h>
 
 namespace Vertix::Engine {
     inline DirectX::SimpleMath::Matrix CreateLightViewProjectionForFrustum(const DirectX::SimpleMath::Vector3 &lightDirection,

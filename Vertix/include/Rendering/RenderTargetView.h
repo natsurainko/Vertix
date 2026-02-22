@@ -15,10 +15,10 @@ namespace Vertix {
     class RenderTargetView {
     public:
         RenderTargetView(GraphicsDevice* graphicsDevice,
-                                  const D3D12_RESOURCE_DESC &rtvResourceDesc,
-                                  const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
-                                  const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc = nullptr,
-                                  const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } });
+                         const D3D12_RESOURCE_DESC &rtvResourceDesc,
+                         const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
+                         const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc = nullptr,
+                         const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } });
 
         void Resize(const Vector2D<UINT> &size);
 

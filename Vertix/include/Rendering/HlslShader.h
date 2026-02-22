@@ -5,6 +5,8 @@
 #ifndef VERTIX_HLSLSHADER_H
 #define VERTIX_HLSLSHADER_H
 
+#include <d3dcompiler.h>
+#include <dxcapi.h>
 #include <string>
 #include <d3d12/d3dcommon.h>
 #include <wrl/client.h>
@@ -14,20 +16,30 @@ namespace Vertix {
     public:
         explicit HlslShader(std::wstring filePath, UINT compileFlags = 0);
 
+        void Compile(const std::wstring &entryName,
+                     const std::wstring &shaderModel,
+                     IDxcIncludeHandler* includeHandler = nullptr);
+
         void Compile(const std::string &entryName,
                      const std::string &shaderModel,
                      const D3D_SHADER_MACRO* defines = nullptr,
                      ID3DInclude* include = nullptr);
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3DBlob>& GetShaderBlob() const {
-            return shaderBlob;
+        ID3DBlob* GetShaderBlob() const {
+            if (compiledByDxc) {
+                return reinterpret_cast<ID3DBlob *>(dxcShaderBlob.Get());
+            }
+
+            return shaderBlob.Get();
         }
 
     private:
         std::wstring filePath;
         UINT compileFlags;
+        bool compiledByDxc = false;
 
+        Microsoft::WRL::ComPtr<IDxcBlob> dxcShaderBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
     };
 }

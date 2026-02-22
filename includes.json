@@ -45,12 +45,35 @@
       ]
     },
     {
-      "includeName": "directXTK.simpleMath",
-      "targetDirectory": "includes/directXTK/simpleMath",
-      "sourceDirectory": "includes/directXTK/simpleMath",
+      "includeName": "DirectXTK12",
+      "targetDirectory": "includes/DirectXTK12",
+      "sourceDirectory": "includes/DirectXTK12",
       "files": [
+        "Audio.h",
+        "BufferHelpers.h",
+        "CommonStates.h",
+        "DDSTextureLoader.h",
+        "DescriptorHeap.h",
+        "DirectXHelpers.h",
+        "EffectPipelineStateDescription.h",
+        "Effects.h",
+        "GamePad.h",
+        "GeometricPrimitive.h",
+        "GraphicsMemory.h",
+        "Keyboard.h",
+        "Model.h",
+        "Mouse.h",
+        "PostProcess.h",
+        "PrimitiveBatch.h",
+        "RenderTargetState.h",
+        "ResourceUploadBatch.h",
+        "ScreenGrab.h",
         "SimpleMath.h",
-        "SimpleMath.inl"
+        "SimpleMath.inl",
+        "SpriteBatch.h",
+        "SpriteFont.h",
+        "VertexTypes.h",
+        "WICTextureLoader.h"
       ]
     },
     {

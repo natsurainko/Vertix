@@ -6,7 +6,7 @@
 #define VERTIX_POSITIONCONTROLLER_H
 
 #include <vector>
-#include <directXTK/simpleMath/SimpleMath.h>
+#include <DirectXTK12/SimpleMath.h>
 
 #include "GameObject3D.h"
 #include "IControllerInput.h"

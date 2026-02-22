@@ -6,7 +6,7 @@
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <directXTK/simpleMath/SimpleMath.h>
+#include <DirectXTK12/SimpleMath.h>
 
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;

@@ -4,8 +4,11 @@
         include/Controlling/IControllerInput.h
         include/Controlling/DefaultPositionController.h
         include/Controlling/DefaultRotationController.h
+        include/Material/DefaultPBRMaterial.h
+        include/Material/Material.h
         include/Math/FloatExtensions.h
         include/Math/MatrixExtensions.h
+        include/Math/VectorExtensions.h
         include/Helpers/FrameCounter.h
         include/Input/GeneralKeyboardDevice.h
         include/Input/GeneralMouseDevice.h
@@ -22,12 +25,10 @@
         src/Input/GameInputInterface.cpp
         src/Input/KeyboardDevice.cpp
         src/Input/MouseDevice.cpp
-        src/Scene/SceneObject3D.cpp
         src/GameObject3D.cpp
-        src/SimpleMath.cpp
 )
 
-target_link_libraries(Vertix.Engine PUBLIC Vertix assimp-vc145-mt.lib GameInput.lib)
+target_link_libraries(Vertix.Engine PUBLIC Vertix GameInput.lib assimp-vc145-mt.lib)
 
 target_include_directories(Vertix.Engine BEFORE PUBLIC ${INCLUDES_DIR})
 target_include_directories(Vertix.Engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

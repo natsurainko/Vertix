@@ -5,7 +5,7 @@
 #ifndef VERTIX_DEFAULTROTATIONCONTROLLER_H
 #define VERTIX_DEFAULTROTATIONCONTROLLER_H
 
-#include <directXTK/simpleMath/SimpleMath.h>
+#include <DirectXTK12/SimpleMath.h>
 
 #include "GameObject3D.h"
 #include "IControllerInput.h"
@@ -29,7 +29,7 @@ namespace Vertix::Engine {
         std::vector<GameObject3D*> gameObjects;
 
         void OnUpdate(const double deltaTime) const {
-            const DirectX::SimpleMath::Vector3 value = controllerInput->GetValue();
+            const DirectX::SimpleMath::Vector3 &value = controllerInput->GetValue();
             if (deltaTime <= 0 || value == DirectX::SimpleMath::Vector3::Zero) return;
 
             const DirectX::SimpleMath::Vector3 vector = value * Sensitivity;

@@ -16,7 +16,6 @@ void Vertix::Engine::MouseDevice::InitializeDevice(const ComPtr<IGameInput> &gam
         !(SUCCEEDED(hr)) || !reading) return;
 
     reading->GetMouseState(&currentMouseState);
-    previousMouseState = currentMouseState;
 }
 
 void Vertix::Engine::MouseDevice::Update() {
@@ -27,8 +26,6 @@ void Vertix::Engine::MouseDevice::Update() {
     previousMouseState = currentMouseState;
     if (!reading->GetMouseState(&currentMouseState)) return;
 
-    delta = Vector2D(
-        currentMouseState.positionX - previousMouseState.positionX,
-        currentMouseState.positionY - previousMouseState.positionY
-    );
+    delta.X = static_cast<int>(currentMouseState.positionX - previousMouseState.positionX);
+    delta.Y = static_cast<int>(currentMouseState.positionY - previousMouseState.positionY);
 }

@@ -2,30 +2,22 @@
 // Created by Natsurainko on 2025/12/23.
 //
 
-#define _CRTDBG_MAP_ALLOC
-
 #include <crtdbg.h>
 
 #include "DemoMainWindow.h"
 #include "Hosting/GameApplicationBuilder.h"
 
-_Use_decl_annotations_
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nShowCmd) {
-    int exitCode;
-    {
-        Vertix::WindowOptions windowOptions = Vertix::WindowOptions::GetDefaultWindowOptions();
-        windowOptions.windowTitle = L"D3D12GameDemo.MainWindow";
-        windowOptions.windowSize = { 1280, 720 };
+#ifndef NDEBUG
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
-        exitCode = Vertix::GameApplicationBuilder(hInstance, lpCmdLine, nShowCmd)
-            .ConfigureWindow<DemoMainWindow>(windowOptions)
-            .Build()
-            .Run();
-    }
+    Vertix::WindowOptions windowOptions = Vertix::WindowOptions::GetDefaultWindowOptions();
+    windowOptions.windowTitle = L"D3D12GameDemo.MainWindow";
+    windowOptions.windowSize = { 1280, 720 };
 
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
-    _CrtDumpMemoryLeaks();
-
-    return exitCode;
+    return Vertix::GameApplicationBuilder(hInstance, lpCmdLine, nShowCmd)
+        .ConfigureWindow<DemoMainWindow>(windowOptions)
+        .Build()
+        .Run();
 }

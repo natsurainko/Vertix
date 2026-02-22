@@ -5,7 +5,7 @@
 #ifndef VERTIX_VERTEX_H
 #define VERTIX_VERTEX_H
 
-#include <directXTK/simpleMath/SimpleMath.h>
+#include <DirectXTK12/SimpleMath.h>
 
 namespace Vertix {
     struct Vertex {
