@@ -6,7 +6,9 @@
 #define VERTIX_MATERIAL_H
 
 namespace Vertix::Engine {
-    struct Material {};
+    struct Material {
+        float TextureScale = 1.0f;
+    };
 }
 
 #endif //VERTIX_MATERIAL_H

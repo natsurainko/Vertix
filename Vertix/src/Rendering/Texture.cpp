@@ -49,7 +49,7 @@ Vertix::Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Devi
     d3d12Device->CreateShaderResourceView(d3d12Resource.Get(), &srvDesc, cpuDescriptorHandle);
 }
 
-Vertix::Texture::~Texture() {}
+Vertix::Texture::~Texture() = default;
 
 Vertix::Texture2D::Texture2D(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
                              const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
