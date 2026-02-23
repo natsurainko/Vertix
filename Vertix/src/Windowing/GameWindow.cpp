@@ -197,12 +197,12 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
             }
             return 0;
 
-        case WM_NCLBUTTONDOWN:
+        case WM_ENTERSIZEMOVE:
             if (gameWindow) {
                 gameWindow->isDraggingWindow = true;
                 gameWindow->OnDragEnter();
             }
-            return DefWindowProc(hWnd, message, wParam, lParam);
+            return 0;
 
         case WM_EXITSIZEMOVE:
             if (gameWindow) {
