@@ -95,7 +95,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
 - CMakeLists for the demo includes a post-build step to copy `assets` to the output directory.
 
 #### Screenshots
-<img width="1332" height="802" alt="249711d8a25366c6d4e8578ca973a85f" src="https://github.com/user-attachments/assets/64dd3635-33ee-4b9b-abb5-4bcbe84db284" />
+<img width="1332" height="802" alt="D3D12GameDemo" src="https://github.com/user-attachments/assets/64dd3635-33ee-4b9b-abb5-4bcbe84db284" />
 
 ### D3D12RenderPipelineDemo
 - Path: `Examples/D3D12RenderPipelineDemo`
@@ -110,7 +110,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
 - CMakeLists for the demo includes a post-build step to copy `assets` to the output directory.
 
 #### Screenshots
-<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/bd528d97-2150-4e43-862f-138113845014" />
+<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/eb7c539e-2513-4825-b949-7945e5a86f33" />
 
 #### Notes
 - **Shader Model 6.6 Requirement**: The GeometryPass shader requires Shader Model 6.6 support.
