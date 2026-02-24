@@ -6,15 +6,17 @@
 A lightweight 3D game development framework written in C++, targeting Windows with Direct3D 12 (D3D12).
 
 ## Features
-- Basic D3D12 object wrappers (SwapChain, CommandList, HlslShader, etc.)
+- Basic D3D12 object wrappers (SwapChain, CommandList, DescriptorHeap, HlslShader, etc.)
 - 3D model importing (based on Assimp)
-- Basic 3D scene types (PerspectiveCamera, GameObject3D)
+- Basic 3D scene types (PerspectiveCamera, GameObject3D, SceneObject3D, etc.)
+- Basic rendering resource types (Model, Texture, Material, etc.)
 - Basic input devices (MouseDevice, KeyboardDevice, ...)
-- Example/demo project (Examples/D3D12GameDemo)
+- Example/demo project (Examples/D3D12GameDemo, Examples/D3D12RenderPipelineDemo)
 
 ## In Progress
-- RenderTarget and MRT (multi-RenderTarget) support
-- RenderPipeline abstraction
+- Encapsulation of rendering resource management classes for models, textures, materials, and other rendering assets
+- Implementation of more light source types in Vertix.Engine
+- Implementation of skybox, multi-point light sources, and other advanced rendering effects in RenderPipelineDemo
 
 ## Prerequisites
 - Windows 10 / Windows 11
@@ -94,6 +96,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
 
 #### Screenshots
 <img width="1332" height="802" alt="249711d8a25366c6d4e8578ca973a85f" src="https://github.com/user-attachments/assets/64dd3635-33ee-4b9b-abb5-4bcbe84db284" />
+
+### D3D12RenderPipelineDemo
+- Path: `Examples/D3D12RenderPipelineDemo`
+- A comprehensive demonstration of a custom D3D12 rendering pipeline with advanced rendering techniques.
+- Features include:
+  - **Deferred Rendering**: Multi-pass rendering with geometry and lighting passes for efficient handling of multiple light sources.
+  - **Texture and Material Management**: Complete a simple system for storing and loading texture and material resources.
+  - **Bindless Texturing**: GPU-driven rendering with bindless texture access for improved performance.
+  - **Cascaded Shadow Mapping**: Efficient shadow mapping across multiple view frustum levels.
+  - **PCSS Soft Shadows**: Percentage-Closer Soft Shadows for realistic shadow penumbra.
+  - **PBR Texture-Based Lighting**: Physically-Based Rendering using texture-based material properties.
+- CMakeLists for the demo includes a post-build step to copy `assets` to the output directory.
+
+#### Screenshots
+<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/bd528d97-2150-4e43-862f-138113845014" />
+
+#### Notes
+- **Shader Model 6.6 Requirement**: The GeometryPass shader requires Shader Model 6.6 support.
+- **DXCompiler Dependency**: This demo requires the DXCompiler library. The DLL is provided in the dependencies folder but must be manually copied to the output directory. Ensure the Windows SDK is properly installed to provide the necessary `.lib` files.
 
 ## Notes and tips
 - The top-level `CMakeLists.txt` sets `CMAKE_CXX_STANDARD` to 20 — the project uses C++20 features.
