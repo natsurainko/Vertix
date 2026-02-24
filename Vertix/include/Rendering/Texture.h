@@ -56,6 +56,12 @@ namespace Vertix {
                                             const GraphicsCommandList *graphicsCommandList,
                                             ResourceUploadHeap &resourceUploadHeap,
                                             DescriptorHeap &srvDescriptorHeap);
+
+        static Texture2D* CreateFromFileUsingWIC(const std::wstring &filename,
+                                                 const GraphicsDevice *graphicsDevice,
+                                                 const GraphicsCommandList *graphicsCommandList,
+                                                 ResourceUploadHeap &resourceUploadHeap,
+                                                 DescriptorHeap &srvDescriptorHeap);
     };
 }
 

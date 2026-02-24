@@ -29,6 +29,11 @@ namespace Vertix::Engine {
             projectionMatrix = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(fov, aspect, nearPlane, farPlane);
         }
 
+        void SetFieldOfView(const float newFieldOfView) {
+            fov = newFieldOfView;
+            projectionMatrix = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(fov, aspect, nearPlane, farPlane);
+        }
+
         [[nodiscard]]
         float GetAspect() const {
             return aspect;

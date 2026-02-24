@@ -1,6 +1,6 @@
 ﻿{
   "repository": "https://github.com/natsurainko/Vertix.Dependencies",
-  "commit": "5d75fd5",
+  "commit": "88edc0d",
   "includes": [
     {
       "includeName": "d3d12",

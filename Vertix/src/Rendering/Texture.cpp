@@ -8,6 +8,7 @@
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_resource_helpers.h>
 #include <DirectXTK12/DDSTextureLoader.h>
+#include <DirectXTK12/WICTextureLoader.h>
 
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsCommandList.h"
@@ -176,5 +177,62 @@ Vertix::Texture2D * Vertix::Texture2D::CreateFromDdsFile(const std::wstring &fil
 
     resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(tempUploadResource));
     resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(std::move(ddsData)));
+    return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
+}
+
+Vertix::Texture2D * Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring &filename,
+                                                              const GraphicsDevice *graphicsDevice,
+                                                              const GraphicsCommandList *graphicsCommandList,
+                                                              ResourceUploadHeap &resourceUploadHeap,
+                                                              DescriptorHeap &srvDescriptorHeap) {
+    const auto &device = graphicsDevice->GetD3D12Device();
+    const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> tempUploadResource, d3d12Resource;
+    std::unique_ptr<uint8_t[]> imageData;
+    D3D12_SUBRESOURCE_DATA subresourceData;
+
+    ThrowIfFailed(DirectX::LoadWICTextureFromFile(
+        device.Get(),
+        filename.c_str(),
+        &d3d12Resource,
+        imageData,
+        subresourceData
+    ));
+
+    {
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(d3d12Resource.Get(), 0, 1);
+        const CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
+        const CD3DX12_RESOURCE_DESC uploadResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        ThrowIfFailed(device->CreateCommittedResource(
+            &uploadHeapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadResourceDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&tempUploadResource)
+        ));
+    }
+
+    {
+        UpdateSubresources(
+            commandList.Get(),
+            d3d12Resource.Get(),
+            tempUploadResource.Get(),
+            0, 0,
+            1,
+            &subresourceData
+        );
+
+        const CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+            d3d12Resource.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        );
+        commandList->ResourceBarrier(1, &barrier);
+    }
+
+    resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(tempUploadResource));
+    resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(std::move(imageData)));
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }

@@ -1,12 +1,13 @@
 {
   "repository": "https://github.com/natsurainko/Vertix.Dependencies",
-  "commit": "5d75fd5",
+  "commit": "88edc0d",
   "targetDirectory": "libraries",
   "files": [
     "libraries/assimp-vc145-mt.dll",
     "libraries/assimp-vc145-mt.lib",
     "libraries/GameInput.lib",
-    "DirectXTK12-vc145-MD.lib",
-    "DirectXTK12-vc145-MDd.lib"
+    "libraries/DirectXTK12-vc145-MD.lib",
+    "libraries/DirectXTK12-vc145-MDd.lib",
+    "libraries/dxcompiler.dll"
   ]
 }

@@ -39,7 +39,6 @@
         src/Rendering/RenderTargetView.cpp
         src/Rendering/Texture.cpp
         src/Windowing/GameWindow.cpp
-
 )
 
 target_compile_definitions(Vertix PRIVATE UNICODE _UNICODE)
