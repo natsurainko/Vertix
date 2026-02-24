@@ -11,9 +11,10 @@ using Microsoft::WRL::ComPtr;
 
 Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
                              const HWND &hwnd,
-                             const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) : swapChainDesc(swapChainDesc) {
+                             const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
+                             const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc) : swapChainDesc(swapChainDesc) {
     const UINT frameCount = swapChainDesc.BufferCount;
-    const ComPtr<IDXGIFactory6> dxgiFactory = graphicsDevice->GetDxgiFactory();
+    const ComPtr<IDXGIFactory6>& dxgiFactory = graphicsDevice->GetDxgiFactory();
     d3d12Device = graphicsDevice->GetD3D12Device();
 
     {
@@ -46,7 +47,7 @@ Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
 
         for (UINT i = 0; i < frameCount; i++) {
             ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
-            d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), nullptr, rtvHandle);
+            d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), renderTargetDesc, rtvHandle);
             rtvHandles.push_back(rtvHandle);
             rtvHandle.Offset(1, renderTargetsDescriptorLength);
         }

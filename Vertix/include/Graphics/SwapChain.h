@@ -18,7 +18,8 @@ namespace Vertix {
     public:
         SwapChain(const GraphicsDevice *graphicsDevice,
                   const HWND &hwnd,
-                  const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc);
+                  const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
+                  const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc = nullptr);
 
         void PresentFrame();
         void Resize(const Vector2D<UINT> &size);
