@@ -41,6 +41,15 @@ namespace Vertix {
         }
 
         [[nodiscard]]
+        DXGI_FORMAT GetRenderTargetFormat() const {
+            if (hasRenderTargetDesc) {
+                return renderTargetDesc.Format;
+            }
+
+            return swapChainDesc.Format;
+        }
+
+        [[nodiscard]]
         const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCurrentFrameRenderTargetResource() const {
             return rtvResources[currentFrameIndex];
         }
@@ -51,6 +60,7 @@ namespace Vertix {
         }
     private:
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
+        D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc{};
         std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
 
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
@@ -63,6 +73,7 @@ namespace Vertix {
         UINT presentSyncInterval = 1;
 
         bool enableVSync = true;
+        bool hasRenderTargetDesc = false;
     };
 }
 

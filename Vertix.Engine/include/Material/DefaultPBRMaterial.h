@@ -10,10 +10,11 @@
 
 namespace Vertix::Engine {
     struct DefaultPBRMaterial : Material {
-        Texture* DiffuseTexture = nullptr;
+        Texture* AlbedoTexture = nullptr;
         Texture* MetallicTexture = nullptr;
         Texture* RoughnessTexture = nullptr;
         Texture* NormalTexture = nullptr;
+        Texture* AoTexture = nullptr;
     };
 }
 

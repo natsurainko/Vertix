@@ -13,6 +13,12 @@ Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
                              const HWND &hwnd,
                              const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
                              const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc) : swapChainDesc(swapChainDesc) {
+
+    if (renderTargetDesc) {
+        this->renderTargetDesc = *renderTargetDesc;
+        hasRenderTargetDesc = true;
+    }
+
     const UINT frameCount = swapChainDesc.BufferCount;
     const ComPtr<IDXGIFactory6>& dxgiFactory = graphicsDevice->GetDxgiFactory();
     d3d12Device = graphicsDevice->GetD3D12Device();
@@ -76,7 +82,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
 
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
         ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
-        d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), nullptr, rtvHandles[i]);
+        d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), hasRenderTargetDesc ? &renderTargetDesc : nullptr, rtvHandles[i]);
     }
 
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();

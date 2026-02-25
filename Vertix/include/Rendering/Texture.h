@@ -7,6 +7,7 @@
 
 #include <string>
 #include <d3d12/d3d12.h>
+#include <DirectXTK12/WICTextureLoader.h>
 #include <wrl/client.h>
 
 #include "Graphics/DescriptorHeap.h"
@@ -61,7 +62,8 @@ namespace Vertix {
                                                  const GraphicsDevice *graphicsDevice,
                                                  const GraphicsCommandList *graphicsCommandList,
                                                  ResourceUploadHeap &resourceUploadHeap,
-                                                 DescriptorHeap &srvDescriptorHeap);
+                                                 DescriptorHeap &srvDescriptorHeap,
+                                                 DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
     };
 }
 

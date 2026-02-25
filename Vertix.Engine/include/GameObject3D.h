@@ -42,6 +42,11 @@ namespace Vertix::Engine {
             UpdateWorldMatrix();
         }
 
+        void SetScale(const DirectX::SimpleMath::Vector3 &newScale) {
+            this->scale = newScale;
+            UpdateWorldMatrix();
+        }
+
     protected:
         void UpdateWorldMatrix() {
             world = DirectX::SimpleMath::Matrix::CreateScale(scale) *

@@ -6,6 +6,7 @@
 #define VERTIX_DEPTHSTENCILVIEW_H
 
 #include <d3d12/d3d12.h>
+#include <d3d12/d3dx12_barriers.h>
 #include <wrl/client.h>
 
 #include "Math/Vector2D.h"
@@ -14,11 +15,19 @@ namespace Vertix {
     class GraphicsDevice;
     class DepthStencilView {
     public:
-        DepthStencilView(GraphicsDevice* graphicsDevice,
+        DepthStencilView(const GraphicsDevice* graphicsDevice,
                          const D3D12_RESOURCE_DESC &dsvResourceDesc,
                          const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
                          const D3D12_DEPTH_STENCIL_VIEW_DESC* dsvDesc = nullptr,
                          const D3D12_CLEAR_VALUE &clearValue = { .DepthStencil = { 1.0f, 0 } });
+
+        [[nodiscard]]
+        CD3DX12_RESOURCE_BARRIER CreateTransitionBarrier(D3D12_RESOURCE_STATES before,
+                                                         D3D12_RESOURCE_STATES after,
+                                                         UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+                                                         D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) const;
+
+        void CreateShaderResourceView(const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle) const;
 
         void Resize(const Vector2D<UINT> &size);
 
@@ -31,13 +40,14 @@ namespace Vertix {
         const D3D12_CPU_DESCRIPTOR_HANDLE& GetHandle() const {
             return dsvHandle;
         }
+
     private:
-        GraphicsDevice* graphicsDevice;
         Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+        const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device;
 
         D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
         D3D12_RESOURCE_DESC dsvResourceDesc;
-        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc{};
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
         D3D12_CLEAR_VALUE clearValue;
         bool hasDsvDesc = false;
     };

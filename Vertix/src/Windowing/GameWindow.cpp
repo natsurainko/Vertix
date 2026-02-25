@@ -92,7 +92,7 @@ void Vertix::GameWindow::InitializeSwapChain() {
     rtvDesc.Format = windowOptions.renderTargetFormat;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-    swapChain = new SwapChain(graphicsDevice, m_hwnd, swapChainDesc);
+    swapChain = new SwapChain(graphicsDevice, m_hwnd, swapChainDesc, &rtvDesc);
     swapChain->SetEnableVSync(windowOptions.enableVSync);
 }
 

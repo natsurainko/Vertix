@@ -120,11 +120,11 @@ Vertix::Texture2D* Vertix::Texture2D::CreatePixelColorTexture(const float color[
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }
 
-Vertix::Texture2D * Vertix::Texture2D::CreateFromDdsFile(const std::wstring &filename,
-                                                         const GraphicsDevice* graphicsDevice,
-                                                         const GraphicsCommandList* graphicsCommandList,
-                                                         ResourceUploadHeap &resourceUploadHeap,
-                                                         DescriptorHeap &srvDescriptorHeap) {
+Vertix::Texture2D* Vertix::Texture2D::CreateFromDdsFile(const std::wstring &filename,
+                                                        const GraphicsDevice* graphicsDevice,
+                                                        const GraphicsCommandList* graphicsCommandList,
+                                                        ResourceUploadHeap &resourceUploadHeap,
+                                                        DescriptorHeap &srvDescriptorHeap) {
     const auto &device = graphicsDevice->GetD3D12Device();
     const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
 
@@ -180,11 +180,12 @@ Vertix::Texture2D * Vertix::Texture2D::CreateFromDdsFile(const std::wstring &fil
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }
 
-Vertix::Texture2D * Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring &filename,
+Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring &filename,
                                                               const GraphicsDevice *graphicsDevice,
                                                               const GraphicsCommandList *graphicsCommandList,
                                                               ResourceUploadHeap &resourceUploadHeap,
-                                                              DescriptorHeap &srvDescriptorHeap) {
+                                                              DescriptorHeap &srvDescriptorHeap,
+                                                              const DirectX::WIC_LOADER_FLAGS wicLoaderFlags) {
     const auto &device = graphicsDevice->GetD3D12Device();
     const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
 
@@ -192,9 +193,12 @@ Vertix::Texture2D * Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring
     std::unique_ptr<uint8_t[]> imageData;
     D3D12_SUBRESOURCE_DATA subresourceData;
 
-    ThrowIfFailed(DirectX::LoadWICTextureFromFile(
+    ThrowIfFailed(DirectX::LoadWICTextureFromFileEx(
         device.Get(),
         filename.c_str(),
+        0,
+        D3D12_RESOURCE_FLAG_NONE,
+        wicLoaderFlags,
         &d3d12Resource,
         imageData,
         subresourceData
