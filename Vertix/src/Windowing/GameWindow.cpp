@@ -172,6 +172,12 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
                                        const LPARAM lParam) {
     auto* gameWindow = reinterpret_cast<GameWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
+    if (gameWindow) {
+        if (const LRESULT result = gameWindow->BeforeWindowProc(hWnd, message, wParam, lParam); result) {
+            return result;
+        }
+    }
+
     switch (message) {
         case WM_PAINT:
             if (gameWindow) {
@@ -192,11 +198,21 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
 
         case WM_SIZE:
             if (gameWindow) {
-                if (wParam != SIZE_MINIMIZED) {
-                    if (const auto newSize = Vector2D<UINT>(LOWORD(lParam), HIWORD(lParam)); newSize != gameWindow->windowSize) {
-                        gameWindow->windowSize = newSize;
-                        gameWindow->OnResized(gameWindow->windowSize);
-                    }
+                switch (wParam) {
+                    case SIZE_MINIMIZED:
+                        gameWindow->windowState = Minimized;
+                        return 0;
+                    case SIZE_MAXIMIZED:
+                        gameWindow->windowState = Maximized;
+                        break;
+                    default:
+                        gameWindow->windowState = Normal;
+                        break;
+                }
+
+                if (const auto newSize = Vector2D<UINT>(LOWORD(lParam), HIWORD(lParam)); newSize != gameWindow->windowSize) {
+                    gameWindow->windowSize = newSize;
+                    gameWindow->OnResized(gameWindow->windowSize);
                 }
             }
             return 0;
@@ -244,7 +260,7 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
         }
 
         case WM_DESTROY: {
-            if (gameWindow->frameCommandList)
+            if (gameWindow && gameWindow->frameCommandList)
                 gameWindow->frameCommandList->WaitAllFrames();
 
             PostQuitMessage(0);

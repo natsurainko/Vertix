@@ -16,6 +16,12 @@
 #include "Math/Vector2D.h"
 #include "Windowing/WindowOptions.h"
 
+enum WindowState {
+    Normal,
+    Minimized,
+    Maximized,
+};
+
 namespace Vertix {
     struct KeyboardEventArgs;
     class GraphicsDevice;
@@ -69,6 +75,11 @@ namespace Vertix {
         }
 
         [[nodiscard]]
+        WindowState GetWindowState() const {
+            return windowState;
+        }
+
+        [[nodiscard]]
         SwapChain* GetSwapChain() const {
             return swapChain;
         }
@@ -105,6 +116,8 @@ namespace Vertix {
         virtual void OnDragEnter() {}
         virtual void OnDragExit() {}
 
+        virtual LRESULT BeforeWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) { return 0; }
+
     private:
         WindowOptions windowOptions;
         Vector2D<UINT> windowSize;
@@ -112,6 +125,7 @@ namespace Vertix {
 
         bool isDraggingWindow = false;
         bool isFocused = false;
+        WindowState windowState = Normal;
 
         std::chrono::steady_clock::time_point lastTickTime;
 

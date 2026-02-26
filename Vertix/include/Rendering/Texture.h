@@ -7,6 +7,7 @@
 
 #include <string>
 #include <d3d12/d3d12.h>
+#include <d3d12/d3dx12_root_signature.h>
 #include <DirectXTK12/WICTextureLoader.h>
 #include <wrl/client.h>
 

@@ -19,8 +19,7 @@ Vertix::Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Devi
     if (srvDescriptorHeap.IsFull())
         throw std::exception("The descriptor heap is full.");
 
-    descriptorHeapIndex = srvDescriptorHeap.GetCurrentHandleCount();
-    srvDescriptorHeap.AllocDescriptorHandle(cpuDescriptorHandle, gpuDescriptorHandle);
+    srvDescriptorHeap.AllocDescriptorHandle(cpuDescriptorHandle, gpuDescriptorHandle, &descriptorHeapIndex);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     D3D12_RESOURCE_DESC resourceDesc = d3d12Resource->GetDesc();

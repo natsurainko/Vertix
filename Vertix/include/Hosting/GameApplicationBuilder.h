@@ -30,6 +30,12 @@ namespace Vertix {
             return *this;
         }
 
+        template <GameWindowType TWindow,  typename... Args>
+        GameApplicationBuilder ConfigureWindow(const WindowOptions &options, Args... args) {
+            gameWindow = new TWindow(options, args...);
+            return *this;
+        }
+
         template <GameWindowType TWindow>
         GameApplicationBuilder ConfigureWindow(TWindow* window) {
             gameWindow = window;

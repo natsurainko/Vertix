@@ -83,8 +83,8 @@ void DemoMainWindow::OnInitialize() {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         psoDesc.InputLayout = { inputElementDesc, _countof(inputElementDesc) };
         psoDesc.pRootSignature = rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.GetShaderBlob().Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.GetShaderBlob().Get());
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.GetShaderBlob());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.GetShaderBlob());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);

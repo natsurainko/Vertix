@@ -1,6 +1,6 @@
 ﻿{
   "repository": "https://github.com/natsurainko/Vertix.Dependencies",
-  "commit": "88edc0d",
+  "commit": "4a16a93",
   "includes": [
     {
       "includeName": "d3d12",
@@ -182,6 +182,21 @@
       "sourceDirectory": "includes/GameInput",
       "files": [
         "GameInput.h"
+      ]
+    },
+    {
+      "includeName": "imgui",
+      "targetDirectory": "includes/imgui",
+      "sourceDirectory": "includes/imgui",
+      "files": [
+        "imconfig.h",
+        "imgui.h",
+        "imgui_internal.h",
+        "imstb_rectpack.h",
+        "imstb_textedit.h",
+        "imstb_truetype.h",
+        "backends/imgui_impl_dx12.h",
+        "backends/imgui_impl_win32.h"
       ]
     }
   ]

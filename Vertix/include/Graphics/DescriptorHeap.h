@@ -5,7 +5,7 @@
 #ifndef VERTIX_DESCRIPTORHEAP_H
 #define VERTIX_DESCRIPTORHEAP_H
 
-#include <d3d12/d3dx12_root_signature.h>
+#include <set>
 
 #include "GraphicsDevice.h"
 
@@ -17,13 +17,18 @@ namespace Vertix {
                                 UINT maxDescriptors = 16,
                                 bool shaderVisible = false);
 
-        void AllocDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE &handle);
-        void AllocDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE &cpuHandle, CD3DX12_GPU_DESCRIPTOR_HANDLE &gpuHandle);
+        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE &handle, UINT* indexPtr = nullptr);
+        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE &cpuHandle,
+                                   D3D12_GPU_DESCRIPTOR_HANDLE &gpuHandle,
+                                   UINT* indexPtr = nullptr);
 
-        void AllocDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE* handles, UINT numHandles);
-        void AllocDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE* cpuHandles,
-                                   CD3DX12_GPU_DESCRIPTOR_HANDLE* gpuHandles,
-                                   UINT numHandles);
+        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE* handles,
+                                   UINT numHandles,
+                                   UINT* indicesPtr = nullptr);
+        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE* cpuHandles,
+                                   D3D12_GPU_DESCRIPTOR_HANDLE* gpuHandles,
+                                   UINT numHandles,
+                                   UINT* indicesPtr = nullptr);
 
         [[nodiscard]]
         const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() const {
@@ -32,33 +37,33 @@ namespace Vertix {
 
         [[nodiscard]]
         bool IsFull() const {
-            return currentHandles == maxDescriptors;
+            return freeIndices.empty();
         }
 
         [[nodiscard]]
-        UINT GetCurrentHandleCount() const {
-            return currentHandles;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCpuDescriptorHandleForHeapStart() const {
+            return heapStartCpuHandle;
         }
 
         [[nodiscard]]
-        CD3DX12_CPU_DESCRIPTOR_HANDLE GetCpuDescriptorHandleForHeapStart() const {
-            return CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+        D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandleForHeapStart() const {
+            return heapStartGpuHandle;
         }
 
         [[nodiscard]]
-        CD3DX12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandleForHeapStart() const {
-            return CD3DX12_GPU_DESCRIPTOR_HANDLE(descriptorHeap->GetGPUDescriptorHandleForHeapStart());
-        }
+        UINT GetIndexOfDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
+
+        void FreeDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle);
 
     private:
         UINT maxDescriptors;
         UINT descriptorLength;
-        UINT currentHandles = 0;
         bool shaderVisible;
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE currentAvailableCpuHandle{};
-        CD3DX12_GPU_DESCRIPTOR_HANDLE currentAvailableGpuHandle{};
+        D3D12_CPU_DESCRIPTOR_HANDLE heapStartCpuHandle{};
+        D3D12_GPU_DESCRIPTOR_HANDLE heapStartGpuHandle{};
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
+        std::set<UINT> freeIndices;
     };
 }
 
