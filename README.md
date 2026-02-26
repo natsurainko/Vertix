@@ -97,6 +97,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
 #### Screenshots
 <img width="1332" height="802" alt="D3D12GameDemo" src="https://github.com/user-attachments/assets/64dd3635-33ee-4b9b-abb5-4bcbe84db284" />
 
+### D3D12ImGuiDemo
+- Path: `Examples/D3D12ImGuiDemo`
+- The demo demonstrates how to call ImGui within a framework.
+
+#### Screenshots
+<img width="1332" height="802" alt="D3D12ImGuiDemo" src="https://github.com/user-attachments/assets/d046f6c7-6e74-4641-b4ee-971ae4b6a86f" />
+
 ### D3D12RenderPipelineDemo
 - Path: `Examples/D3D12RenderPipelineDemo`
 - A comprehensive demonstration of a custom D3D12 rendering pipeline with advanced rendering techniques.
