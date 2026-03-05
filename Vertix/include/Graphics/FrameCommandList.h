@@ -19,16 +19,14 @@ namespace Vertix {
         ~FrameCommandList() override;
 
         void BeginCommand(const Microsoft::WRL::ComPtr<ID3D12PipelineState> &pipelineState) const override;
-
-        void WaitAllFrames() const;
-        void WaitPreviousFrame() const;
         void MoveToNextFrame();
+        void WaitForCommand() override;
+
     private:
         UINT frameCount;
         UINT currentFrameIndex = 0;
         std::vector<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>> allocators;
 
-        UINT64 fenceValue;
         HANDLE fenceEvent;
         Microsoft::WRL::ComPtr<ID3D12Fence> fence;
         std::vector<UINT64> fenceValues;

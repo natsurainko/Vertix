@@ -15,6 +15,7 @@ namespace Vertix::Engine {
         virtual ~GameObject3D() = default;
 
         virtual void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const {}
+        virtual void DrawInstanced(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList, UINT instanceCount) const {}
 
         virtual void Move(const DirectX::SimpleMath::Vector3 &offset,
                           bool relative = true,

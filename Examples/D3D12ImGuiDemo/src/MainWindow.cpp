@@ -80,7 +80,7 @@ void MainWindow::OnDestroy() {
 }
 
 void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
-    frameCommandList->WaitAllFrames();
+    frameCommandList->WaitForCommand();
     swapChain->Resize(size);
 }
 

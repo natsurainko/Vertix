@@ -11,7 +11,7 @@
 using Microsoft::WRL::ComPtr;
 
 Vertix::FrameCommandList::FrameCommandList(const GraphicsDevice* graphicsDevice, const UINT frameCount)
-    : GraphicsCommandList(graphicsDevice->GetD3D12Device(), graphicsDevice->GetDefaultD3D12CommandQueue()), frameCount(frameCount), fenceValue(0) {
+    : GraphicsCommandList(graphicsDevice->GetD3D12Device(), graphicsDevice->GetDefaultD3D12CommandQueue()), frameCount(frameCount)/*, fenceValue(0)*/ {
 
     if (frameCount == 0) throw std::exception("frameCount cannot be zero");
 
@@ -19,18 +19,20 @@ Vertix::FrameCommandList::FrameCommandList(const GraphicsDevice* graphicsDevice,
         allocators = std::vector<ComPtr<ID3D12CommandAllocator>>(frameCount);
         allocators[0] = commandAllocator;
 
-        for (UINT i = 1; i < frameCount ; ++i) {
+        for (UINT i = 1; i < frameCount; ++i) {
             ThrowIfFailed(d3d12Device->CreateCommandAllocator(
                 D3D12_COMMAND_LIST_TYPE_DIRECT,
                 IID_PPV_ARGS(&allocators[i])));
         }
     }
+
     {
         fenceValues.resize(frameCount);
         ThrowIfFailed(d3d12Device->CreateFence(
-            fenceValues[0],
+            fenceValues[currentFrameIndex],
             D3D12_FENCE_FLAG_NONE,
             IID_PPV_ARGS(&fence)));
+        fenceValues[currentFrameIndex]++;
 
         fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         if (fenceEvent == nullptr) {
@@ -40,13 +42,6 @@ Vertix::FrameCommandList::FrameCommandList(const GraphicsDevice* graphicsDevice,
 }
 
 Vertix::FrameCommandList::~FrameCommandList() {
-    for (UINT i = 0; i < frameCount; i++) {
-        if (fence->GetCompletedValue() < fenceValues[i]) {
-            ThrowIfFailed(fence->SetEventOnCompletion(fenceValues[i], fenceEvent));
-            WaitForSingleObject(fenceEvent, INFINITE);
-        }
-    }
-
     if (fenceEvent) {
         CloseHandle(fenceEvent);
     }
@@ -58,26 +53,29 @@ void Vertix::FrameCommandList::BeginCommand(const ComPtr<ID3D12PipelineState> &p
     ThrowIfFailed(graphicsCommandList->Reset(allocator.Get(), pipelineState.Get()));
 }
 
-void Vertix::FrameCommandList::WaitAllFrames() const {
-    for (UINT i = 0; i < frameCount; ++i) {
-        if (fence->GetCompletedValue() < fenceValues[i]) {
-            ThrowIfFailed(fence->SetEventOnCompletion(fenceValues[i], fenceEvent));
-            WaitForSingleObject(fenceEvent, INFINITE);
-        }
-    }
-}
+// Prepare to render the next frame.
+void Vertix::FrameCommandList::MoveToNextFrame()
+{
+    // Schedule a Signal command in the queue.
+    const UINT64 currentFenceValue = fenceValues[currentFrameIndex];
+    ThrowIfFailed(commandQueue->Signal(fence.Get(), currentFenceValue));
 
-void Vertix::FrameCommandList::WaitPreviousFrame() const {
-    if (const UINT64 currentFenceValue = fenceValues[currentFrameIndex]; fence->GetCompletedValue() < currentFenceValue) {
-        ThrowIfFailed(fence->SetEventOnCompletion(currentFenceValue, fenceEvent));
-        WaitForSingleObject(fenceEvent, INFINITE);
-    }
-}
-
-void Vertix::FrameCommandList::MoveToNextFrame() {
-    ThrowIfFailed(commandQueue->Signal(fence.Get(), fenceValue));
-    fenceValues[currentFrameIndex] = fenceValue;
-    fenceValue++;
-
+    // Update the frame index.
     currentFrameIndex = (currentFrameIndex + 1) % frameCount;
+
+    // If the next frame is not ready to be rendered yet, wait until it is ready.
+    if (fence->GetCompletedValue() < fenceValues[currentFrameIndex]) {
+        ThrowIfFailed(fence->SetEventOnCompletion(fenceValues[currentFrameIndex], fenceEvent));
+        WaitForSingleObjectEx(fenceEvent, INFINITE, FALSE);
+    }
+
+    // Set the fence value for the next frame.
+    fenceValues[currentFrameIndex] = currentFenceValue + 1;
+}
+
+void Vertix::FrameCommandList::WaitForCommand() {
+    ThrowIfFailed(commandQueue->Signal(fence.Get(), fenceValues[currentFrameIndex]));
+    ThrowIfFailed(fence->SetEventOnCompletion(fenceValues[currentFrameIndex], fenceEvent));
+    WaitForSingleObjectEx(fenceEvent, INFINITE, FALSE);
+    fenceValues[currentFrameIndex]++;
 }

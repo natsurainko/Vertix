@@ -18,6 +18,12 @@ namespace Vertix::Engine {
             }
         }
 
+        void DrawInstanced(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList, const UINT instanceCount) const override {
+            if (SceneModel) {
+                SceneModel->DrawInstanced(commandList, instanceCount);
+            }
+        }
+
         Model* SceneModel = nullptr;
         Material* Material = nullptr;
     };

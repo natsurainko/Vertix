@@ -33,6 +33,7 @@ namespace Vertix {
                          ResourceUploadHeap &resourceUploadHeap);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
+        void DrawInstanced(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList, UINT instanceCount) const;
     };
 }
 

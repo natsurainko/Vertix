@@ -21,7 +21,7 @@ namespace Vertix {
 
         [[nodiscard]]
         static WindowOptions GetDefaultWindowOptions() {
-            WindowOptions options;
+            WindowOptions options{};
             options.swapChainFrameCount = 2;
             options.swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
             options.renderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM;

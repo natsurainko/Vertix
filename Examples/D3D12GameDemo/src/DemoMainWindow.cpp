@@ -179,7 +179,7 @@ void DemoMainWindow::OnRender(const double deltaTime) {
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
     GetD3D12ViewportRectSize(viewport, scissorRect);
 
-    frameCommandList->WaitAllFrames();
+    frameCommandList->WaitForCommand();
     swapChain->Resize(size);
     depthStencilView->Resize(size);
 

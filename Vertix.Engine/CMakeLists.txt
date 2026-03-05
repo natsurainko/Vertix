@@ -1,6 +1,7 @@
 ﻿add_library(Vertix.Engine SHARED
         include/Camera/PerspectiveCamera.h
         include/Content/ModelImporter.h
+        include/Content/ModelImportOptions.h
         include/Controlling/IControllerInput.h
         include/Controlling/DefaultPositionController.h
         include/Controlling/DefaultRotationController.h

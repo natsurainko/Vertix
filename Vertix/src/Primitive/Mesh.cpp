@@ -138,3 +138,9 @@ void Vertix::Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList5> &commandList) c
     commandList->IASetIndexBuffer(&IndexBuffer->d3d12IndexBufferView);
     commandList->DrawIndexedInstanced(IndexBuffer->indexCount, 1, 0, 0, 0);
 }
+
+void Vertix::Mesh::DrawInstanced(const ComPtr<ID3D12GraphicsCommandList5> &commandList, const UINT instanceCount) const {
+    commandList->IASetVertexBuffers(0, 1, &VertexBuffer->d3d12VertexBufferView);
+    commandList->IASetIndexBuffer(&IndexBuffer->d3d12IndexBufferView);
+    commandList->DrawIndexedInstanced(IndexBuffer->indexCount, instanceCount, 0, 0, 0);
+}

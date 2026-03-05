@@ -26,7 +26,6 @@ Vertix::GameWindow::GameWindow(const WindowOptions &options) {
 
 Vertix::GameWindow::~GameWindow() {
     if (frameCommandList) {
-        frameCommandList->WaitAllFrames();
         delete frameCommandList;
         frameCommandList = nullptr;
     }
@@ -134,7 +133,6 @@ void Vertix::GameWindow::OnTick() {
 }
 
 void Vertix::GameWindow::OnInternalUpdate(const double deltaTime) {
-    frameCommandList->WaitPreviousFrame();
     OnUpdate(deltaTime);
 }
 
@@ -260,8 +258,9 @@ LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
         }
 
         case WM_DESTROY: {
-            if (gameWindow && gameWindow->frameCommandList)
-                gameWindow->frameCommandList->WaitAllFrames();
+            if (gameWindow && gameWindow->frameCommandList) {
+                gameWindow->frameCommandList->WaitForCommand();
+            }
 
             PostQuitMessage(0);
             return 0;

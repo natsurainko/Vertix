@@ -36,11 +36,11 @@ void Vertix::GraphicsCommandList::EndCommand() const {
     commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
-void Vertix::GraphicsCommandList::WaitForCommand() const {
+void Vertix::GraphicsCommandList::WaitForCommand() {
     ComPtr<ID3D12Fence> fence;
     ThrowIfFailed(d3d12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 
-    const HANDLE fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    HANDLE fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (fenceEvent == nullptr) {
         ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }

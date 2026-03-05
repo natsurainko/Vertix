@@ -23,3 +23,9 @@ void Vertix::Model::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5
         mesh.Draw(commandList);
     }
 }
+
+void Vertix::Model::DrawInstanced(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList, const UINT instanceCount) const {
+    for (auto &mesh: Meshes) {
+        mesh.DrawInstanced(commandList, instanceCount);
+    }
+}
