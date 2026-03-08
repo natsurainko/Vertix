@@ -81,8 +81,7 @@ namespace Vertix {
                 renderPass->Execute(commandList);
             }
         }
-
-        virtual void FinalDraw() {}
+        
         virtual void Resize(const Vector2D<UINT> &size) {}
     };
 }
