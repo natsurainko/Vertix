@@ -239,3 +239,24 @@ Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring 
     resourceUploadHeap.Store(resourceUploadHeap.CreateUploadResource(std::move(imageData)));
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }
+
+Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring &filename,
+                                                             const GraphicsDevice *graphicsDevice,
+                                                             DirectX::ResourceUploadBatch &resourceUploadBatch,
+                                                             DescriptorHeap &srvDescriptorHeap,
+                                                             const DirectX::WIC_LOADER_FLAGS wicLoaderFlags) {
+    const auto &device = graphicsDevice->GetD3D12Device();
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+    ThrowIfFailed(DirectX::CreateWICTextureFromFileEx(
+        device.Get(),
+        resourceUploadBatch,
+        filename.c_str(),
+        0,
+        D3D12_RESOURCE_FLAG_NONE,
+        wicLoaderFlags,
+        &d3d12Resource
+    ));
+
+    return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
+}

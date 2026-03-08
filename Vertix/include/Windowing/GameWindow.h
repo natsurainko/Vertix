@@ -60,7 +60,7 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        HWND GetWindowHandle() const {
+        const HWND& GetWindowHandle() const {
             return m_hwnd;
         }
 

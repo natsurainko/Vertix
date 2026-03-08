@@ -36,7 +36,13 @@ namespace Vertix::Engine {
         }
 
         center /= 8.0f;
-        const auto lightViewMatrix = DirectX::SimpleMath::Matrix::CreateLookAt(center, center + lightDirection, DirectX::SimpleMath::Vector3::Up);
+
+        DirectX::SimpleMath::Vector3 upVector = DirectX::SimpleMath::Vector3::Up;
+        if (std::abs(lightDirection.Dot(upVector)) > 0.999f) {
+            upVector = DirectX::SimpleMath::Vector3::Forward;
+        }
+
+        const auto lightViewMatrix = DirectX::SimpleMath::Matrix::CreateLookAt(center, center + lightDirection, upVector);
 
         float minX = (std::numeric_limits<float>::max)();
         float minY = (std::numeric_limits<float>::max)();

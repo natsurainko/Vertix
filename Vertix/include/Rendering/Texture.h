@@ -9,6 +9,7 @@
 #include <d3d12/d3d12.h>
 #include <d3d12/d3dx12_root_signature.h>
 #include <DirectXTK12/WICTextureLoader.h>
+#include <DirectXTK12/ResourceUploadBatch.h>
 #include <wrl/client.h>
 
 #include "Graphics/DescriptorHeap.h"
@@ -63,6 +64,12 @@ namespace Vertix {
                                                  const GraphicsDevice *graphicsDevice,
                                                  const GraphicsCommandList *graphicsCommandList,
                                                  ResourceUploadHeap &resourceUploadHeap,
+                                                 DescriptorHeap &srvDescriptorHeap,
+                                                 DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
+
+        static Texture2D* CreateFromFileUsingWIC(const std::wstring &filename,
+                                                 const GraphicsDevice *graphicsDevice,
+                                                 DirectX::ResourceUploadBatch &resourceUploadBatch,
                                                  DescriptorHeap &srvDescriptorHeap,
                                                  DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
     };

@@ -43,6 +43,11 @@ namespace Vertix::Engine {
             UpdateWorldMatrix();
         }
 
+        void SetOrientation(const DirectX::SimpleMath::Quaternion &newOrientation) {
+            this->orientation = newOrientation;
+            UpdateWorldMatrix();
+        }
+
         void SetScale(const DirectX::SimpleMath::Vector3 &newScale) {
             this->scale = newScale;
             UpdateWorldMatrix();

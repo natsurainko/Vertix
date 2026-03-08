@@ -31,6 +31,11 @@ namespace Vertix {
         }
 
         [[nodiscard]]
+        UINT GetFrameCount() const {
+            return swapChainDesc.BufferCount;
+        }
+
+        [[nodiscard]]
         Vector2D<UINT> GetFrameSize() const {
             return { swapChainDesc.Width, swapChainDesc.Height };
         }
