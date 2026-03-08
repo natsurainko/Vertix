@@ -19,7 +19,9 @@ namespace Vertix::Engine {
             options.AssimpPostProcessSteps =
                 aiProcess_Triangulate |
                 aiProcess_GenSmoothNormals |
-                aiProcess_CalcTangentSpace;
+                aiProcess_CalcTangentSpace |
+                aiProcess_MakeLeftHanded |
+                aiProcess_OptimizeMeshes;
 
             return options;
         }
