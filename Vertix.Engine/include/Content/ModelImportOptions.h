@@ -9,13 +9,16 @@
 
 namespace Vertix::Engine {
     struct ModelImportOptions {
-        bool CombineIntoSingleMesh;
+        bool TreatAssimpNodeAsModel;
+        bool ApplyTransformationToModel;
+
         unsigned int AssimpPostProcessSteps;
 
         [[nodiscard]]
         static ModelImportOptions GetDefaultModelImportOptions() {
             ModelImportOptions options{};
-            options.CombineIntoSingleMesh = true;
+            options.TreatAssimpNodeAsModel = false;
+            options.ApplyTransformationToModel = true;
             options.AssimpPostProcessSteps =
                 aiProcess_Triangulate |
                 aiProcess_GenSmoothNormals |

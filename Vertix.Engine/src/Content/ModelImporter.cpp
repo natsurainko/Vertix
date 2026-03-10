@@ -12,7 +12,38 @@
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;
 
-bool Vertix::Engine::ModelImporter::TryLoadFromFile(Model &model, const std::string &filePath, const ModelImportOptions &options) {
+const aiMatrix4x4t Identity = {
+    1.0f,0.0f,0.0f,0.0f,
+    0.0f,1.0f,0.0f,0.0f,
+    0.0f,0.0f,1.0f,0.0f,
+    0.0f,0.0f,0.0f,1.0f
+};
+
+bool Vertix::Engine::ModelImporter::TryLoadFromFile(Model &model,
+                                                    const std::string &filePath,
+                                                    const ModelImportOptions &options) {
+    try {
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(filePath, options.AssimpPostProcessSteps);
+
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+            return false;
+        if (options.TreatAssimpNodeAsModel)
+            throw std::exception("TreatNodeAsSingleModel is invalid for this function, "
+                                 "please use std::function<void(const ModelLoadCallbackContext*)>& modelLoadCallback instead");
+
+        ProcessNode(model, scene->mRootNode, scene, options, Identity);
+    } catch (const std::exception& e) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Vertix::Engine::ModelImporter::TryLoadFromFile(const std::function<void(ModelLoadCallbackContext*)>& modelLoadCallback,
+                                                    const std::string &filePath,
+                                                    const ModelImportOptions &options,
+                                                    const std::function<void(ModelMaterialLoadCallbackContext*)>* modelMaterialLoadCallback) {
     try {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(filePath, options.AssimpPostProcessSteps);
@@ -20,95 +51,153 @@ bool Vertix::Engine::ModelImporter::TryLoadFromFile(Model &model, const std::str
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
             return false;
 
-        ProcessNode(model, scene->mRootNode, scene, options);
-        return true;
+        if (modelMaterialLoadCallback) {
+            ProcessMaterial(scene, *modelMaterialLoadCallback);
+        }
+
+        ProcessNode(modelLoadCallback, scene->mRootNode, scene, options, Identity);
     } catch (const std::exception& e) {
         return false;
+    }
+
+    return true;
+}
+
+void Vertix::Engine::ModelImporter::ProcessNode(const std::function<void(ModelLoadCallbackContext*)>& modelLoadCallback,
+                                                const aiNode* node,
+                                                const aiScene* scene,
+                                                const ModelImportOptions &options,
+                                                const aiMatrix4x4t<float> &parentTransformation) {
+    if (!options.TreatAssimpNodeAsModel) {
+        ModelLoadCallbackContext callbackContext = {
+            .Model = std::make_unique<Model>(),
+            .Name = node->mName.length > 0 ? node->mName.C_Str() : "UnnamedModel",
+            .Position = Vector3::Zero,
+            .Scale = Vector3::One,
+            .Orientation = DirectX::SimpleMath::Quaternion::Identity,
+        };
+        ProcessNode(*callbackContext.Model, node, scene, options, parentTransformation * node->mTransformation);
+        modelLoadCallback(&callbackContext);
+        return;
+    }
+
+    if (node->mNumMeshes > 0) {
+        ModelLoadCallbackContext callbackContext = {
+            .Model = std::make_unique<Model>(),
+            .Name = node->mName.length > 0 ? node->mName.C_Str() : "UnnamedModel",
+            .Position = Vector3::Zero,
+            .Scale = Vector3::One,
+            .Orientation = DirectX::SimpleMath::Quaternion::Identity,
+        };
+
+        const auto transformation = options.ApplyTransformationToModel
+            ? parentTransformation * node->mTransformation
+            : node->mTransformation;
+
+        aiQuaternion aiRotation;
+        transformation.Decompose(
+            *reinterpret_cast<aiVector3D*>(&callbackContext.Scale),
+            aiRotation,
+            *reinterpret_cast<aiVector3D*>(&callbackContext.Position)
+        );
+        callbackContext.Orientation = DirectX::SimpleMath::Quaternion(
+            aiRotation.x,
+            aiRotation.y,
+            aiRotation.z,
+            aiRotation.w
+        );
+
+        auto* model = callbackContext.Model.get();
+        for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+            const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            callbackContext.MaterialIndices.insert(mesh->mMaterialIndex);
+
+            ProcessMesh(
+                mesh,
+                model->Meshes.emplace_back(),
+                Identity
+            );
+        }
+
+        modelLoadCallback(&callbackContext);
+    }
+
+    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+        ProcessNode(modelLoadCallback, node->mChildren[i], scene, options, parentTransformation * node->mTransformation);
+    }
+}
+
+void Vertix::Engine::ModelImporter::ProcessMaterial(const aiScene *scene, const std::function<void(ModelMaterialLoadCallbackContext*)>& modelMaterialLoadCallback) {
+    for (unsigned int mi = 0; mi  < scene->mNumMaterials; mi ++) {
+        const aiMaterial* mat = scene->mMaterials[mi];
+
+        aiString matName;
+        mat->Get(AI_MATKEY_NAME, matName);
+
+        ModelMaterialLoadCallbackContext callbackContext {
+            .Name = matName.length > 0 ? matName.C_Str() : "UnnamedMaterial",
+        };
+
+        for (int t = 1; t < aiTextureType_GLTF_METALLIC_ROUGHNESS; ++t) {
+            const auto type = static_cast<aiTextureType>(t);
+
+            for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
+                aiString path;
+                mat->GetTexture(type, i, &path);
+
+                if (const bool embedded = path.length > 0 && path.C_Str()[0] == '*'; !embedded) {
+                    callbackContext.Textures.emplace_back(ModelTextureLoadContext {
+                        .Type = type,
+                        .FilePath = path.C_Str(),
+                    });
+                }
+            }
+        }
+
+        modelMaterialLoadCallback(&callbackContext);
     }
 }
 
 void Vertix::Engine::ModelImporter::ProcessNode(Model &model,
                                                 const aiNode* node,
                                                 const aiScene* scene,
-                                                const ModelImportOptions &options) {
-    if (options.CombineIntoSingleMesh) {
-        if (model.Meshes.empty()) {
-            model.Meshes.emplace_back();
-            model.Meshes[0].Name = "RootNode";
-        }
+                                                const ModelImportOptions &options,
+                                                const aiMatrix4x4t<float> &parentTransformation) {
+    if (node->mNumMeshes > 0) {
+        const auto transformation = options.ApplyTransformationToModel
+            ? parentTransformation * node->mTransformation
+            : node->mTransformation;
 
-        for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
-            const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            ProcessMesh(mesh, model.Meshes[0]);
-        }
-    } else {
-        for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
-            const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            model.Meshes.push_back(ProcessMesh(mesh));
+        for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+            ProcessMesh(
+                scene->mMeshes[node->mMeshes[i]],
+                model.Meshes.emplace_back(),
+                transformation
+            );
         }
     }
 
-    for (uint32_t i = 0; i < node->mNumChildren; ++i) {
-        ProcessNode(model, node->mChildren[i], scene, options);
+    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+        ProcessNode(model, node->mChildren[i], scene, options, parentTransformation * node->mTransformation);
     }
 }
 
-Vertix::Mesh Vertix::Engine::ModelImporter::ProcessMesh(const aiMesh *aiMesh) {
-    Mesh mesh;
-
+void Vertix::Engine::ModelImporter::ProcessMesh(const aiMesh *aiMesh,
+                                                Mesh &mesh,
+                                                const aiMatrix4x4t<float> &transformation) {
     if (aiMesh->mName.length > 0) {
         mesh.Name = aiMesh->mName.C_Str();
     }
 
-    for (uint32_t i = 0; i < aiMesh->mNumVertices; ++i) {
-        Vertex vertex;
-        vertex.Position = Vector3(
-            aiMesh->mVertices[i].x,
-            aiMesh->mVertices[i].y,
-            aiMesh->mVertices[i].z);
-
-        if (aiMesh->HasNormals()) {
-            vertex.Normal = Vector3(
-                aiMesh->mNormals[i].x,
-                aiMesh->mNormals[i].y,
-                aiMesh->mNormals[i].z);
-        }
-
-        if (aiMesh->HasTextureCoords(0)) {
-            vertex.TexCoord = Vector2(
-                aiMesh->mTextureCoords[0][i].x,
-                aiMesh->mTextureCoords[0][i].y);
-
-            vertex.Tangent = Vector3(
-                aiMesh->mTangents[i].x,
-                aiMesh->mTangents[i].y,
-                aiMesh->mTangents[i].z);
-
-            vertex.Bitangent = Vector3(
-                aiMesh->mBitangents[i].x,
-                aiMesh->mBitangents[i].y,
-                aiMesh->mBitangents[i].z);
-        } else
-            vertex.TexCoord = Vector2(0, 0);
-
-        mesh.Vertices.push_back(vertex);
-    }
-
-    for (uint32_t i = 0; i < aiMesh->mNumFaces; i++)
-        for (uint32_t j = 0; j < aiMesh->mFaces[i].mNumIndices; j++)
-            mesh.Indices.push_back(aiMesh->mFaces[i].mIndices[j]);
-
-    return mesh;
-}
-
-void Vertix::Engine::ModelImporter::ProcessMesh(const aiMesh *aiMesh, Mesh &mesh) {
-    if (aiMesh->mName.length > 0) {
-        mesh.Name = mesh.Name + ";" + aiMesh->mName.C_Str();
-    }
-
     const size_t baseVertex = mesh.Vertices.size();
-    for (uint32_t i = 0; i < aiMesh->mNumVertices; ++i) {
-        Vertex vertex;
+    for (unsigned int i = 0; i < aiMesh->mNumFaces; ++i)
+        for (unsigned int j = 0; j < aiMesh->mFaces[i].mNumIndices; ++j)
+            mesh.Indices.push_back(aiMesh->mFaces[i].mIndices[j] + baseVertex);
+
+    for (unsigned int i = 0; i < aiMesh->mNumVertices; ++i) {
+        Vertex &vertex = mesh.Vertices.emplace_back();
+
+        aiMesh->mVertices[i] = transformation * aiMesh->mVertices[i];
         vertex.Position = Vector3(
             aiMesh->mVertices[i].x,
             aiMesh->mVertices[i].y,
@@ -116,16 +205,12 @@ void Vertix::Engine::ModelImporter::ProcessMesh(const aiMesh *aiMesh, Mesh &mesh
 
         if (aiMesh->HasNormals()) {
             vertex.Normal = Vector3(
-                aiMesh->mNormals[i].x,
-                aiMesh->mNormals[i].y,
-                aiMesh->mNormals[i].z);
+            aiMesh->mNormals[i].x,
+            aiMesh->mNormals[i].y,
+            aiMesh->mNormals[i].z);
         }
 
-        if (aiMesh->HasTextureCoords(0)) {
-            vertex.TexCoord = Vector2(
-                aiMesh->mTextureCoords[0][i].x,
-                aiMesh->mTextureCoords[0][i].y);
-
+        if (aiMesh->HasTangentsAndBitangents()) {
             vertex.Tangent = Vector3(
                 aiMesh->mTangents[i].x,
                 aiMesh->mTangents[i].y,
@@ -135,13 +220,12 @@ void Vertix::Engine::ModelImporter::ProcessMesh(const aiMesh *aiMesh, Mesh &mesh
                 aiMesh->mBitangents[i].x,
                 aiMesh->mBitangents[i].y,
                 aiMesh->mBitangents[i].z);
-        } else
-            vertex.TexCoord = Vector2(0, 0);
+        }
 
-        mesh.Vertices.push_back(vertex);
+        if (aiMesh->HasTextureCoords(0)) {
+            vertex.TexCoord = Vector2(
+                aiMesh->mTextureCoords[0][i].x,
+                aiMesh->mTextureCoords[0][i].y);
+        }
     }
-
-    for (uint32_t i = 0; i < aiMesh->mNumFaces; i++)
-        for (uint32_t j = 0; j < aiMesh->mFaces[i].mNumIndices; j++)
-            mesh.Indices.push_back(aiMesh->mFaces[i].mIndices[j] + baseVertex);
 }
