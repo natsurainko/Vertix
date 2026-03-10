@@ -10,6 +10,7 @@
 #include <d3d12/d3d12.h>
 #include <wrl/client.h>
 
+#include "Material.h"
 #include "Vertex.h"
 #include "Graphics/Buffers/IndexBuffer.h"
 #include "Graphics/Buffers/VertexBuffer.h"
@@ -25,6 +26,7 @@ namespace Vertix {
 
         VertexBuffer* VertexBuffer = nullptr;
         IndexBuffer* IndexBuffer = nullptr;
+        Material* Material = nullptr;
 
         ~Mesh();
 

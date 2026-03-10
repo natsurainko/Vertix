@@ -5,7 +5,7 @@
 #ifndef VERTIX_DEFAULTPBRMATERIAL_H
 #define VERTIX_DEFAULTPBRMATERIAL_H
 
-#include "Material.h"
+#include "Primitive/Material.h"
 #include "Rendering/Texture.h"
 
 namespace Vertix::Engine {

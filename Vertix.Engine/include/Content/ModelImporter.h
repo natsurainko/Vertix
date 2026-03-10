@@ -22,9 +22,13 @@ namespace Vertix::Engine {
         std::vector<ModelTextureLoadContext> Textures;
     };
 
+    struct ModelMeshProcessCallbackContext {
+        Mesh* Mesh;
+        unsigned int MaterialIndex;
+    };
+
     struct ModelLoadCallbackContext {
         std::unique_ptr<Model> Model = nullptr;
-        std::unordered_set<unsigned int> MaterialIndices;
         std::string Name;
 
         DirectX::SimpleMath::Vector3 Position;
@@ -34,35 +38,36 @@ namespace Vertix::Engine {
 
     class ModelImporter {
     public:
-        [[nodiscard]]
-        static bool TryLoadFromFile(Model &model,
-                                    const std::string &filePath,
-                                    const ModelImportOptions &options = ModelImportOptions::GetDefaultModelImportOptions());
-
-
         static bool TryLoadFromFile(const std::function<void(ModelLoadCallbackContext*)> &modelLoadCallback,
                                     const std::string &filePath,
-                                    const ModelImportOptions &options = ModelImportOptions::GetDefaultModelImportOptions(),
-                                    const std::function<void(ModelMaterialLoadCallbackContext*)>* modelMaterialLoadCallback = nullptr);
+                                    const ModelImportOptions &options = ModelImportOptions{},
+                                    const std::function<void(ModelMaterialLoadCallbackContext*)>* modelMaterialLoadCallback = nullptr,
+                                    const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback = nullptr);
 
+        /*[[nodiscard]]
+        static bool TryLoadFromFile(Model &model,
+                                    const std::string &filePath,
+                                    const ModelImportOptions &options = ModelImportOptions::GetDefaultModelImportOptions());*/
     private:
-        static void ProcessNode(Model &model,
-                                const aiNode *node,
-                                const aiScene *scene,
-                                const ModelImportOptions &options,
-                                const aiMatrix4x4t<float> &parentTransformation);
-
         static void ProcessNode(const std::function<void(ModelLoadCallbackContext *)> &modelLoadCallback,
                                 const aiNode *node,
                                 const aiScene *scene,
                                 const ModelImportOptions &options,
-                                const aiMatrix4x4t<float> &parentTransformation);
+                                const aiMatrix4x4t<float> &parentTransformation,
+                                const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback = nullptr);
 
         static void ProcessMaterial(const aiScene *scene, const std::function<void(ModelMaterialLoadCallbackContext*)> &modelMaterialLoadCallback);
 
         static void ProcessMesh(const aiMesh *aiMesh,
                                 Mesh &mesh,
-                                const aiMatrix4x4t<float> &transformation);
+                                const aiMatrix4x4t<float> &transformation,
+                                const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback = nullptr);
+
+        /*static void ProcessNode(Model &model,
+                                const aiNode *node,
+                                const aiScene *scene,
+                                const ModelImportOptions &options,
+                                const aiMatrix4x4t<float> &parentTransformation);*/
     };
 }
 

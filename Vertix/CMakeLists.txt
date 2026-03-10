@@ -10,12 +10,14 @@
         include/Graphics/Buffers/IndexBuffer.h
         include/Graphics/Buffers/ConstantBuffer.h
         include/Graphics/Buffers/ConstantBufferPageArray.h
+        include/Graphics/Buffers/StructuredBuffer.h
         include/Hosting/GameApplication.h
         include/Hosting/GameApplicationBuilder.h
         include/Math/Vector2D.h
         include/Primitive/Vertex.h
         include/Primitive/Mesh.h
         include/Primitive/Model.h
+        include/Primitive/Material.h
         include/Rendering/DepthStencilView.h
         include/Rendering/RenderTargetView.h
         include/Rendering/HlslShader.h

@@ -6,7 +6,6 @@
         include/Controlling/DefaultPositionController.h
         include/Controlling/DefaultRotationController.h
         include/Material/DefaultPBRMaterial.h
-        include/Material/Material.h
         include/Math/FloatExtensions.h
         include/Math/MatrixExtensions.h
         include/Math/VectorExtensions.h

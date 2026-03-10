@@ -9,6 +9,10 @@
 #include <DirectXTK12/SimpleMath.h>
 #include <wrl/client.h>
 
+namespace Vertix {
+    class Mesh;
+}
+
 namespace Vertix::Engine {
     class GameObject3D {
     public:
@@ -26,6 +30,11 @@ namespace Vertix::Engine {
         [[nodiscard]]
         const DirectX::SimpleMath::Matrix& GetWorldMatrix() const {
             return world;
+        }
+
+        [[nodiscard]]
+        const DirectX::SimpleMath::Matrix& GetWorldInverseTranspose() const {
+            return worldInverseTranspose;
         }
 
         [[nodiscard]]
@@ -58,6 +67,9 @@ namespace Vertix::Engine {
             world = DirectX::SimpleMath::Matrix::CreateScale(scale) *
                 DirectX::SimpleMath::Matrix::CreateFromQuaternion(orientation) *
                 DirectX::SimpleMath::Matrix::CreateTranslation(position);
+
+            world.Invert(worldInverseTranspose);
+            worldInverseTranspose.Transpose(worldInverseTranspose);
         }
 
         DirectX::SimpleMath::Vector3 position;
@@ -65,6 +77,7 @@ namespace Vertix::Engine {
         DirectX::SimpleMath::Quaternion orientation = DirectX::SimpleMath::Quaternion::Identity;
 
         DirectX::SimpleMath::Matrix world = DirectX::SimpleMath::Matrix::Identity;
+        DirectX::SimpleMath::Matrix worldInverseTranspose = DirectX::SimpleMath::Matrix::Identity;
     };
 }
 

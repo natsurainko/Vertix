@@ -9,25 +9,13 @@
 
 namespace Vertix::Engine {
     struct ModelImportOptions {
-        bool TreatAssimpNodeAsModel;
-        bool ApplyTransformationToModel;
-
-        unsigned int AssimpPostProcessSteps;
-
-        [[nodiscard]]
-        static ModelImportOptions GetDefaultModelImportOptions() {
-            ModelImportOptions options{};
-            options.TreatAssimpNodeAsModel = false;
-            options.ApplyTransformationToModel = true;
-            options.AssimpPostProcessSteps =
+        bool ApplyTransformationToModel = true;
+        unsigned int AssimpPostProcessSteps =
                 aiProcess_Triangulate |
                 aiProcess_GenSmoothNormals |
                 aiProcess_CalcTangentSpace |
                 aiProcess_MakeLeftHanded |
                 aiProcess_OptimizeMeshes;
-
-            return options;
-        }
     };
 }
 

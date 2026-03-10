@@ -6,7 +6,6 @@
 #define VERTIX_SCENEOBJECT3D_H
 
 #include "GameObject3D.h"
-#include "Material/Material.h"
 #include "Primitive/Model.h"
 
 namespace Vertix::Engine {
@@ -25,7 +24,6 @@ namespace Vertix::Engine {
         }
 
         Model* SceneModel = nullptr;
-        Material* Material = nullptr;
     };
 }
 
