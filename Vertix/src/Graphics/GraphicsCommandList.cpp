@@ -9,11 +9,11 @@
 
 using Microsoft::WRL::ComPtr;
 
-Vertix::GraphicsCommandList::GraphicsCommandList(const ComPtr<ID3D12Device10> &d3d12Device,
-                                                 const ComPtr<ID3D12CommandQueue> &commandQueue,
-                                                 const D3D12_COMMAND_LIST_TYPE commandListType)
-    : d3d12Device(d3d12Device), commandQueue(commandQueue), commandListType(commandListType) {
-    
+Vertix::GraphicsCommandList::GraphicsCommandList(
+    const ComPtr<ID3D12Device10> &d3d12Device,
+    const ComPtr<ID3D12CommandQueue> &commandQueue,
+    const D3D12_COMMAND_LIST_TYPE commandListType) : d3d12Device(d3d12Device), commandQueue(commandQueue), commandListType(commandListType)
+{
     ThrowIfFailed(d3d12Device->CreateCommandList1(
         0,
         commandListType,

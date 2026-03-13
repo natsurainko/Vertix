@@ -8,7 +8,7 @@
 #include <numbers>
 
 namespace Vertix::Engine {
-    inline float DegreesToRadians(const float degrees) {
+    inline float DegreesToRadians(const float degrees) noexcept {
         return degrees * std::numbers::pi_v<float> / 180.0f;
     }
 }

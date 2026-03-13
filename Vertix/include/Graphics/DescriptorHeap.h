@@ -8,53 +8,61 @@
 #include <set>
 
 #include "GraphicsDevice.h"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
-    class DescriptorHeap {
+    class VERTIX_API DescriptorHeap {
     public:
-        explicit DescriptorHeap(const GraphicsDevice* graphicsDevice,
-                                D3D12_DESCRIPTOR_HEAP_TYPE heapType,
-                                UINT maxDescriptors = 16,
-                                bool shaderVisible = false);
+        explicit DescriptorHeap(
+            const GraphicsDevice* graphicsDevice,
+            D3D12_DESCRIPTOR_HEAP_TYPE heapType,
+            UINT maxDescriptors = 16,
+            bool shaderVisible = false);
 
-        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE &handle, UINT* indexPtr = nullptr);
-        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE &cpuHandle,
-                                   D3D12_GPU_DESCRIPTOR_HANDLE &gpuHandle,
-                                   UINT* indexPtr = nullptr);
+        void AllocDescriptorHandle(
+            D3D12_CPU_DESCRIPTOR_HANDLE &handle,
+            UINT* indexPtr = nullptr);
 
-        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE* handles,
-                                   UINT numHandles,
-                                   UINT* indicesPtr = nullptr);
-        void AllocDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE* cpuHandles,
-                                   D3D12_GPU_DESCRIPTOR_HANDLE* gpuHandles,
-                                   UINT numHandles,
-                                   UINT* indicesPtr = nullptr);
+        void AllocDescriptorHandle(
+            D3D12_CPU_DESCRIPTOR_HANDLE &cpuHandle,
+            D3D12_GPU_DESCRIPTOR_HANDLE &gpuHandle,
+            UINT* indexPtr = nullptr);
+
+        void AllocDescriptorHandle(
+            D3D12_CPU_DESCRIPTOR_HANDLE* handles,
+            UINT numHandles,
+            UINT* indicesPtr = nullptr);
+
+        void AllocDescriptorHandle(
+            D3D12_CPU_DESCRIPTOR_HANDLE* cpuHandles,
+            D3D12_GPU_DESCRIPTOR_HANDLE* gpuHandles,
+            UINT numHandles,
+            UINT* indicesPtr = nullptr);
+
+        void FreeDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle);
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() const {
+        const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() const noexcept {
             return descriptorHeap;
         }
 
         [[nodiscard]]
-        bool IsFull() const {
+        bool IsFull() const noexcept {
             return freeIndices.empty();
         }
 
         [[nodiscard]]
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCpuDescriptorHandleForHeapStart() const {
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCpuDescriptorHandleForHeapStart() const noexcept {
             return heapStartCpuHandle;
         }
 
         [[nodiscard]]
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandleForHeapStart() const {
+        D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandleForHeapStart() const noexcept {
             return heapStartGpuHandle;
         }
 
         [[nodiscard]]
         UINT GetIndexOfDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
-
-        void FreeDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle);
-
     private:
         UINT maxDescriptors;
         UINT descriptorLength;

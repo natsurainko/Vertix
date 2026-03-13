@@ -22,16 +22,16 @@ void DemoMainWindow::OnInitialize() {
 
         // release after command list executed
         Vertix::ResourceUploadHeap resourceUploadHeap;
-        if (Vertix::Engine::ModelImporter::TryLoadFromFile(cubeModel, "assets/models/block.fbx")) {
-            cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
-        }
+        //if (Vertix::Engine::ModelImporter::TryLoadFromFile(cubeModel, "assets/models/block.fbx")) {
+        //    cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
+        //}
 
         frameCommandList->EndCommand();
         frameCommandList->WaitForCommand();
     }
 
     {
-        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
         rootParameters[0].InitAsConstantBufferView(0);
 
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;

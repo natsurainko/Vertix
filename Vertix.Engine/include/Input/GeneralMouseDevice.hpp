@@ -14,8 +14,10 @@ namespace Vertix::Engine {
             GeneralMouseDevice::InitializeDevice(inputInterface.GetInterface(), nullptr);
         }
 
-        void InitializeDevice(const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
-                      const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &) override {
+        void InitializeDevice(
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &) override
+        {
             MouseDevice::InitializeDevice(gameInput, nullptr);
         }
     };

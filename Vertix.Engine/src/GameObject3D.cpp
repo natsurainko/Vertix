@@ -4,9 +4,11 @@
 
 #include "GameObject3D.h"
 
-void Vertix::Engine::GameObject3D::Move(const DirectX::SimpleMath::Vector3 &offset,
-                                        const bool relative,
-                                        const bool allowRoll) {
+void Vertix::Engine::GameObject3D::Move(
+    const DirectX::SimpleMath::Vector3 &offset,
+    const bool relative,
+    const bool allowRoll)
+{
     if (!relative) {
         position = position + offset;
         return;
@@ -22,7 +24,10 @@ void Vertix::Engine::GameObject3D::Move(const DirectX::SimpleMath::Vector3 &offs
     position += right * offset.z;
 }
 
-void Vertix::Engine::GameObject3D::Rotate(const DirectX::SimpleMath::Vector3 &angles, const bool allowRoll) {
+void Vertix::Engine::GameObject3D::Rotate(
+    const DirectX::SimpleMath::Vector3 &angles,
+    const bool allowRoll)
+{
     orientation = orientation * DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(allowRoll
         ? DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Up, orientation)
         : DirectX::SimpleMath::Vector3::Up, angles.y);

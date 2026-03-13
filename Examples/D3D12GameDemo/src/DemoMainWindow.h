@@ -9,11 +9,11 @@
 #include <d3d12/d3dx12_root_signature.h>
 
 #include "Camera/PerspectiveCamera.h"
-#include "Graphics/Buffers/ConstantBuffer.h"
-#include "Helpers/FrameCounter.h"
+#include "Graphics/Buffers/ConstantBuffer.hpp"
+#include "Helpers/FrameCounter.hpp"
 #include "Input/GameInputInterface.h"
-#include "Input/GeneralKeyboardDevice.h"
-#include "Input/GeneralMouseDevice.h"
+#include "Input/GeneralKeyboardDevice.hpp"
+#include "Input/GeneralMouseDevice.hpp"
 #include "Primitive/Model.h"
 #include "Rendering/DepthStencilView.h"
 #include "Rendering/HlslShader.h"

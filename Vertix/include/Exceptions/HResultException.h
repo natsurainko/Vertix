@@ -18,7 +18,9 @@ inline std::string HResultToString(const HRESULT hr) {
 class HResultException : public std::runtime_error {
 public:
     explicit HResultException(const HRESULT hr) : std::runtime_error(HResultToString(hr)), hr(hr) {}
-    [[nodiscard]] HRESULT GetHResult() const {
+
+    [[nodiscard]]
+    HRESULT GetHResult() const noexcept {
         return hr;
     }
 private:

@@ -16,7 +16,7 @@ namespace Vertix {
 
     class ResourceUploadHeap {
     public:
-        void Store(std::unique_ptr<IResourceUploading> resource) {
+        void Store(std::unique_ptr<IResourceUploading> resource) noexcept {
             resources.push_back(std::move(resource));
         }
 
@@ -25,7 +25,7 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        size_t Size() const {
+        size_t Size() const noexcept {
             return resources.size();
         }
 

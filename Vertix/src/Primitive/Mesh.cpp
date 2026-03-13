@@ -11,7 +11,7 @@
 #include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
-#include "Graphics/ResourceUploadHeap.h"
+#include "Graphics/ResourceUploadHeap.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -20,9 +20,11 @@ Vertix::Mesh::~Mesh() {
     delete IndexBuffer;
 }
 
-void Vertix::Mesh::UploadToGPU(const ComPtr<ID3D12Device10> &device,
-                               const ComPtr<ID3D12GraphicsCommandList5> &commandList,
-                               ResourceUploadHeap &resourceUploadHeap) {
+void Vertix::Mesh::UploadToGPU(
+    const ComPtr<ID3D12Device10> &device,
+    const ComPtr<ID3D12GraphicsCommandList5> &commandList,
+    ResourceUploadHeap &resourceUploadHeap)
+{
     const auto defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     const auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
@@ -139,7 +141,10 @@ void Vertix::Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList5> &commandList) c
     commandList->DrawIndexedInstanced(IndexBuffer->indexCount, 1, 0, 0, 0);
 }
 
-void Vertix::Mesh::DrawInstanced(const ComPtr<ID3D12GraphicsCommandList5> &commandList, const UINT instanceCount) const {
+void Vertix::Mesh::DrawInstanced(
+    const ComPtr<ID3D12GraphicsCommandList5> &commandList,
+    const UINT instanceCount) const
+{
     commandList->IASetVertexBuffers(0, 1, &VertexBuffer->d3d12VertexBufferView);
     commandList->IASetIndexBuffer(&IndexBuffer->d3d12IndexBufferView);
     commandList->DrawIndexedInstanced(IndexBuffer->indexCount, instanceCount, 0, 0, 0);

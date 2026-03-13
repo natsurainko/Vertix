@@ -85,7 +85,7 @@ void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
 }
 
 void MainWindow::OnRender(double deltaTime) {
-    if (GetWindowState() == Minimized) return;
+    if (GetWindowState() == Vertix::Minimized) return;
 
     static bool show_demo_window = true;
     static bool show_another_window = false;

@@ -6,19 +6,22 @@
 #define VERTIX_GAMEAPPLICATION_H
 
 #include "Windowing/GameWindow.h"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
-    class GameApplication {
+    class VERTIX_API GameApplication {
     public:
-        GameApplication(const HINSTANCE &hInstance,
-                        LPSTR lpCmdLine,
-                        int nCmdShow,
-                        GameWindow* gameWindow);
+        GameApplication(
+            const HINSTANCE &hInstance,
+            LPSTR lpCmdLine,
+            int nCmdShow,
+            GameWindow* gameWindow);
+
+        ~GameApplication();
 
         [[nodiscard]]
         int Run() const;
 
-        ~GameApplication();
     private:
         HINSTANCE hInstance;
         LPSTR lpCmdLine;

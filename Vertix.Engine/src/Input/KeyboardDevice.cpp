@@ -20,7 +20,8 @@ Vertix::Engine::KeyboardDevice::~KeyboardDevice() {
 
 void Vertix::Engine::KeyboardDevice::InitializeDevice(
     const ComPtr<IGameInput> &gameInput,
-    const ComPtr<IGameInputDevice> &gameInputDevice) {
+    const ComPtr<IGameInputDevice> &gameInputDevice)
+{
     const GameInputDeviceInfo* deviceInfo = nullptr;
     ThrowIfFailed(gameInputDevice->GetDeviceInfo(&deviceInfo));
     maxSimultaneousKeys = deviceInfo->keyboardInfo->maxSimultaneousKeys;
@@ -36,7 +37,7 @@ void Vertix::Engine::KeyboardDevice::InitializeDevice(
     InputDevice::InitializeDevice(gameInput, gameInputDevice);
 }
 
-bool Vertix::Engine::KeyboardDevice::IsKeyPressed(const UINT &virtualKey) const {
+bool Vertix::Engine::KeyboardDevice::IsKeyPressed(const UINT &virtualKey) const noexcept {
     for (UINT i = 0; i < activeKeyCount; i++)
         if (activeKeysArray[i].virtualKey == virtualKey)
             return true;
@@ -44,9 +45,11 @@ bool Vertix::Engine::KeyboardDevice::IsKeyPressed(const UINT &virtualKey) const 
     return false;
 }
 
-void Vertix::Engine::KeyboardDevice::OnKeyboardReadingCallback(const GameInputCallbackToken,
-                                                               void *contextPtr,
-                                                               IGameInputReading *reading) {
+void Vertix::Engine::KeyboardDevice::OnKeyboardReadingCallback(
+    const GameInputCallbackToken,
+    void *contextPtr,
+    IGameInputReading *reading)
+{
     const auto keyboard = static_cast<KeyboardDevice*>(contextPtr);
     keyboard->activeKeyCount = reading->GetKeyState(keyboard->maxSimultaneousKeys, keyboard->activeKeysArray);
 }

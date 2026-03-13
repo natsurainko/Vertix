@@ -13,8 +13,10 @@ namespace Vertix::Engine {
     public:
         virtual ~InputDevice() = default;
 
-        virtual void InitializeDevice(const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
-                              const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) {
+        virtual void InitializeDevice(
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice)
+        {
             this->input = gameInput;
             this->device = gameInputDevice;
 
@@ -22,7 +24,7 @@ namespace Vertix::Engine {
         }
 
         [[nodiscard]]
-        bool IsInitialized() const {
+        bool IsInitialized() const noexcept {
             return initialized;
         }
 

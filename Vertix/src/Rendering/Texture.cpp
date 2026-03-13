@@ -13,9 +13,11 @@
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsCommandList.h"
 
-Vertix::Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
-                         const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
-                         DescriptorHeap &srvDescriptorHeap): d3d12Resource(d3d12Resource) {
+Vertix::Texture::Texture(
+    const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
+    const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
+    DescriptorHeap &srvDescriptorHeap): d3d12Resource(d3d12Resource)
+{
     if (srvDescriptorHeap.IsFull())
         throw std::exception("The descriptor heap is full.");
 
@@ -49,18 +51,13 @@ Vertix::Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Devi
     d3d12Device->CreateShaderResourceView(d3d12Resource.Get(), &srvDesc, cpuDescriptorHandle);
 }
 
-Vertix::Texture::~Texture() = default;
-
-Vertix::Texture2D::Texture2D(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
-                             const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
-                             DescriptorHeap &srvDescriptorHeap) : Texture(d3d12Device, d3d12Resource, srvDescriptorHeap) {
-}
-
-Vertix::Texture2D* Vertix::Texture2D::CreatePixelColorTexture(const float color[4],
-                                                              const GraphicsDevice* graphicsDevice,
-                                                              const GraphicsCommandList* graphicsCommandList,
-                                                              ResourceUploadHeap &resourceUploadHeap,
-                                                              DescriptorHeap &srvDescriptorHeap) {
+Vertix::Texture2D* Vertix::Texture2D::CreatePixelColorTexture(
+    const float color[4],
+    const GraphicsDevice* graphicsDevice,
+    const GraphicsCommandList* graphicsCommandList,
+    ResourceUploadHeap &resourceUploadHeap,
+    DescriptorHeap &srvDescriptorHeap)
+{
     const auto &device = graphicsDevice->GetD3D12Device();
     const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
     constexpr UINT64 textureSize = sizeof(float) * 4;
@@ -119,11 +116,13 @@ Vertix::Texture2D* Vertix::Texture2D::CreatePixelColorTexture(const float color[
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }
 
-Vertix::Texture2D* Vertix::Texture2D::CreateFromDdsFile(const std::wstring &filename,
-                                                        const GraphicsDevice* graphicsDevice,
-                                                        const GraphicsCommandList* graphicsCommandList,
-                                                        ResourceUploadHeap &resourceUploadHeap,
-                                                        DescriptorHeap &srvDescriptorHeap) {
+Vertix::Texture2D* Vertix::Texture2D::CreateFromDdsFile(
+    const std::wstring &filename,
+    const GraphicsDevice* graphicsDevice,
+    const GraphicsCommandList* graphicsCommandList,
+    ResourceUploadHeap &resourceUploadHeap,
+    DescriptorHeap &srvDescriptorHeap)
+{
     const auto &device = graphicsDevice->GetD3D12Device();
     const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
 
@@ -179,12 +178,14 @@ Vertix::Texture2D* Vertix::Texture2D::CreateFromDdsFile(const std::wstring &file
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }
 
-Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring &filename,
-                                                              const GraphicsDevice *graphicsDevice,
-                                                              const GraphicsCommandList *graphicsCommandList,
-                                                              ResourceUploadHeap &resourceUploadHeap,
-                                                              DescriptorHeap &srvDescriptorHeap,
-                                                              const DirectX::WIC_LOADER_FLAGS wicLoaderFlags) {
+Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(
+    const std::wstring &filename,
+    const GraphicsDevice *graphicsDevice,
+    const GraphicsCommandList *graphicsCommandList,
+    ResourceUploadHeap &resourceUploadHeap,
+    DescriptorHeap &srvDescriptorHeap,
+    const DirectX::WIC_LOADER_FLAGS wicLoaderFlags)
+{
     const auto &device = graphicsDevice->GetD3D12Device();
     const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
 
@@ -240,11 +241,13 @@ Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring 
     return new Texture2D(device, d3d12Resource, srvDescriptorHeap);
 }
 
-Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(const std::wstring &filename,
-                                                             const GraphicsDevice *graphicsDevice,
-                                                             DirectX::ResourceUploadBatch &resourceUploadBatch,
-                                                             DescriptorHeap &srvDescriptorHeap,
-                                                             const DirectX::WIC_LOADER_FLAGS wicLoaderFlags) {
+Vertix::Texture2D* Vertix::Texture2D::CreateFromFileUsingWIC(
+    const std::wstring &filename,
+    const GraphicsDevice *graphicsDevice,
+    DirectX::ResourceUploadBatch &resourceUploadBatch,
+    DescriptorHeap &srvDescriptorHeap,
+    const DirectX::WIC_LOADER_FLAGS wicLoaderFlags)
+{
     const auto &device = graphicsDevice->GetD3D12Device();
 
     Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;

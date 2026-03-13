@@ -14,23 +14,26 @@
 
 #include "Graphics/DescriptorHeap.h"
 #include "Graphics/GraphicsCommandList.h"
-#include "Graphics/ResourceUploadHeap.h"
+#include "Graphics/ResourceUploadHeap.hpp"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
-    class Texture {
+    class VERTIX_API Texture {
     public:
-        Texture(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
-                const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
-                DescriptorHeap &srvDescriptorHeap);
-        virtual ~Texture();
+        Texture(
+            const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
+            const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
+            DescriptorHeap &srvDescriptorHeap);
+
+        virtual ~Texture() = default;
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetResource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetResource() const noexcept {
             return d3d12Resource;
         }
 
         [[nodiscard]]
-        UINT GetIndexOfDescriptor() const {
+        UINT GetIndexOfDescriptor() const noexcept {
             return descriptorHeapIndex;
         }
 
@@ -44,34 +47,39 @@ namespace Vertix {
 
     class Texture2D : public Texture {
     public:
-        Texture2D(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
-                 const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
-                 DescriptorHeap &srvDescriptorHeap);
+        Texture2D(
+            const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
+            const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource,
+            DescriptorHeap &srvDescriptorHeap) : Texture(d3d12Device, d3d12Resource, srvDescriptorHeap) {}
 
-        static Texture2D* CreatePixelColorTexture(const float color[4],
-                                                  const GraphicsDevice *graphicsDevice,
-                                                  const GraphicsCommandList *graphicsCommandList,
-                                                  ResourceUploadHeap &resourceUploadHeap,
-                                                  DescriptorHeap &srvDescriptorHeap);
+        static VERTIX_API Texture2D* CreatePixelColorTexture(
+            const float color[4],
+            const GraphicsDevice *graphicsDevice,
+            const GraphicsCommandList *graphicsCommandList,
+            ResourceUploadHeap &resourceUploadHeap,
+            DescriptorHeap &srvDescriptorHeap);
 
-        static Texture2D* CreateFromDdsFile(const std::wstring &filename,
-                                            const GraphicsDevice *graphicsDevice,
-                                            const GraphicsCommandList *graphicsCommandList,
-                                            ResourceUploadHeap &resourceUploadHeap,
-                                            DescriptorHeap &srvDescriptorHeap);
+        static VERTIX_API Texture2D* CreateFromDdsFile(
+            const std::wstring &filename,
+            const GraphicsDevice *graphicsDevice,
+            const GraphicsCommandList *graphicsCommandList,
+            ResourceUploadHeap &resourceUploadHeap,
+            DescriptorHeap &srvDescriptorHeap);
 
-        static Texture2D* CreateFromFileUsingWIC(const std::wstring &filename,
-                                                 const GraphicsDevice *graphicsDevice,
-                                                 const GraphicsCommandList *graphicsCommandList,
-                                                 ResourceUploadHeap &resourceUploadHeap,
-                                                 DescriptorHeap &srvDescriptorHeap,
-                                                 DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
+        static VERTIX_API Texture2D* CreateFromFileUsingWIC(
+            const std::wstring &filename,
+            const GraphicsDevice *graphicsDevice,
+            const GraphicsCommandList *graphicsCommandList,
+            ResourceUploadHeap &resourceUploadHeap,
+            DescriptorHeap &srvDescriptorHeap,
+            DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
 
-        static Texture2D* CreateFromFileUsingWIC(const std::wstring &filename,
-                                                 const GraphicsDevice *graphicsDevice,
-                                                 DirectX::ResourceUploadBatch &resourceUploadBatch,
-                                                 DescriptorHeap &srvDescriptorHeap,
-                                                 DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
+        static VERTIX_API Texture2D* CreateFromFileUsingWIC(
+            const std::wstring &filename,
+            const GraphicsDevice *graphicsDevice,
+            DirectX::ResourceUploadBatch &resourceUploadBatch,
+            DescriptorHeap &srvDescriptorHeap,
+            DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_FLAGS::WIC_LOADER_DEFAULT);
     };
 }
 

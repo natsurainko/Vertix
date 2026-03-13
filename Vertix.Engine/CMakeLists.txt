@@ -1,47 +1,40 @@
-﻿add_library(Vertix.Engine SHARED
-        include/Camera/PerspectiveCamera.h
-        include/Content/ModelImporter.h
-        include/Content/ModelImportOptions.h
-        include/Controlling/IControllerInput.h
-        include/Controlling/DefaultPositionController.h
-        include/Controlling/DefaultRotationController.h
-        include/Material/DefaultPBRMaterial.h
-        include/Math/FloatExtensions.h
-        include/Math/MatrixExtensions.h
-        include/Math/VectorExtensions.h
-        include/Helpers/FrameCounter.h
-        include/Input/GeneralKeyboardDevice.h
-        include/Input/GeneralMouseDevice.h
-        include/Input/GameInputInterface.h
-        include/Input/KeyboardDevice.h
-        include/Input/MouseDevice.h
-        include/Input/InputDevice.h
-        include/Scene/DirectionalLight.h
-        include/Scene/SceneObject3D.h
-        include/GameObject3D.h
-
+﻿add_library(Vertix.Engine SHARED)
+set_target_properties(Vertix.Engine PROPERTIES LINKER_LANGUAGE CXX)
+target_compile_definitions(Vertix.Engine PRIVATE Vertix_Engine_EXPORTS)
+target_sources(Vertix.Engine
+    PRIVATE
         src/Camera/PerspectiveCamera.cpp
         src/Content/ModelImporter.cpp
         src/Input/GameInputInterface.cpp
         src/Input/KeyboardDevice.cpp
         src/Input/MouseDevice.cpp
         src/GameObject3D.cpp
+    PUBLIC
+        FILE_SET HEADERS
+        BASE_DIRS include
+        FILES
+            include/VERTIX_ENGINE_EXPORT.h
+
+            include/Camera/PerspectiveCamera.h
+            include/Content/ModelImporter.h
+            include/Controlling/DefaultPositionController.hpp
+            include/Controlling/DefaultRotationController.hpp
+            include/Controlling/IControllerInput.hpp
+            include/Material/DefaultPBRMaterial.h
+            include/Math/FloatExtensions.h
+            include/Math/MatrixExtensions.h
+            include/Math/VectorExtensions.h
+            include/Helpers/FrameCounter.hpp
+            include/Input/GeneralKeyboardDevice.hpp
+            include/Input/GeneralMouseDevice.hpp
+            include/Input/GameInputInterface.h
+            include/Input/KeyboardDevice.h
+            include/Input/MouseDevice.h
+            include/Input/InputDevice.hpp
+            include/Scene/DirectionalLight.h
+            include/Scene/SceneObject3D.hpp
+            include/GameObject3D.h
 )
 
-target_link_libraries(Vertix.Engine PUBLIC Vertix GameInput.lib assimp-vc145-mt.lib)
-
-target_include_directories(Vertix.Engine BEFORE PUBLIC ${INCLUDES_DIR})
-target_include_directories(Vertix.Engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-add_custom_command(TARGET Vertix.Engine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${LIBRARIES_DIR}/assimp-vc145-mt.dll"
-        $<TARGET_FILE_DIR:Vertix.Engine>
-        COMMENT "Copying assimp dll to output folder.."
-)
-
-if (MSVC)
-    set_target_properties(Vertix.Engine PROPERTIES
-            WINDOWS_EXPORT_ALL_SYMBOLS ON
-    )
-endif ()
+target_include_directories(Vertix BEFORE PUBLIC ${INCLUDES_DIR})
+target_link_libraries(Vertix.Engine PUBLIC Vertix GameInput assimp)

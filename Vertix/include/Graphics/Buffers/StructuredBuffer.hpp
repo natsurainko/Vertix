@@ -5,7 +5,6 @@
 #ifndef VERTIX_STRUCTUREDBUFFER_H
 #define VERTIX_STRUCTUREDBUFFER_H
 
-#include <vector>
 #include <d3d12/d3d12.h>
 #include <d3d12/d3dx12_core.h>
 #include <wrl/client.h>
@@ -17,8 +16,10 @@ namespace Vertix {
     template <typename T>
     class StructuredBuffer {
     public:
-        explicit StructuredBuffer(const GraphicsDevice* graphicsDevice, const UINT elementCount = 32)
-            : elementCount(elementCount) {
+        explicit StructuredBuffer(
+            const GraphicsDevice* graphicsDevice,
+            const UINT elementCount = 32) : elementCount(elementCount)
+        {
             const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
             const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * elementCount);
 
@@ -45,7 +46,10 @@ namespace Vertix {
             }
         }
 
-        void FillAt(const UINT index, const T &value) {
+        void FillAt(
+            const UINT index,
+            const T &value)
+        {
             if (index >= elementCount) {
                 throw std::out_of_range("Index out of range");
             }
@@ -54,12 +58,12 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const noexcept {
             return d3d12Resource;
         }
 
         [[nodiscard]]
-        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const {
+        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const noexcept {
             return gpuVirtualAddress;
         }
 

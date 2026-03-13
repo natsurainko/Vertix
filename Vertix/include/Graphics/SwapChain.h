@@ -10,43 +10,45 @@
 #include <d3d12/d3dx12_root_signature.h>
 #include <wrl/client.h>
 
-#include "Math/Vector2D.h"
+#include "Math/Vector2D.hpp"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class GraphicsDevice;
-    class SwapChain {
+    class VERTIX_API SwapChain {
     public:
-        SwapChain(const GraphicsDevice *graphicsDevice,
-                  const HWND &hwnd,
-                  const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
-                  const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc = nullptr);
+        SwapChain(
+            const GraphicsDevice *graphicsDevice,
+            const HWND &hwnd,
+            const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
+            const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc = nullptr);
 
         void PresentFrame();
         void Resize(const Vector2D<UINT> &size);
-        void SetEnableVSync(const bool &enable);
+        void SetEnableVSync(const bool &enable) noexcept;
 
         [[nodiscard]]
-        bool GetEnableVsync() const {
+        bool GetEnableVsync() const noexcept {
             return enableVSync;
         }
 
         [[nodiscard]]
-        UINT GetFrameCount() const {
+        UINT GetFrameCount() const noexcept {
             return swapChainDesc.BufferCount;
         }
 
         [[nodiscard]]
-        Vector2D<UINT> GetFrameSize() const {
+        Vector2D<UINT> GetFrameSize() const noexcept {
             return { swapChainDesc.Width, swapChainDesc.Height };
         }
 
         [[nodiscard]]
-        UINT GetCurrentFrameIndex() const {
+        UINT GetCurrentFrameIndex() const noexcept {
             return currentFrameIndex;
         }
 
         [[nodiscard]]
-        DXGI_FORMAT GetRenderTargetFormat() const {
+        DXGI_FORMAT GetRenderTargetFormat() const noexcept {
             if (hasRenderTargetDesc) {
                 return renderTargetDesc.Format;
             }
@@ -55,14 +57,15 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCurrentFrameRenderTargetResource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCurrentFrameRenderTargetResource() const noexcept {
             return rtvResources[currentFrameIndex];
         }
 
         [[nodiscard]]
-        const CD3DX12_CPU_DESCRIPTOR_HANDLE& GetCurrentFrameRenderTargetHandle() const {
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE& GetCurrentFrameRenderTargetHandle() const noexcept {
             return rtvHandles[currentFrameIndex];
         }
+
     private:
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
         D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc{};

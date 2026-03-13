@@ -13,7 +13,7 @@
 #include "Graphics/GraphicsDevice.h"
 #include "Graphics/SwapChain.h"
 
-Vertix::GameWindow::GameWindow() : windowOptions(WindowOptions::GetDefaultWindowOptions()) {
+Vertix::GameWindow::GameWindow() {
     windowSize = windowOptions.windowSize;
     windowTitle = windowOptions.windowTitle;
 }
@@ -164,12 +164,13 @@ void Vertix::GameWindow::SetCursorCenterWindow() const {
     SetCursorPos(center.x, center.y);
 }
 
-LRESULT Vertix::GameWindow::WindowProc(const HWND hWnd,
-                                       const UINT message,
-                                       const WPARAM wParam,
-                                       const LPARAM lParam) {
+LRESULT Vertix::GameWindow::WindowProc(
+    const HWND hWnd,
+    const UINT message,
+    const WPARAM wParam,
+    const LPARAM lParam)
+{
     auto* gameWindow = reinterpret_cast<GameWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
     if (gameWindow) {
         if (const LRESULT result = gameWindow->BeforeWindowProc(hWnd, message, wParam, lParam); result) {
             return result;

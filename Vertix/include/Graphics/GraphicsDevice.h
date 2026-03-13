@@ -9,10 +9,12 @@
 #include <wrl.h>
 #include <d3d12/d3d12.h>
 
+#include "VERTIX_EXPORT.h"
+
 namespace Vertix {
     class GameWindow;
     class SwapChain;
-    class GraphicsDevice {
+    class VERTIX_API GraphicsDevice {
     public:
         explicit GraphicsDevice(bool useSoftware = false);
         ~GraphicsDevice();
@@ -20,17 +22,17 @@ namespace Vertix {
         void WaitForGPU() const;
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<IDXGIFactory6>& GetDxgiFactory() const {
+        const Microsoft::WRL::ComPtr<IDXGIFactory6>& GetDxgiFactory() const noexcept {
             return dxgiFactory;
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Device10>& GetD3D12Device() const {
+        const Microsoft::WRL::ComPtr<ID3D12Device10>& GetD3D12Device() const noexcept {
             return d3d12Device;
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetDefaultD3D12CommandQueue() const {
+        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetDefaultD3D12CommandQueue() const noexcept {
             return d3d12CommandQueue;
         }
 
@@ -42,7 +44,9 @@ namespace Vertix {
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> d3d12CommandQueue;
 
 #ifndef NDEBUG
+#ifndef NO_D3D12_DEBUG_LAYER
         Microsoft::WRL::ComPtr<ID3D12Debug5> d3dDebug;
+#endif
 #endif
 
         HRESULT CreateSuitableDevice();

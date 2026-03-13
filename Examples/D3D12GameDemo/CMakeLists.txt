@@ -4,14 +4,20 @@
         src/DemoMainWindow.h
 )
 
-add_dependencies(D3D12GameDemo Vertix)
-add_dependencies(D3D12GameDemo Vertix.Engine)
-
+add_dependencies(D3D12GameDemo Vertix Vertix.Engine)
 target_link_libraries(D3D12GameDemo PRIVATE Vertix Vertix.Engine)
 
 add_custom_command(TARGET D3D12GameDemo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_RUNTIME_DLLS:D3D12GameDemo>
+        $<TARGET_FILE_DIR:D3D12GameDemo>
+        COMMAND_EXPAND_LISTS
+        COMMENT "Copying runtime DLLs..."
+)
+
+add_custom_command(TARGET D3D12GameDemo POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/assets
-            $<TARGET_FILE_DIR:D3D12GameDemo>/assets
+        ${CMAKE_CURRENT_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:D3D12GameDemo>/assets
         COMMENT "Copying assets folder to output folder.."
 )

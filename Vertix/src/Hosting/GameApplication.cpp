@@ -7,30 +7,29 @@
 #include "Graphics/GraphicsDevice.h"
 #include "Windowing/GameWindow.h"
 
-namespace Vertix {
-    GameApplication::GameApplication(const HINSTANCE &hInstance, const LPSTR lpCmdLine, const int nCmdShow,
-        GameWindow *gameWindow): hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow),
-            gameWindow(gameWindow) {
-        graphicsDevice = new GraphicsDevice();
-        gameWindow->InitializeDevice(graphicsDevice);
-    }
-
-    int GameApplication::Run() const {
-        gameWindow->NativeInitialize(hInstance);
-        gameWindow->OnInitialize();
-        gameWindow->Show(nCmdShow);
-
-        WPARAM result;
-        gameWindow->RunMessageLoop(result);
-        gameWindow->OnDestroy();
-
-        return static_cast<char>(result);
-    }
-
-    GameApplication::~GameApplication() {
-        delete gameWindow;
-        delete graphicsDevice;
-    }
+Vertix::GameApplication::GameApplication(
+    const HINSTANCE &hInstance,
+    const LPSTR lpCmdLine,
+    const int nCmdShow,
+    GameWindow *gameWindow) : hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow), gameWindow(gameWindow)
+{
+    graphicsDevice = new GraphicsDevice();
+    gameWindow->InitializeDevice(graphicsDevice);
 }
 
+Vertix::GameApplication::~GameApplication() {
+    delete gameWindow;
+    delete graphicsDevice;
+}
 
+int Vertix::GameApplication::Run() const {
+    gameWindow->NativeInitialize(hInstance);
+    gameWindow->OnInitialize();
+    gameWindow->Show(nCmdShow);
+
+    WPARAM result;
+    gameWindow->RunMessageLoop(result);
+    gameWindow->OnDestroy();
+
+    return static_cast<char>(result);
+}

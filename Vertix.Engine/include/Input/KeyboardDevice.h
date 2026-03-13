@@ -5,21 +5,26 @@
 #ifndef VERTIX_KEYBOARDDEVICE_H
 #define VERTIX_KEYBOARDDEVICE_H
 
-#include "Input/InputDevice.h"
+#include "Input/InputDevice.hpp"
+#include "VERTIX_ENGINE_EXPORT.h"
 
 namespace Vertix::Engine {
-    class KeyboardDevice : public InputDevice {
+    class VERTIX_ENGINE_API KeyboardDevice : public InputDevice {
     public:
         KeyboardDevice();
         ~KeyboardDevice() override;
 
-        void InitializeDevice(const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
-                              const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) override;
+        void InitializeDevice(
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) override;
 
         [[nodiscard]]
-        bool IsKeyPressed(const UINT &virtualKey) const;
+        bool IsKeyPressed(const UINT &virtualKey) const noexcept;
 
-        void GetActiveKeys(const GameInput::v3::GameInputKeyState* &keys, UINT &keyCount) const {
+        void GetActiveKeys(
+            const GameInput::v3::GameInputKeyState* &keys,
+            UINT &keyCount) const noexcept
+        {
             keys = activeKeysArray;
             keyCount = activeKeyCount;
         }

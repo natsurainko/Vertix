@@ -9,24 +9,23 @@
 #include <wrl/client.h>
 #include <GameInput/GameInput.h>
 
-struct GetInputDevicesEnumeratorContext {
-    Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> gameInput;
-    std::vector<Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice>>* devices;
-};
+#include "VERTIX_ENGINE_EXPORT.h"
 
 namespace Vertix::Engine {
     class InputDevice;
-    class GameInputInterface {
+    class VERTIX_ENGINE_API GameInputInterface {
     public:
         GameInputInterface();
 
         [[nodiscard]]
         std::vector<Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice>> GetInputDevices(const GameInput::v3::GameInputKind &inputKind) const;
 
-        void InitializeDevice(InputDevice &inputDevice, const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) const;
+        void InitializeDevice(
+            InputDevice &inputDevice,
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) const;
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput>& GetInterface() const {
+        const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput>& GetInterface() const noexcept {
             return gameInput;
         }
 

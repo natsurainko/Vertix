@@ -14,11 +14,12 @@
 #include "Vertex.h"
 #include "Graphics/Buffers/IndexBuffer.h"
 #include "Graphics/Buffers/VertexBuffer.h"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class ResourceUploadHeap;
     class GraphicsDevice;
-    class Mesh {
+    class VERTIX_API Mesh {
     public:
         std::vector<Vertex> Vertices;
         std::vector<UINT32> Indices;
@@ -30,12 +31,16 @@ namespace Vertix {
 
         ~Mesh();
 
-        void UploadToGPU(const Microsoft::WRL::ComPtr<ID3D12Device10> &device,
-                         const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
-                         ResourceUploadHeap &resourceUploadHeap);
+        void UploadToGPU(
+            const Microsoft::WRL::ComPtr<ID3D12Device10> &device,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+            ResourceUploadHeap &resourceUploadHeap);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
-        void DrawInstanced(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList, UINT instanceCount) const;
+
+        void DrawInstanced(
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+            UINT instanceCount) const;
     };
 }
 

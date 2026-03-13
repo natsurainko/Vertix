@@ -50,12 +50,12 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const noexcept {
             return d3d12Resource;
         }
 
         [[nodiscard]]
-        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const {
+        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const noexcept {
             return gpuVirtualAddress;
         }
 

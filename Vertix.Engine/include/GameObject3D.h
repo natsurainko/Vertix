@@ -9,61 +9,65 @@
 #include <DirectXTK12/SimpleMath.h>
 #include <wrl/client.h>
 
-namespace Vertix {
-    class Mesh;
-}
+#include "VERTIX_ENGINE_EXPORT.h"
 
 namespace Vertix::Engine {
-    class GameObject3D {
+    class VERTIX_ENGINE_API GameObject3D {
     public:
         virtual ~GameObject3D() = default;
 
         virtual void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const {}
-        virtual void DrawInstanced(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList, UINT instanceCount) const {}
 
-        virtual void Move(const DirectX::SimpleMath::Vector3 &offset,
-                          bool relative = true,
-                          bool allowRoll = false);
+        virtual void DrawInstanced(
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+            UINT instanceCount) const {}
 
-        virtual void Rotate(const DirectX::SimpleMath::Vector3 &angles, bool allowRoll = false);
+        virtual void Move(
+            const DirectX::SimpleMath::Vector3 &offset,
+            bool relative = true,
+            bool allowRoll = false);
+
+        virtual void Rotate(
+            const DirectX::SimpleMath::Vector3 &angles,
+            bool allowRoll = false);
 
         [[nodiscard]]
-        const DirectX::SimpleMath::Matrix& GetWorldMatrix() const {
+        const DirectX::SimpleMath::Matrix& GetWorldMatrix() const noexcept {
             return world;
         }
 
         [[nodiscard]]
-        const DirectX::SimpleMath::Matrix& GetWorldInverseTranspose() const {
+        const DirectX::SimpleMath::Matrix& GetWorldInverseTranspose() const noexcept {
             return worldInverseTranspose;
         }
 
         [[nodiscard]]
-        const DirectX::SimpleMath::Vector3& GetPosition() const {
+        const DirectX::SimpleMath::Vector3& GetPosition() const noexcept {
             return position;
         }
 
         [[nodiscard]]
-        const DirectX::SimpleMath::Quaternion& GetOrientation() const {
+        const DirectX::SimpleMath::Quaternion& GetOrientation() const noexcept {
             return orientation;
         }
 
-        void SetPosition(const DirectX::SimpleMath::Vector3 &newPosition) {
+        void SetPosition(const DirectX::SimpleMath::Vector3 &newPosition) noexcept {
             this->position = newPosition;
             UpdateWorldMatrix();
         }
 
-        void SetOrientation(const DirectX::SimpleMath::Quaternion &newOrientation) {
+        void SetOrientation(const DirectX::SimpleMath::Quaternion &newOrientation) noexcept {
             this->orientation = newOrientation;
             UpdateWorldMatrix();
         }
 
-        void SetScale(const DirectX::SimpleMath::Vector3 &newScale) {
+        void SetScale(const DirectX::SimpleMath::Vector3 &newScale) noexcept {
             this->scale = newScale;
             UpdateWorldMatrix();
         }
 
     protected:
-        void UpdateWorldMatrix() {
+        void UpdateWorldMatrix() noexcept {
             world = DirectX::SimpleMath::Matrix::CreateScale(scale) *
                 DirectX::SimpleMath::Matrix::CreateFromQuaternion(orientation) *
                 DirectX::SimpleMath::Matrix::CreateTranslation(position);

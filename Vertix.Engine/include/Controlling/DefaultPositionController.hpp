@@ -9,13 +9,12 @@
 #include <DirectXTK12/SimpleMath.h>
 
 #include "GameObject3D.h"
-#include "IControllerInput.h"
+#include "IControllerInput.hpp"
 
 namespace Vertix::Engine {
     class DefaultPositionController {
     public:
-        explicit DefaultPositionController(IControllerInput<DirectX::SimpleMath::Vector3>* controllerInput)
-            : controllerInput(controllerInput) {
+        explicit DefaultPositionController(IControllerInput<DirectX::SimpleMath::Vector3>* controllerInput) : controllerInput(controllerInput) {
             controllerInput->OnUpdate(std::bind(&DefaultPositionController::OnUpdate, this, std::placeholders::_1));
         }
 

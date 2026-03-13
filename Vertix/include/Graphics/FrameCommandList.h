@@ -10,12 +10,16 @@
 #include <wrl/client.h>
 
 #include "GraphicsCommandList.h"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class GraphicsDevice;
-    class FrameCommandList : public GraphicsCommandList {
+    class VERTIX_API FrameCommandList : public GraphicsCommandList {
     public:
-        FrameCommandList(const GraphicsDevice *graphicsDevice, UINT frameCount);
+        FrameCommandList(
+            const GraphicsDevice *graphicsDevice,
+            UINT frameCount);
+
         ~FrameCommandList() override;
 
         void BeginCommand(const Microsoft::WRL::ComPtr<ID3D12PipelineState> &pipelineState) const override;

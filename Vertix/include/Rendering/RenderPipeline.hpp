@@ -8,8 +8,9 @@
 #include <concepts>
 #include <memory>
 #include <vector>
+#include <d3d12/d3d12.h>
 
-#include "Rendering/RenderPass.h"
+#include "Rendering/RenderPass.hpp"
 
 namespace Vertix {
     template <typename TRenderPass, typename TContext>
@@ -25,7 +26,8 @@ namespace Vertix {
         GraphicsDevice* graphicsDevice = nullptr;
 
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> commandList;
-        std::vector<std::unique_ptr<RenderPass<TContext>>> renderPasses{};
+        std::vector<std::unique_ptr<RenderPass<TContext>>> renderPasses;
+
     public:
         RenderPipeline(GraphicsDevice* graphicsDevice, const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &graphicsCommandList)
             : graphicsDevice(graphicsDevice), commandList(graphicsCommandList) {}
@@ -68,21 +70,23 @@ namespace Vertix {
             return false;
         }
 
-        std::vector<std::unique_ptr<RenderPass<TContext>>> GetPasses() const {
-            return renderPasses;
-        }
-
-        TContext* GetRenderContext() {
-            return renderContext;
-        }
-
         virtual void Execute() {
             for (const auto &renderPass : renderPasses) {
                 renderPass->Execute(commandList);
             }
         }
-        
+
         virtual void Resize(const Vector2D<UINT> &size) {}
+
+        [[nodiscard]]
+        std::vector<std::unique_ptr<RenderPass<TContext>>>& GetPasses() const noexcept {
+            return renderPasses;
+        }
+
+        [[nodiscard]]
+        TContext* GetRenderContext() noexcept {
+            return renderContext;
+        }
     };
 }
 

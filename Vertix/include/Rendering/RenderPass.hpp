@@ -13,7 +13,10 @@ namespace Vertix {
     public:
         virtual ~RenderPass() = default;
 
-        virtual void Initialize(GraphicsDevice* device, TContext* context) {
+        virtual void Initialize(
+            GraphicsDevice* device,
+            TContext* context)
+        {
             renderContext = context;
             graphicsDevice = device;
         }

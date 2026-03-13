@@ -8,13 +8,16 @@
 #include <d3d12/d3d12.h>
 #include <wrl/client.h>
 
+#include "VERTIX_EXPORT.h"
+
 namespace Vertix {
     class GraphicsDevice;
-    class GraphicsCommandList {
+    class VERTIX_API GraphicsCommandList {
     public:
-        GraphicsCommandList(const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
-                            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue,
-                            D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT);
+        GraphicsCommandList(
+            const Microsoft::WRL::ComPtr<ID3D12Device10> &d3d12Device,
+            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue,
+            D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT);
 
         virtual ~GraphicsCommandList() = default;
 
@@ -23,9 +26,10 @@ namespace Vertix {
         virtual void WaitForCommand();
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5>& GetD3D12GraphicsCommandList() const {
+        const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5>& GetD3D12GraphicsCommandList() const noexcept {
             return graphicsCommandList;
         }
+
     protected:
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;

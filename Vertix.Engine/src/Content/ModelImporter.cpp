@@ -7,8 +7,6 @@
 #include <assimp/Importer.hpp>
 #include <DirectXTK12/SimpleMath.h>
 
-#include "Content/ModelImportOptions.h"
-
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;
 
@@ -19,11 +17,13 @@ const aiMatrix4x4t aiMatrix_Identity = {
     0.0f,0.0f,0.0f,1.0f
 };
 
-bool Vertix::Engine::ModelImporter::TryLoadFromFile(const std::function<void(ModelLoadCallbackContext*)>& modelLoadCallback,
-                                                    const std::string &filePath,
-                                                    const ModelImportOptions &options,
-                                                    const std::function<void(ModelMaterialLoadCallbackContext*)>* modelMaterialLoadCallback,
-                                                    const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback) {
+bool Vertix::Engine::ModelImporter::TryLoadFromFile(
+    const std::function<void(ModelLoadCallbackContext*)>& modelLoadCallback,
+    const std::string &filePath,
+    const ModelImportOptions &options,
+    const std::function<void(ModelMaterialLoadCallbackContext*)>* modelMaterialLoadCallback,
+    const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback)
+{
     try {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(filePath, options.AssimpPostProcessSteps);
@@ -43,12 +43,14 @@ bool Vertix::Engine::ModelImporter::TryLoadFromFile(const std::function<void(Mod
     return true;
 }
 
-void Vertix::Engine::ModelImporter::ProcessNode(const std::function<void(ModelLoadCallbackContext*)>& modelLoadCallback,
-                                                const aiNode* node,
-                                                const aiScene* scene,
-                                                const ModelImportOptions &options,
-                                                const aiMatrix4x4t<float> &parentTransformation,
-                                                const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback) {
+void Vertix::Engine::ModelImporter::ProcessNode(
+    const std::function<void(ModelLoadCallbackContext*)>& modelLoadCallback,
+    const aiNode* node,
+    const aiScene* scene,
+    const ModelImportOptions &options,
+    const aiMatrix4x4t<float> &parentTransformation,
+    const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback)
+{
     if (node->mNumMeshes > 0) {
         ModelLoadCallbackContext callbackContext = {
             .Model = std::make_unique<Model>(),
@@ -93,7 +95,10 @@ void Vertix::Engine::ModelImporter::ProcessNode(const std::function<void(ModelLo
     }
 }
 
-void Vertix::Engine::ModelImporter::ProcessMaterial(const aiScene *scene, const std::function<void(ModelMaterialLoadCallbackContext*)>& modelMaterialLoadCallback) {
+void Vertix::Engine::ModelImporter::ProcessMaterial(
+    const aiScene *scene,
+    const std::function<void(ModelMaterialLoadCallbackContext*)>& modelMaterialLoadCallback)
+{
     for (unsigned int mi = 0; mi  < scene->mNumMaterials; mi ++) {
         const aiMaterial* mat = scene->mMaterials[mi];
 
@@ -124,10 +129,12 @@ void Vertix::Engine::ModelImporter::ProcessMaterial(const aiScene *scene, const 
     }
 }
 
-void Vertix::Engine::ModelImporter::ProcessMesh(const aiMesh *aiMesh,
-                                                Mesh &mesh,
-                                                const aiMatrix4x4t<float> &transformation,
-                                                const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback) {
+void Vertix::Engine::ModelImporter::ProcessMesh(
+    const aiMesh *aiMesh,
+    Mesh &mesh,
+    const aiMatrix4x4t<float> &transformation,
+    const std::function<void(ModelMeshProcessCallbackContext*)>* modelMeshProcessCallback)
+{
     if (aiMesh->mName.length > 0) {
         mesh.Name = aiMesh->mName.C_Str();
     }

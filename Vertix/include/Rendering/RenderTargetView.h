@@ -9,35 +9,40 @@
 #include <d3d12/d3dx12_barriers.h>
 #include <wrl/client.h>
 
-#include "Math/Vector2D.h"
+#include "Math/Vector2D.hpp"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class GraphicsDevice;
-    class RenderTargetView {
+    class VERTIX_API RenderTargetView {
     public:
-        RenderTargetView(const GraphicsDevice* graphicsDevice,
-                         const D3D12_RESOURCE_DESC &rtvResourceDesc,
-                         const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
-                         const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc = nullptr,
-                         const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } });
+        RenderTargetView(
+            const GraphicsDevice* graphicsDevice,
+            const D3D12_RESOURCE_DESC &rtvResourceDesc,
+            const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
+            const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc = nullptr,
+            const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } });
 
         [[nodiscard]]
-        CD3DX12_RESOURCE_BARRIER CreateTransitionBarrier(D3D12_RESOURCE_STATES before,
-                                                         D3D12_RESOURCE_STATES after,
-                                                         UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-                                                         D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) const;
+        CD3DX12_RESOURCE_BARRIER CreateTransitionBarrier(
+            D3D12_RESOURCE_STATES before,
+            D3D12_RESOURCE_STATES after,
+            UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+            D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) const;
 
-        void CreateShaderResourceView(const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle) const;
+        void CreateShaderResourceView(
+            const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc,
+            D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle) const;
 
         void Resize(const Vector2D<UINT> &size);
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const {
+        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetD3D12Resource() const noexcept {
             return d3d12Resource;
         }
 
         [[nodiscard]]
-        const D3D12_CPU_DESCRIPTOR_HANDLE& GetHandle() const {
+        const D3D12_CPU_DESCRIPTOR_HANDLE& GetHandle() const noexcept {
             return rtvHandle;
         }
 

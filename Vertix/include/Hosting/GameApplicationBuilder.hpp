@@ -13,9 +13,10 @@ namespace Vertix {
 
     class GameApplicationBuilder {
     public:
-        GameApplicationBuilder(const HINSTANCE &hInstance,
-                               const LPSTR &lpCmdLine,
-                               const int &nCmdShow)
+        GameApplicationBuilder(
+            const HINSTANCE &hInstance,
+            const LPSTR &lpCmdLine,
+            const int &nCmdShow)
             : hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow) {}
 
         template <GameWindowType TWindow>
@@ -37,7 +38,7 @@ namespace Vertix {
         }
 
         template <GameWindowType TWindow>
-        GameApplicationBuilder ConfigureWindow(TWindow* window) {
+        GameApplicationBuilder ConfigureWindow(TWindow* window) noexcept {
             gameWindow = window;
             return *this;
         }

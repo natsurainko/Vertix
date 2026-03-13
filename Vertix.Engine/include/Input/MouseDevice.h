@@ -5,27 +5,29 @@
 #ifndef VERTIX_MOUSEDEVICE_H
 #define VERTIX_MOUSEDEVICE_H
 
-#include "InputDevice.h"
-#include "Math/Vector2D.h"
+#include "InputDevice.hpp"
+#include "Math/Vector2D.hpp"
+#include "VERTIX_ENGINE_EXPORT.h"
 
 namespace Vertix::Engine {
-    class MouseDevice : public InputDevice {
+    class VERTIX_ENGINE_API MouseDevice : public InputDevice {
     public:
         MouseDevice() = default;
         ~MouseDevice() override = default;
 
-        void InitializeDevice(const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
-                              const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) override;
+        void InitializeDevice(
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &gameInputDevice) override;
 
         void Update();
 
         [[nodiscard]]
-        Vector2D<int> GetDeltaOffset() const {
+        Vector2D<int> GetDeltaOffset() const noexcept {
             return delta;
         }
 
         [[nodiscard]]
-        Vector2D<int> GetPosition() const {
+        Vector2D<int> GetPosition() const noexcept {
             return {
                 static_cast<int>(currentMouseState.absolutePositionX),
                 static_cast<int>(currentMouseState.absolutePositionY)
@@ -33,23 +35,23 @@ namespace Vertix::Engine {
         }
 
         [[nodiscard]]
-        bool IsButtonDown(const GameInput::v3::GameInputMouseButtons button) const {
+        bool IsButtonDown(const GameInput::v3::GameInputMouseButtons button) const noexcept {
             return (currentMouseState.buttons & button) != 0;
         }
 
         [[nodiscard]]
-        bool IsButtonUp(const GameInput::v3::GameInputMouseButtons button) const {
+        bool IsButtonUp(const GameInput::v3::GameInputMouseButtons button) const noexcept {
             return (currentMouseState.buttons & button) == 0;
         }
 
         [[nodiscard]]
-        bool WasButtonPressed(const GameInput::v3::GameInputMouseButtons button) const {
+        bool WasButtonPressed(const GameInput::v3::GameInputMouseButtons button) const noexcept {
             return (previousMouseState.buttons & button) == 0 &&
                    (currentMouseState.buttons & button) != 0;
         }
 
         [[nodiscard]]
-        bool WasButtonReleased(const GameInput::v3::GameInputMouseButtons button) const {
+        bool WasButtonReleased(const GameInput::v3::GameInputMouseButtons button) const noexcept {
             return (previousMouseState.buttons & button) != 0 &&
                    (currentMouseState.buttons & button) == 0;
         }

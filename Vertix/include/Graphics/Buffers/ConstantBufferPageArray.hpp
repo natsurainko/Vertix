@@ -23,8 +23,10 @@ namespace Vertix {
         };
 
     public:
-        explicit ConstantBufferPageArray(const GraphicsDevice* graphicsDevice, const UINT pageElementCount = 32)
-            : pageElementCount(pageElementCount) {
+        explicit ConstantBufferPageArray(
+            const GraphicsDevice* graphicsDevice,
+            const UINT pageElementCount = 32) : pageElementCount(pageElementCount)
+        {
             d3d12Device = graphicsDevice->GetD3D12Device();
 
             elementMemorySize = (sizeof(T) + 255) & ~255;
@@ -42,7 +44,10 @@ namespace Vertix {
             }
         }
 
-        void FillAt(const UINT index, const T &value) {
+        void FillAt(
+            const UINT index,
+            const T &value)
+        {
             if (index >= totalElementCount) {
                 throw std::out_of_range("Index out of range");
             }
@@ -74,7 +79,7 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        UINT GetTotalElementCount() const {
+        UINT GetTotalElementCount() const noexcept {
             return totalElementCount;
         }
 

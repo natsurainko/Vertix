@@ -10,8 +10,9 @@
 #include <wrl/client.h>
 
 #include "Graphics/GraphicsCommandList.h"
-#include "Graphics/ResourceUploadHeap.h"
+#include "Graphics/ResourceUploadHeap.hpp"
 #include "Primitive/Vertex.h"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class VertexBuffer {
@@ -20,10 +21,11 @@ namespace Vertix {
         D3D12_VERTEX_BUFFER_VIEW d3d12VertexBufferView;
         UINT vertexCount;
 
-        static VertexBuffer* Create(const std::vector<Vertex> &vertices,
-                                    const GraphicsDevice* graphicsDevice,
-                                    const GraphicsCommandList* graphicsCommandList,
-                                    ResourceUploadHeap &resourceUploadHeap);
+        static VERTIX_API VertexBuffer* Create(
+            const std::vector<Vertex> &vertices,
+            const GraphicsDevice* graphicsDevice,
+            const GraphicsCommandList* graphicsCommandList,
+            ResourceUploadHeap &resourceUploadHeap);
     };
 }
 

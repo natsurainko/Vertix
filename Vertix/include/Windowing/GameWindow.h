@@ -13,21 +13,31 @@
 #include <windows.h>
 #include <d3d12/d3dx12_core.h>
 
-#include "Math/Vector2D.h"
-#include "Windowing/WindowOptions.h"
-
-enum WindowState {
-    Normal,
-    Minimized,
-    Maximized,
-};
+#include "Math/Vector2D.hpp"
+#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
+    struct WindowOptions {
+        UINT swapChainFrameCount = 2;
+        DXGI_FORMAT swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+        DXGI_FORMAT renderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+        Vector2D<UINT> windowSize { 800, 600 };
+        std::wstring windowTitle = L"Vertix.GameWindow";
+        std::wstring windowClassName = L"Vertix_GameWindow";
+        bool enableVSync = true;
+    };
+
+    enum WindowState {
+        Normal,
+        Minimized,
+        Maximized,
+    };
+
     struct KeyboardEventArgs;
     class GraphicsDevice;
     class FrameCommandList;
     class SwapChain;
-    class GameWindow {
+    class VERTIX_API GameWindow {
     public:
         GameWindow();
         explicit GameWindow(const WindowOptions &options);
@@ -50,41 +60,41 @@ namespace Vertix {
         void Show(int nCmdShow = SW_SHOW) const;
 
         [[nodiscard]]
-        const Vector2D<UINT>& GetWindowSize() const {
+        const Vector2D<UINT>& GetWindowSize() const noexcept {
             return windowSize;
         }
 
         [[nodiscard]]
-        const std::wstring& GetWindowTitle() const {
+        const std::wstring& GetWindowTitle() const noexcept {
             return windowTitle;
         }
 
         [[nodiscard]]
-        const HWND& GetWindowHandle() const {
+        const HWND& GetWindowHandle() const noexcept {
             return m_hwnd;
         }
 
         [[nodiscard]]
-        bool GetDraggingState() const {
+        bool GetDraggingState() const noexcept {
             return isDraggingWindow;
         }
 
         [[nodiscard]]
-        bool GetFocusingState() const {
+        bool GetFocusingState() const noexcept {
             return isFocused;
         }
 
         [[nodiscard]]
-        WindowState GetWindowState() const {
+        WindowState GetWindowState() const noexcept {
             return windowState;
         }
 
         [[nodiscard]]
-        SwapChain* GetSwapChain() const {
+        SwapChain* GetSwapChain() const noexcept {
             return swapChain;
         }
 
-        void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const {
+        void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const noexcept {
             viewport.Width = static_cast<float>(windowSize.X);
             viewport.Height = static_cast<float>(windowSize.Y);
             scissorRect.right = static_cast<LONG>(windowSize.X);
@@ -119,7 +129,7 @@ namespace Vertix {
         virtual LRESULT BeforeWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) { return 0; }
 
     private:
-        WindowOptions windowOptions;
+        WindowOptions windowOptions{};
         Vector2D<UINT> windowSize;
         std::wstring windowTitle;
 

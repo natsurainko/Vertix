@@ -10,34 +10,31 @@
 
 using Microsoft::WRL::ComPtr;
 
-Vertix::FrameCommandList::FrameCommandList(const GraphicsDevice* graphicsDevice, const UINT frameCount)
-    : GraphicsCommandList(graphicsDevice->GetD3D12Device(), graphicsDevice->GetDefaultD3D12CommandQueue()), frameCount(frameCount)/*, fenceValue(0)*/ {
-
+Vertix::FrameCommandList::FrameCommandList(
+    const GraphicsDevice* graphicsDevice,
+    const UINT frameCount) : GraphicsCommandList(graphicsDevice->GetD3D12Device(), graphicsDevice->GetDefaultD3D12CommandQueue()), frameCount(frameCount)
+{
     if (frameCount == 0) throw std::exception("frameCount cannot be zero");
 
-    {
-        allocators = std::vector<ComPtr<ID3D12CommandAllocator>>(frameCount);
-        allocators[0] = commandAllocator;
+    allocators = std::vector<ComPtr<ID3D12CommandAllocator>>(frameCount);
+    allocators[0] = commandAllocator;
 
-        for (UINT i = 1; i < frameCount; ++i) {
-            ThrowIfFailed(d3d12Device->CreateCommandAllocator(
-                D3D12_COMMAND_LIST_TYPE_DIRECT,
-                IID_PPV_ARGS(&allocators[i])));
-        }
+    for (UINT i = 1; i < frameCount; ++i) {
+        ThrowIfFailed(d3d12Device->CreateCommandAllocator(
+            D3D12_COMMAND_LIST_TYPE_DIRECT,
+            IID_PPV_ARGS(&allocators[i])));
     }
 
-    {
-        fenceValues.resize(frameCount);
-        ThrowIfFailed(d3d12Device->CreateFence(
-            fenceValues[currentFrameIndex],
-            D3D12_FENCE_FLAG_NONE,
-            IID_PPV_ARGS(&fence)));
-        fenceValues[currentFrameIndex]++;
+    fenceValues.resize(frameCount);
+    ThrowIfFailed(d3d12Device->CreateFence(
+        fenceValues[currentFrameIndex],
+        D3D12_FENCE_FLAG_NONE,
+        IID_PPV_ARGS(&fence)));
+    fenceValues[currentFrameIndex]++;
 
-        fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (fenceEvent == nullptr) {
-            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-        }
+    fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (fenceEvent == nullptr) {
+        ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }
 }
 

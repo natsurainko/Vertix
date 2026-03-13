@@ -11,10 +11,17 @@
 
 using Microsoft::WRL::ComPtr;
 
+constexpr D3D_FEATURE_LEVEL D3D12_Feature_Levels[] = {
+    D3D_FEATURE_LEVEL_12_2,
+    D3D_FEATURE_LEVEL_12_1,
+    D3D_FEATURE_LEVEL_12_0,
+};
+
 Vertix::GraphicsDevice::GraphicsDevice(const bool useSoftware): useSoftwareRendering(useSoftware) {
     UINT dxgiFactoryFlags = 0;
 
 #ifndef NDEBUG
+#ifndef NO_D3D12_DEBUG_LAYER
     if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&d3dDebug)))) {
         d3dDebug->EnableDebugLayer();
 
@@ -33,6 +40,7 @@ Vertix::GraphicsDevice::GraphicsDevice(const bool useSoftware): useSoftwareRende
         // d3dDebug->SetEnableAutoName(FALSE);
         OutputDebugStringW(L"D3D12 Debug Layer Enabled (ID3D12Debug5)\n");
     }
+#endif
 #endif
 
     ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
@@ -86,19 +94,11 @@ HRESULT Vertix::GraphicsDevice::CreateSuitableDevice() {
         }
     }
 
-    if (dxgiAdapter == nullptr) {
+    if (!dxgiAdapter) {
         ThrowIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter)));
     }
 
-    D3D_FEATURE_LEVEL featureLevels[] = {
-        D3D_FEATURE_LEVEL_12_2,
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-    };
-
-    for (const auto & featureLevel : featureLevels) {
+    for (const auto & featureLevel : D3D12_Feature_Levels) {
         if (SUCCEEDED(D3D12CreateDevice(
             dxgiAdapter.Get(),
             featureLevel,

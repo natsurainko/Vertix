@@ -9,13 +9,13 @@
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsDevice.h"
 
-Vertix::RenderTargetView::RenderTargetView(const GraphicsDevice* graphicsDevice,
-                                           const D3D12_RESOURCE_DESC &rtvResourceDesc,
-                                           const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
-                                           const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc,
-                                           const D3D12_CLEAR_VALUE &clearValue)
-    : d3d12Device(graphicsDevice->GetD3D12Device()), rtvHandle(descriptorHandle), rtvResourceDesc(rtvResourceDesc), clearValue(clearValue) {
-
+Vertix::RenderTargetView::RenderTargetView(
+    const GraphicsDevice* graphicsDevice,
+    const D3D12_RESOURCE_DESC &rtvResourceDesc,
+    const D3D12_CPU_DESCRIPTOR_HANDLE &descriptorHandle,
+    const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc,
+    const D3D12_CLEAR_VALUE &clearValue) : d3d12Device(graphicsDevice->GetD3D12Device()), rtvHandle(descriptorHandle), rtvResourceDesc(rtvResourceDesc), clearValue(clearValue)
+{
     if (rtvDesc) {
         hasRtvDesc = true;
         this->rtvDesc = *rtvDesc;
@@ -36,14 +36,19 @@ Vertix::RenderTargetView::RenderTargetView(const GraphicsDevice* graphicsDevice,
     d3d12Device->CreateRenderTargetView(d3d12Resource.Get(), rtvDesc, rtvHandle);
 }
 
-CD3DX12_RESOURCE_BARRIER Vertix::RenderTargetView::CreateTransitionBarrier(const D3D12_RESOURCE_STATES before,
-                                                                           const D3D12_RESOURCE_STATES after,
-                                                                           const UINT subresource,
-                                                                           const D3D12_RESOURCE_BARRIER_FLAGS flags) const {
+CD3DX12_RESOURCE_BARRIER Vertix::RenderTargetView::CreateTransitionBarrier(
+    const D3D12_RESOURCE_STATES before,
+    const D3D12_RESOURCE_STATES after,
+    const UINT subresource,
+    const D3D12_RESOURCE_BARRIER_FLAGS flags) const
+{
     return CD3DX12_RESOURCE_BARRIER::Transition(d3d12Resource.Get(), before, after, subresource, flags);
 }
 
-void Vertix::RenderTargetView::CreateShaderResourceView(const D3D12_SHADER_RESOURCE_VIEW_DESC *srvDesc, const D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle) const {
+void Vertix::RenderTargetView::CreateShaderResourceView(
+    const D3D12_SHADER_RESOURCE_VIEW_DESC *srvDesc,
+    const D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle) const
+{
     d3d12Device->CreateShaderResourceView(d3d12Resource.Get(), srvDesc, descriptorHandle);
 }
 

@@ -7,8 +7,10 @@
 using namespace GameInput::v3;
 using Microsoft::WRL::ComPtr;
 
-void Vertix::Engine::MouseDevice::InitializeDevice(const ComPtr<IGameInput> &gameInput,
-    const ComPtr<IGameInputDevice> &gameInputDevice) {
+void Vertix::Engine::MouseDevice::InitializeDevice(
+    const ComPtr<IGameInput> &gameInput,
+    const ComPtr<IGameInputDevice> &gameInputDevice)
+{
     InputDevice::InitializeDevice(gameInput, gameInputDevice);
 
     ComPtr<IGameInputReading> reading;

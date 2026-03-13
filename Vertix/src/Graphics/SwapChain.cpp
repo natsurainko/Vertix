@@ -9,11 +9,12 @@
 
 using Microsoft::WRL::ComPtr;
 
-Vertix::SwapChain::SwapChain(const GraphicsDevice* graphicsDevice,
-                             const HWND &hwnd,
-                             const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
-                             const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc) : swapChainDesc(swapChainDesc) {
-
+Vertix::SwapChain::SwapChain(
+    const GraphicsDevice* graphicsDevice,
+    const HWND &hwnd,
+    const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
+    const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc) : swapChainDesc(swapChainDesc)
+{
     if (renderTargetDesc) {
         this->renderTargetDesc = *renderTargetDesc;
         hasRenderTargetDesc = true;
@@ -88,7 +89,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();
 }
 
-void Vertix::SwapChain::SetEnableVSync(const bool &enable) {
+void Vertix::SwapChain::SetEnableVSync(const bool &enable) noexcept {
     enableVSync = enable;
 
     if (enable) {

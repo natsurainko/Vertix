@@ -15,8 +15,10 @@ namespace Vertix::Engine {
             GeneralKeyboardDevice::InitializeDevice(inputInterface.GetInterface(), nullptr);
         }
 
-        void InitializeDevice(const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
-                              const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &) override {
+        void InitializeDevice(
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInput> &gameInput,
+            const Microsoft::WRL::ComPtr<GameInput::v3::IGameInputDevice> &) override
+        {
             maxSimultaneousKeys = 32;
             activeKeysArray = new GameInput::v3::GameInputKeyState[maxSimultaneousKeys];
 
