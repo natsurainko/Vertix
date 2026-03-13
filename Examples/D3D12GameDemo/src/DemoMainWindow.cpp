@@ -18,14 +18,16 @@ void DemoMainWindow::OnInitialize() {
 
     {
         commandList = frameCommandList->GetD3D12GraphicsCommandList();
+
+        Vertix::ResourceUploadHeap resourceUploadHeap{};
         frameCommandList->BeginCommand(nullptr);
-
-        // release after command list executed
-        Vertix::ResourceUploadHeap resourceUploadHeap;
-        //if (Vertix::Engine::ModelImporter::TryLoadFromFile(cubeModel, "assets/models/block.fbx")) {
-        //    cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
-        //}
-
+        {
+            // release after command list executed
+            Vertix::Engine::ModelImporter::TryLoadFromFile([&](const auto* context) -> void {
+                cubeModel = *context->Model;
+                cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
+            }, "assets/models/block.fbx");
+        }
         frameCommandList->EndCommand();
         frameCommandList->WaitForCommand();
     }
@@ -86,7 +88,6 @@ void DemoMainWindow::OnInitialize() {
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.GetShaderBlob());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.GetShaderBlob());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC2(D3D12_DEFAULT);
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
