@@ -4,7 +4,8 @@ target_compile_definitions(Vertix.Engine PRIVATE Vertix_Engine_EXPORTS)
 target_sources(Vertix.Engine
     PRIVATE
         src/Camera/PerspectiveCamera.cpp
-        src/Content/ModelImporter.cpp
+        src/Content/ModelLoader.cpp
+        src/Content/TextureLoader.cpp
         src/Input/GameInputInterface.cpp
         src/Input/KeyboardDevice.cpp
         src/Input/MouseDevice.cpp
@@ -16,11 +17,11 @@ target_sources(Vertix.Engine
             include/VERTIX_ENGINE_EXPORT.h
 
             include/Camera/PerspectiveCamera.h
-            include/Content/ModelImporter.h
+            include/Content/ModelLoader.h
+            include/Content/TextureLoader.h
             include/Controlling/DefaultPositionController.hpp
             include/Controlling/DefaultRotationController.hpp
             include/Controlling/IControllerInput.hpp
-            include/Material/DefaultPBRMaterial.h
             include/Math/FloatExtensions.h
             include/Math/MatrixExtensions.h
             include/Math/VectorExtensions.h

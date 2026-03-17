@@ -19,6 +19,8 @@ namespace Vertix {
         explicit GraphicsDevice(bool useSoftware = false);
         ~GraphicsDevice();
 
+        void CreateCommandQueue(Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue, const D3D12_COMMAND_QUEUE_DESC &queueDesc) const;
+
         void WaitForGPU() const;
 
         [[nodiscard]]

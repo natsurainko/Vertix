@@ -9,11 +9,9 @@
 #include <vector>
 #include <wrl/client.h>
 
-namespace Vertix {
-    struct IResourceUploading {
-        virtual ~IResourceUploading() = default;
-    };
+#include "Mixin/IResourceUploading.h"
 
+namespace Vertix {
     class ResourceUploadHeap {
     public:
         void Store(std::unique_ptr<IResourceUploading> resource) noexcept {

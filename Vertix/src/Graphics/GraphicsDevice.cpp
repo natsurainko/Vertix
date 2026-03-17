@@ -73,6 +73,13 @@ Vertix::GraphicsDevice::~GraphicsDevice() {
     WaitForGPU();
 }
 
+void Vertix::GraphicsDevice::CreateCommandQueue(
+    ComPtr<ID3D12CommandQueue> &commandQueue,
+    const D3D12_COMMAND_QUEUE_DESC& queueDesc) const
+{
+    ThrowIfFailed(d3d12Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)));
+}
+
 HRESULT Vertix::GraphicsDevice::CreateSuitableDevice() {
     ComPtr<IDXGIAdapter1> dxgiAdapter = nullptr;
     if (!useSoftwareRendering) {

@@ -27,7 +27,8 @@ namespace Vertix {
 
         VertexBuffer* VertexBuffer = nullptr;
         IndexBuffer* IndexBuffer = nullptr;
-        Material* Material = nullptr;
+
+        MaterialHandle Material;
 
         ~Mesh();
 

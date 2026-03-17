@@ -6,7 +6,7 @@
 
 #include <d3d12/d3dx12_barriers.h>
 
-#include "Content/ModelImporter.h"
+#include "Content/ModelLoader.h"
 #include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
@@ -23,7 +23,7 @@ void DemoMainWindow::OnInitialize() {
         frameCommandList->BeginCommand(nullptr);
         {
             // release after command list executed
-            Vertix::Engine::ModelImporter::TryLoadFromFile([&](const auto* context) -> void {
+            Vertix::Engine::ModelLoader::TryLoadFromFile([&](const auto* context) -> void {
                 cubeModel = *context->Model;
                 cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
             }, "assets/models/block.fbx");

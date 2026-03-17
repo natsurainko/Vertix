@@ -15,7 +15,6 @@ target_sources(Vertix
         src/Rendering/DepthStencilView.cpp
         src/Rendering/HlslShader.cpp
         src/Rendering/RenderTargetView.cpp
-        src/Rendering/Texture.cpp
         src/Windowing/GameWindow.cpp
     PUBLIC
         FILE_SET HEADERS
@@ -23,6 +22,7 @@ target_sources(Vertix
         FILES
             include/VERTIX_EXPORT.h
 
+            include/Dispatching/DispatcherQueue.hpp
             include/Exceptions/HResultException.h
             include/Graphics/DescriptorHeap.h
             include/Graphics/FrameCommandList.h
@@ -38,16 +38,22 @@ target_sources(Vertix
             include/Hosting/GameApplication.h
             include/Hosting/GameApplicationBuilder.hpp
             include/Math/Vector2D.hpp
+            include/Mixin/IFillConstants.h
+            include/Mixin/IResourceUploading.h
+            include/Pool/ResourceHandle.h
+            include/Pool/ResourcePool.hpp
+            include/Pool/MaterialPool.hpp
+            include/Pool/TexturePool.hpp
             include/Primitive/Vertex.h
             include/Primitive/Mesh.h
             include/Primitive/Model.h
             include/Primitive/Material.h
+            include/Primitive/Texture.h
             include/Rendering/DepthStencilView.h
             include/Rendering/RenderTargetView.h
             include/Rendering/HlslShader.h
             include/Rendering/RenderPass.hpp
             include/Rendering/RenderPipeline.hpp
-            include/Rendering/Texture.h
             include/Windowing/GameWindow.h
 )
 
