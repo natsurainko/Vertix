@@ -20,6 +20,7 @@ namespace Vertix::Engine {
                 aiProcess_GenSmoothNormals |
                 aiProcess_CalcTangentSpace |
                 aiProcess_MakeLeftHanded |
+                aiProcess_FlipUVs |
                 aiProcess_OptimizeMeshes;
     };
 
@@ -69,7 +70,7 @@ namespace Vertix::Engine {
             const aiScene *scene, ModelLoadingContext *loadingContext);
 
         static void ProcessMesh(
-            const ::aiMesh *aiMesh,
+            const aiMesh *aiMesh,
             Mesh &mesh,
             const aiMatrix4x4t<float> &transformation, const ModelLoadingContext *loadingContext);
     };

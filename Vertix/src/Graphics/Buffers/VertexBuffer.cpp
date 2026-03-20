@@ -79,3 +79,16 @@ Vertix::VertexBuffer* Vertix::VertexBuffer::Create(
 
     return buffer;
 }
+
+Vertix::VertexBuffer* Vertix::VertexBuffer::CreateFullScreenRect(
+    const GraphicsDevice *graphicsDevice,
+    const GraphicsCommandList *graphicsCommandList,
+    ResourceUploadHeap &resourceUploadHeap)
+{
+    std::vector<Vertex> vertices;
+    vertices.push_back({ .Position = {-1, -1, 0}, .TexCoord = {0,1} });
+    vertices.push_back({ .Position = {-1, 1, 0}, .TexCoord = {0,0} });
+    vertices.push_back({ .Position = {1, -1, 0}, .TexCoord = {1,1} });
+    vertices.push_back({ .Position = {1, 1, 0}, .TexCoord = {1,0} });
+    return Create(vertices, graphicsDevice, graphicsCommandList, resourceUploadHeap);
+}

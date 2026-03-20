@@ -6,7 +6,6 @@
 #define VERTIX_TEXTUREPOOL_HPP
 
 #include <d3dx12_root_signature.h>
-#include <d3dx12_barriers.h>
 
 #include "ResourcePool.hpp"
 #include "Exceptions/HResultException.h"
@@ -31,17 +30,35 @@ namespace Vertix {
             heapStartGpuHandle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
         }
 
-        D3D12_CPU_DESCRIPTOR_HANDLE CreateShaderResourceView(
-            TextureHandle handle,
-            const D3D12_SHADER_RESOURCE_VIEW_DESC &srvDesc)
+        [[nodiscard]]
+        TextureHandle AllocateNamed(
+            const std::wstring &name,
+            std::unique_ptr<Texture> resource = nullptr)
         {
-            const auto descriptorHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, handle.slot, descriptorLength);
-            d3d12Device->CreateShaderResourceView(
-                this->slots[handle.slot].get()->GetResource().Get(),
-                &srvDesc,
-                descriptorHandle
-            );
-            return descriptorHandle;
+            const TextureHandle handle = ResourcePool<Texture, TextureHandle>::Allocate(std::move(resource));
+            NameResource(handle, name);
+            return handle;
+        }
+
+        void Fulfill(
+            const TextureHandle handle,
+            std::unique_ptr<Texture> resource) override
+        {
+            ResourcePool<Texture, TextureHandle>::Fulfill(handle, std::move(resource));
+            NotifyReady(handle);
+        }
+
+        void Free(const TextureHandle handle) override {
+            namedResources.erase(handle);
+            ResourcePool<Texture, TextureHandle>::Free(handle);
+        }
+
+        void OnReady(const TextureHandle handle, std::function<void(TextureHandle)> textureLoadedCallback) {
+            if (this->IsReady(handle)) {
+                textureLoadedCallback(handle);
+                return;
+            }
+            readyCallbacks[handle.slot - 1].emplace_back(std::move(textureLoadedCallback));
         }
 
         void NameResource(const TextureHandle handle, const std::wstring &name) {
@@ -59,33 +76,10 @@ namespace Vertix {
             return namedResourceHandles[name];
         }
 
-        void MarkBarrier(
-            const TextureHandle handle,
-            const D3D12_RESOURCE_STATES stateBefore = D3D12_RESOURCE_STATE_COPY_DEST,
-            const D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-        {
-            std::lock_guard lock(barrierMutex);
-            barriers.emplace_back(CD3DX12_RESOURCE_BARRIER::Transition(
-                this->slots[handle.slot].get()->GetResource().Get(),
-                stateBefore, stateAfter
-            ));
-            needFlushBarrier.store(true, std::memory_order_release);
-        }
-
-        void FlushBarriers(const GraphicsCommandList* graphicsCommandList) {
-            if (!needFlushBarrier.load(std::memory_order_acquire))
-                return;
-
-            std::vector<D3D12_RESOURCE_BARRIER> local;
-            {
-                std::lock_guard lock(barrierMutex);
-                std::swap(local, barriers);
-                needFlushBarrier.store(false, std::memory_order_relaxed);
-            }
-
-            if (!local.empty()) {
-                graphicsCommandList->GetD3D12GraphicsCommandList()->ResourceBarrier(static_cast<UINT>(local.size()), local.data());
-            }
+        [[nodiscard]]
+        D3D12_RESOURCE_DESC GetResourceDesc(const TextureHandle handle) {
+            auto* texture = this->template GetAs<Texture>(handle);
+            return texture->GetResource()->GetDesc();
         }
 
         [[nodiscard]]
@@ -93,20 +87,38 @@ namespace Vertix {
             return descriptorHeap;
         }
 
-    private:
-        std::atomic<bool> needFlushBarrier = false;
-        std::mutex barrierMutex;
-        std::vector<D3D12_RESOURCE_BARRIER> barriers{};
+        [[nodiscard]]
+        D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorHandle(const TextureHandle handle) const noexcept {
+            const uint32_t index = handle.slot - 1;
+            return CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
+        }
 
+    private:
         UINT descriptorLength;
         D3D12_CPU_DESCRIPTOR_HANDLE heapStartCpuHandle{};
         D3D12_GPU_DESCRIPTOR_HANDLE heapStartGpuHandle{};
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
 
+        std::mutex readyCallbackMutex;
+        std::array<std::vector<std::function<void(TextureHandle)>>, Capacity> readyCallbacks{};
+
         std::unordered_map<TextureHandle, std::wstring> namedResources{};
         std::unordered_map<std::wstring, TextureHandle> namedResourceHandles{};
 
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
+
+        void NotifyReady(const TextureHandle handle) {
+            std::vector<std::function<void(TextureHandle)>> callbacks;
+            {
+                std::lock_guard lock(readyCallbackMutex);
+                std::swap(callbacks, readyCallbacks[handle.slot - 1]);
+            }
+            for (auto& callback : callbacks) {
+                if (callback) {
+                    callback(handle);
+                }
+            }
+        }
     };
 }
 

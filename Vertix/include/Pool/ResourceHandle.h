@@ -8,7 +8,12 @@
 #include <cstdint>
 
 namespace Vertix {
-    template<typename Tag>
+    // All ResourceHandles follow a 1-based handle rule:
+    // A handle with a slot of 0 represent an invalid resource.
+    // However, during actual resource filling, to utilize space as much as possible,
+    // slot - 1 is used as the index to fill shader resources such as DescriptorHeap or StructuredBuffer.
+    // Therefore, you should also follow this convention when indexing in your shaders.
+    template<typename>
     struct ResourceHandle {
         static constexpr std::uint32_t Null = 0;
         uint32_t slot = Null;

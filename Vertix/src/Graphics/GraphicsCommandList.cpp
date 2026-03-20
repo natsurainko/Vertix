@@ -30,10 +30,13 @@ void Vertix::GraphicsCommandList::BeginCommand(const ComPtr<ID3D12PipelineState>
     ThrowIfFailed(graphicsCommandList->Reset(commandAllocator.Get(), pipelineState.Get()));
 }
 
-void Vertix::GraphicsCommandList::EndCommand() const {
+void Vertix::GraphicsCommandList::EndCommand(const bool executeImmediately) const {
     ThrowIfFailed(graphicsCommandList->Close());
-    ID3D12CommandList* commandLists[] = { graphicsCommandList.Get() };
-    commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    if (executeImmediately) {
+        ID3D12CommandList* commandLists[] = { graphicsCommandList.Get() };
+        commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+    }
 }
 
 void Vertix::GraphicsCommandList::WaitForCommand() {

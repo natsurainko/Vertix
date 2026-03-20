@@ -25,17 +25,21 @@ namespace Vertix {
         [[nodiscard]]
         MaterialHandle Allocate(std::unique_ptr<Material> resource = nullptr) override {
             assert(this->freeTop > 0 && "ResourcePool capacity exceeded");
-            const uint32_t slot = this->freeSlots[--this->freeTop];
+            const uint32_t index = this->freeSlots[--this->freeTop];
+            const MaterialHandle handle{index + 1};
 
             if (resource) {
-                this->slots[slot] = std::move(resource);
-                MarkDirty(MaterialHandle{slot});
+                this->slots[index] = std::move(resource);
+                MarkDirty(handle);
             }
 
-            return MaterialHandle{slot};
+            return handle;
         }
 
-        void Fulfill(MaterialHandle handle, std::unique_ptr<Material> resource) override {
+        void Fulfill(
+            MaterialHandle handle,
+            std::unique_ptr<Material> resource) override
+        {
             ResourcePool<Material, MaterialHandle, Capacity>::Fulfill(handle, std::move(resource));
             MarkDirty(handle);
         }
@@ -47,7 +51,7 @@ namespace Vertix {
 
         void MarkDirty(const MaterialHandle handle) {
             std::lock_guard lock(dirtyMutex);
-            dirtySlots[handle.slot] = true;
+            dirtySlots[handle.slot - 1] = true;
             needDirtyFlush.store(true, std::memory_order_release);
         }
 
@@ -62,14 +66,14 @@ namespace Vertix {
                 needDirtyFlush.store(false, std::memory_order_relaxed);
             }
 
-            for (uint32_t slot = 0; slot < Capacity; ++slot) {
-                if (!toFlush[slot]) continue;
+            for (uint32_t i = 0; i < Capacity; ++i) {
+                if (!toFlush[i]) continue;
 
                 TConstants constants{};
-                if (this->slots[slot]) {
-                    FillConstants(*this->slots[slot], constants);
+                if (this->slots[i]) {
+                    FillConstants(*this->slots[i], constants);
                 }
-                constantBuffer.FillAt(slot, constants);
+                constantBuffer.FillAt(i, constants);
             }
         }
 
@@ -79,7 +83,10 @@ namespace Vertix {
         }
 
     protected:
-        virtual void FillConstants(const Material& material, TConstants& out) const {
+        virtual void FillConstants(
+            const Material& material,
+            TConstants& out) const
+        {
             const auto* fillable = dynamic_cast<const IFillConstants<TConstants>*>(&material);
             assert(fillable);
             fillable->Fill(out);

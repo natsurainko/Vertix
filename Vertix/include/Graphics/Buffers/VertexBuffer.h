@@ -26,6 +26,11 @@ namespace Vertix {
             const GraphicsDevice* graphicsDevice,
             const GraphicsCommandList* graphicsCommandList,
             ResourceUploadHeap &resourceUploadHeap);
+
+        static VERTIX_API VertexBuffer* CreateFullScreenRect(
+            const GraphicsDevice* graphicsDevice,
+            const GraphicsCommandList* graphicsCommandList,
+            ResourceUploadHeap &resourceUploadHeap);
     };
 }
 

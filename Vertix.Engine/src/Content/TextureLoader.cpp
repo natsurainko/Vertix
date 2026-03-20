@@ -8,6 +8,7 @@
 #include <d3dx12_resource_helpers.h>
 #include <DDSTextureLoader.h>
 
+#include "d3dx12_barriers.h"
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsDevice.h"
 
@@ -182,75 +183,8 @@ Vertix::Texture2D* Vertix::Engine::TextureLoader::CreateFromFileUsingWIC(
     return new Texture2D(d3d12Resource);
 }
 
-Vertix::TextureHandle Vertix::Engine::TextureAsyncLoader::LoadTextureAsync(
-    const std::wstring &filePath,
-    DirectX::WIC_LOADER_FLAGS wicLoaderFlags,
-    std::function<void(TextureHandle)> textureLoadedCallback)
-{
-    if (texturePool->ContainsNamedResource(filePath))
-        return texturePool->GetNamedHandle(filePath);
-
-    const TextureHandle handle = texturePool->Allocate();
-    texturePool->NameResource(handle, filePath);
-    textureLoadRequests.emplace_back(handle, filePath, wicLoaderFlags, std::move(textureLoadedCallback));
-    return handle;
-}
-
-void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatcherQueue) {
-    std::thread([
-        requests   = std::move(textureLoadRequests),
-        device     = d3d12Device,
-        copyQueue  = copyCommandQueue,
-        pool       = texturePool,
-        dispatcherQueue
-    ]() mutable -> void
-    {
-        ThrowIfFailed(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
-
-        ResourceUploadHeap resourceUploadHeap{};
-        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
-        std::unordered_map<TextureHandle, std::function<void(TextureHandle)>> callbacks;
-
-        copyCommandList.BeginCommand(nullptr);
-        {
-            for (const auto &[handle, filePath, flags, callback] : requests) {
-                Texture* texture;
-                if (filePath.ends_with(L".dds")) {
-                    texture = TextureLoader::CreateFromDdsFile(
-                        filePath, device,
-                        copyCommandList.GetD3D12GraphicsCommandList(),
-                        resourceUploadHeap);
-                } else {
-                    texture = TextureLoader::CreateFromFileUsingWIC(
-                        filePath, device,
-                        copyCommandList.GetD3D12GraphicsCommandList(),
-                        resourceUploadHeap, flags);
-                }
-
-                pool->Fulfill(handle, std::unique_ptr<Texture>(texture));
-
-                if (callback)
-                    callbacks.emplace(handle, callback);
-            }
-        }
-        copyCommandList.EndCommand();
-        copyCommandList.WaitForCommand();
-
-        dispatcherQueue->Enqueue([ callbacks = std::move(callbacks), pool ] {
-            for (auto &[handle, callback] : callbacks) {
-                CreateSRVAndBarrier(pool, handle);
-                callback(handle);
-            }
-        });
-
-        CoUninitialize();
-    }).detach();
-}
-
-void Vertix::Engine::TextureAsyncLoader::CreateSRVAndBarrier(TexturePool<>* texturePool, TextureHandle handle) {
-    auto* texture = texturePool->GetAs<Texture>(handle);
-    const D3D12_RESOURCE_DESC desc = texture->GetResource()->GetDesc();
-
+D3D12_SHADER_RESOURCE_VIEW_DESC CreateShaderResourceViewDesc(const Microsoft::WRL::ComPtr<ID3D12Resource> &texture) {
+    const D3D12_RESOURCE_DESC desc = texture->GetDesc();
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Format = desc.Format;
@@ -272,6 +206,101 @@ void Vertix::Engine::TextureAsyncLoader::CreateSRVAndBarrier(TexturePool<>* text
             throw std::runtime_error("Invalid D3D12_RESOURCE_DIMENSION");
     }
 
-    texturePool->CreateShaderResourceView(handle, srvDesc);
-    texturePool->MarkBarrier(handle);
+    return srvDesc;
+}
+
+Vertix::TextureHandle Vertix::Engine::TextureAsyncLoader::LoadTextureAsync(
+    const std::wstring &filePath,
+    const std::wstring* resourceName,
+    DirectX::WIC_LOADER_FLAGS wicLoaderFlags,
+    D3D12_RESOURCE_STATES beforeState,
+    D3D12_RESOURCE_STATES afterState,
+    std::function<void(TextureHandle)> textureLoadedCallback)
+{
+    const std::wstring &handleName = resourceName ? *resourceName : filePath;
+    const bool loaded = texturePool->ContainsNamedResource(handleName);
+    const TextureHandle handle = loaded
+        ? texturePool->GetNamedHandle(handleName)
+        : texturePool->AllocateNamed(handleName);
+
+    if (!loaded) {
+        textureLoadRequests.emplace_back(
+            handle,
+            filePath,
+            wicLoaderFlags,
+            beforeState,
+            afterState
+        );
+    }
+
+    if (textureLoadedCallback) {
+        texturePool->OnReady(handle, std::move(textureLoadedCallback));
+    }
+
+    return handle;
+}
+
+void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatcherQueue, GraphicsCommandList* directCommandList) {
+    std::thread([
+        requests   = std::move(textureLoadRequests),
+        device     = d3d12Device,
+        copyQueue  = copyCommandQueue,
+        pool       = texturePool,
+        dispatcherQueue,
+        directCommandList,
+        graphicsDevice = graphicsDevice
+    ]() mutable -> void
+    {
+        ThrowIfFailed(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
+
+        ResourceUploadHeap resourceUploadHeap{};
+        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
+        std::vector<TextureLoadingContext> textureLoadingContexts;
+
+        copyCommandList.BeginCommand(nullptr);
+        {
+            for (const auto &[handle, filePath, flags, beforeState, afterState] : requests) {
+                Texture* texture = filePath.ends_with(L".dds")
+                    ? TextureLoader::CreateFromDdsFile(
+                        filePath, device,
+                        copyCommandList.GetD3D12GraphicsCommandList(),
+                        resourceUploadHeap)
+                    : TextureLoader::CreateFromFileUsingWIC(
+                        filePath, device,
+                        copyCommandList.GetD3D12GraphicsCommandList(),
+                        resourceUploadHeap, flags);
+
+                textureLoadingContexts.emplace_back(handle, texture, beforeState, afterState);
+            }
+        }
+        copyCommandList.EndCommand();
+        copyCommandList.WaitForCommand();
+
+        dispatcherQueue->Enqueue([
+            directCommandList,
+            textureFulfills = std::move(textureLoadingContexts),
+            pool,
+            graphicsDevice
+        ] {
+            const auto& d3d12Device = graphicsDevice->GetD3D12Device();
+            const auto& commandList = directCommandList->GetD3D12GraphicsCommandList();
+
+            std::vector<D3D12_RESOURCE_BARRIER> textureBarriers;
+            for (const auto &[handle, texture, beforeState, afterState] : textureFulfills) {
+                const auto d3d12Resource = texture->GetResource();
+                const auto srvDesc = CreateShaderResourceViewDesc(d3d12Resource);
+                const auto descriptorHandle = pool->GetDescriptorHandle(handle);
+                const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12Resource.Get(), beforeState, afterState);
+
+                d3d12Device->CreateShaderResourceView(d3d12Resource.Get(), &srvDesc, descriptorHandle);
+                textureBarriers.emplace_back(barrier);
+
+                pool->Fulfill(handle, std::unique_ptr<Texture>(texture));
+            }
+
+            commandList->ResourceBarrier(textureBarriers.size(), textureBarriers.data());
+        });
+
+        CoUninitialize();
+    }).detach();
 }

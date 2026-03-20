@@ -48,8 +48,16 @@ namespace Vertix::Engine {
         struct TextureLoadRequest {
             TextureHandle Handle;
             std::wstring FilePath;
-            DirectX::WIC_LOADER_FLAGS wicLoaderFlags;
-            std::function<void(TextureHandle)> TextureLoadedCallback;
+            DirectX::WIC_LOADER_FLAGS WicLoaderFlags;
+            D3D12_RESOURCE_STATES beforeState;
+            D3D12_RESOURCE_STATES afterState;
+        };
+
+        struct TextureLoadingContext {
+            TextureHandle Handle;
+            Texture* TexturePtr;
+            D3D12_RESOURCE_STATES beforeState;
+            D3D12_RESOURCE_STATES afterState;
         };
 
     public:
@@ -61,23 +69,24 @@ namespace Vertix::Engine {
 
         TextureHandle LoadTextureAsync(
             const std::wstring &filePath,
+            const std::wstring* resourceName = nullptr,
             DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_DEFAULT,
-            std::function<void(TextureHandle)> textureLoadedCallback = nullptr
-        );
+            D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            std::function<void(TextureHandle)> textureLoadedCallback = nullptr);
 
-        void ExecuteAsync(DispatcherQueue* dispatcherQueue);
+        void ExecuteAsync(
+            DispatcherQueue* dispatcherQueue,
+            GraphicsCommandList* directCommandList);
 
     private:
         TexturePool<>* texturePool;
         GraphicsDevice* graphicsDevice;
 
         std::vector<TextureLoadRequest> textureLoadRequests;
-        std::unordered_map<TextureHandle, std::function<void(TextureHandle)>*> handleToCallbacks;
 
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> copyCommandQueue;
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
-
-        static void CreateSRVAndBarrier(TexturePool<> *texturePool, TextureHandle handle);
     };
 }
 

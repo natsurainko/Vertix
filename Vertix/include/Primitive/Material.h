@@ -14,15 +14,15 @@ namespace Vertix {
     using MaterialHandle = ResourceHandle<MaterialTag>;
 
     struct alignas(16) DefaultMaterialConstants {
-        uint32_t albedoIndex        = 0;
-        uint32_t normalIndex        = 0;
-        uint32_t metallicIndex      = 0;
-        uint32_t roughnessIndex     = 0;
+        uint32_t albedoHandle        = 0;
+        uint32_t normalHandle        = 0;
+        uint32_t metallicHandle      = 0;
+        uint32_t roughnessHandle     = 0;
 
-        uint32_t ambientOcclusionIndex = 0;
-        uint32_t emissiveIndex         = 0;
-        float    metallicFactor        = 1.f;
-        float    roughnessFactor       = 1.f;
+        uint32_t ambientOcclusionHandle = 0;
+        uint32_t emissiveHandle         = 0;
+        float    metallicFactor         = 1.f;
+        float    roughnessFactor        = 1.f;
 
         uint32_t flags = 0;
         uint32_t padding[3];
@@ -44,12 +44,12 @@ namespace Vertix {
         float roughnessFactor = 1.f;
 
         void Fill(DefaultMaterialConstants& out) const override {
-            out.albedoIndex = albedo.slot;
-            out.normalIndex = normal.slot;
-            out.metallicIndex = metallic.slot;
-            out.roughnessIndex = roughness.slot;
-            out.ambientOcclusionIndex = ambientOcclusion.slot;
-            out.emissiveIndex = emissive.slot;
+            out.albedoHandle = albedo.slot;
+            out.normalHandle = normal.slot;
+            out.metallicHandle = metallic.slot;
+            out.roughnessHandle = roughness.slot;
+            out.ambientOcclusionHandle = ambientOcclusion.slot;
+            out.emissiveHandle = emissive.slot;
             out.metallicFactor = metallicFactor;
             out.roughnessFactor = roughnessFactor;
         }

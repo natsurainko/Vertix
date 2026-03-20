@@ -15,18 +15,16 @@ namespace Vertix {
         void Enqueue(std::function<void()> fn) {
             std::lock_guard lock(mutex);
             callbackQueue.push(std::move(fn));
-            pendingCount.fetch_add(1, std::memory_order_release);
+            ++pendingCount;
         }
 
         void FlushQueue() {
-            if (pendingCount.load(std::memory_order_acquire) == 0)
-                return;
-
             std::queue<std::function<void()>> local;
             {
                 std::lock_guard lock(mutex);
+                if (!pendingCount) return;
                 std::swap(local, callbackQueue);
-                pendingCount.store(0, std::memory_order_relaxed);
+                pendingCount = 0;
             }
             while (!local.empty()) {
                 local.front()();
@@ -36,7 +34,7 @@ namespace Vertix {
     private:
         std::mutex mutex;
         std::queue<std::function<void()>> callbackQueue;
-        std::atomic<size_t> pendingCount{0};
+        size_t pendingCount{0};
     };
 }
 

@@ -15,7 +15,7 @@ namespace Vertix {
     class ResourcePool {
     public:
         ResourcePool() : capacity(Capacity) {
-            for (uint32_t i = Capacity - 1; i-- > 1; )
+            for (uint32_t i = Capacity; i-- > 0; )
                 freeSlots[freeTop++] = i;
         }
 
@@ -27,37 +27,43 @@ namespace Vertix {
         [[nodiscard]]
         virtual THandle Allocate(std::unique_ptr<TResource> resource = nullptr) {
             assert(freeTop > 0 && "ResourcePool capacity exceeded");
-            const uint32_t slot = freeSlots[--freeTop];
+            const uint32_t index = freeSlots[--freeTop];
 
             if (resource) {
-                slots[slot] = std::move(resource);
+                slots[index] = std::move(resource);
             }
 
-            return THandle{slot};
+            return THandle{index + 1};
         }
 
-        virtual void Fulfill(THandle handle, std::unique_ptr<TResource> resource) {
+        virtual void Fulfill(
+            const THandle handle,
+            std::unique_ptr<TResource> resource)
+        {
+            const uint32_t index = handle.slot - 1;
             assert(handle);
-            assert(!slots[handle.slot] && "Already fulfilled");
+            assert(!slots[index] && "Already fulfilled");
             assert(resource);
-            slots[handle.slot] = std::move(resource);
+            slots[index] = std::move(resource);
         }
 
         virtual void Free(const THandle handle) {
+            const uint32_t index = handle.slot - 1;
             assert(handle);
-            slots[handle.slot].reset();
-            freeSlots[freeTop++] = handle.slot;
+            assert(slots[index] && "Double free detected");
+            slots[index].reset();
+            freeSlots[freeTop++] = index;
         }
 
         [[nodiscard]]
-        bool IsReady(THandle handle) const noexcept {
-            return handle && slots[handle.slot];
+        bool IsReady(const THandle handle) const noexcept {
+            return handle && slots[handle.slot - 1];
         }
 
         [[nodiscard]]
-        TResource* Get(THandle handle) noexcept {
+        TResource* Get(const THandle handle) noexcept {
             if (!handle) return nullptr;
-            return slots[handle.slot].get();
+            return slots[handle.slot - 1].get();
         }
 
         template<class T>
@@ -67,7 +73,7 @@ namespace Vertix {
 
         [[nodiscard]]
         uint32_t GetCount() const noexcept {
-            return capacity - 1 - freeTop;
+            return capacity - freeTop;
         }
 
         [[nodiscard]]
@@ -76,8 +82,8 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        uint32_t GetCapacity() const noexcept {
-            return capacity - 1;
+        static constexpr uint32_t GetCapacity() noexcept {
+            return Capacity;
         }
 
         [[nodiscard]]
@@ -87,7 +93,7 @@ namespace Vertix {
 
         [[nodiscard]]
         bool IsEmpty() const noexcept {
-            return freeTop == Capacity - 1;
+            return freeTop == Capacity;
         }
 
     protected:
