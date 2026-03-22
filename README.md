@@ -6,15 +6,16 @@
 A lightweight 3D game development framework written in C++, targeting Windows with Direct3D 12 (D3D12).
 
 ## Features
-- Basic D3D12 object wrappers (SwapChain, CommandList, DescriptorHeap, HlslShader, etc.)
-- 3D model importing (based on Assimp)
+- Basic D3D12 object wrappers (SwapChain, CommandList, DescriptorHeap, ConstantBuffer, StructuredBuffer etc.)
 - Basic 3D scene types (PerspectiveCamera, GameObject3D, SceneObject3D, etc.)
-- Basic rendering resource types (Model, Texture, Material, etc.)
-- Basic input devices (MouseDevice, KeyboardDevice, ...)
-- Example/demo project (Examples/D3D12GameDemo, Examples/D3D12RenderPipelineDemo)
+- Provides management and asynchronous loading of basic rendering resources. (Model, Texture, Material, etc.)
+- Basic input devices, implemented using GameInput (MouseDevice, KeyboardDevice, ...)
+- Example/demo project (Examples/D3D12GameDemo, Examples/D3D12ImGuiDemo, Examples/D3D12RenderPipelineDemo)
 
 ## In Progress
-- Encapsulation of rendering resource management classes for models, textures, materials, and other rendering assets
+- Implement a Mipmap generator using compute shaders to generate mipmaps when loading texture formats that do not have mipmaps.
+- Improve the Mesh and Model to enable skeletal animation
+- Provide a scene resource manager for GameObject3D and SceneObject3D to facilitate subsequent optimization techniques such as scene object culling.
 - Implementation of more light source types in Vertix.Engine
 - Implementation of skybox, multi-point light sources, and other advanced rendering effects in RenderPipelineDemo
 
@@ -92,7 +93,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
 ### D3D12GameDemo
 - Path: `Examples/D3D12GameDemo`
 - The demo shows basic rendering using the framework and includes sample assets.
-- CMakeLists for the demo includes a post-build step to copy `assets` to the output directory.
 
 #### Screenshots
 <img width="1332" height="802" alt="D3D12GameDemo" src="https://github.com/user-attachments/assets/64dd3635-33ee-4b9b-abb5-4bcbe84db284" />
@@ -109,15 +109,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
 - A comprehensive demonstration of a custom D3D12 rendering pipeline with advanced rendering techniques.
 - Features include:
   - **Deferred Rendering**: Multi-pass rendering with geometry and lighting passes for efficient handling of multiple light sources.
-  - **Texture and Material Management**: Complete a simple system for storing and loading texture and material resources.
+  - **Texture, Material, Model Pools**: Use the library's ResourcePool to manage rendering resources.
+  - **Asynchronous Resource Loader**: Use `TextureAsyncLoader` and `ModelAsyncLoader` to asynchronously batch load resources on a background thread..
   - **Bindless Texturing**: GPU-driven rendering with bindless texture access for improved performance.
   - **Cascaded Shadow Mapping**: Efficient shadow mapping across multiple view frustum levels.
   - **PCSS Soft Shadows**: Percentage-Closer Soft Shadows for realistic shadow penumbra.
   - **PBR Texture-Based Lighting**: Physically-Based Rendering using texture-based material properties.
-- CMakeLists for the demo includes a post-build step to copy `assets` to the output directory.
+  - **HBAO (Horizon-Based Ambient Occlusion)**: Use HBAO to improve the quality of shaded ambient light.
 
 #### Screenshots
-<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/eb7c539e-2513-4825-b949-7945e5a86f33" />
+<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/61273dad-4bba-4806-a3ee-bec4fbd0d3ef" />
 
 #### Notes
 - **Shader Model 6.6 Requirement**: The GeometryPass shader requires Shader Model 6.6 support.
