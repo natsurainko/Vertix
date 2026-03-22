@@ -49,15 +49,11 @@ namespace Vertix::Engine {
             TextureHandle Handle;
             std::wstring FilePath;
             DirectX::WIC_LOADER_FLAGS WicLoaderFlags;
-            D3D12_RESOURCE_STATES beforeState;
-            D3D12_RESOURCE_STATES afterState;
         };
 
         struct TextureLoadingContext {
             TextureHandle Handle;
             Texture* TexturePtr;
-            D3D12_RESOURCE_STATES beforeState;
-            D3D12_RESOURCE_STATES afterState;
         };
 
     public:
@@ -71,13 +67,9 @@ namespace Vertix::Engine {
             const std::wstring &filePath,
             const std::wstring* resourceName = nullptr,
             DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_DEFAULT,
-            D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
             std::function<void(TextureHandle)> textureLoadedCallback = nullptr);
 
-        void ExecuteAsync(
-            DispatcherQueue* dispatcherQueue,
-            GraphicsCommandList* directCommandList);
+        void ExecuteAsync(DispatcherQueue* dispatcherQueue);
 
     private:
         TexturePool<>* texturePool;

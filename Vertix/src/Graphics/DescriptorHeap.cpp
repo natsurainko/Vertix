@@ -4,6 +4,7 @@
 
 #include "Graphics/DescriptorHeap.h"
 
+#include <assert.h>
 #include <exception>
 
 #include "d3d12/d3dx12_root_signature.h"
@@ -35,8 +36,8 @@ void Vertix::DescriptorHeap::AllocDescriptorHandle(
     D3D12_CPU_DESCRIPTOR_HANDLE &handle,
     UINT* indexPtr)
 {
-    if (IsFull()) throw std::exception("The descriptor heap is full.");
-    if (shaderVisible) throw std::exception("This is a GPU-visible descriptor heap; both CPU and GPU handles must be allocated simultaneously.");
+    assert(!IsFull() && "The descriptor heap is full.");
+    assert(!shaderVisible && "This is a GPU-visible descriptor heap; both CPU and GPU handles must be allocated simultaneously.");
 
     const auto it = freeIndices.begin();
     const UINT index = *it;
@@ -53,8 +54,8 @@ void Vertix::DescriptorHeap::AllocDescriptorHandle(
     D3D12_GPU_DESCRIPTOR_HANDLE &gpuHandle,
     UINT* indexPtr)
 {
-    if (IsFull()) throw std::exception("The descriptor heap is full.");
-    if (!shaderVisible) throw std::exception("This is a GPU-invisible descriptor heap, which can only allocate CPU handles.");
+    assert(!IsFull() && "The descriptor heap is full.");
+    assert(shaderVisible && "This is a GPU-invisible descriptor heap, which can only allocate CPU handles.");
 
     const auto it = freeIndices.begin();
     const UINT index = *it;
@@ -73,9 +74,9 @@ void Vertix::DescriptorHeap::AllocDescriptorHandle(
     const UINT numHandles,
     UINT* indicesPtr)
 {
-    if (IsFull()) throw std::exception("The descriptor heap is full.");
-    if (shaderVisible) throw std::exception("This is a GPU-visible descriptor heap; both CPU and GPU handles must be allocated simultaneously.");
-    if (freeIndices.size() < numHandles) throw std::exception("Not enough free descriptors in heap.");
+    assert(!IsFull() && "The descriptor heap is full.");
+    assert(!shaderVisible && "This is a GPU-visible descriptor heap; both CPU and GPU handles must be allocated simultaneously.");
+    assert(freeIndices.size() >= numHandles && "Not enough free descriptors in heap.");
 
     if (indicesPtr) {
         for (UINT i = 0; i < numHandles; i++) {
@@ -104,9 +105,9 @@ void Vertix::DescriptorHeap::AllocDescriptorHandle(
     const UINT numHandles,
     UINT* indicesPtr)
 {
-    if (IsFull()) throw std::exception("The descriptor heap is full.");
-    if (!shaderVisible) throw std::exception("This is a GPU-invisible descriptor heap, which can only allocate CPU handles.");
-    if (freeIndices.size() < numHandles) throw std::exception("Not enough free descriptors in heap.");
+    assert(!IsFull() && "The descriptor heap is full.");
+    assert(shaderVisible && "This is a GPU-invisible descriptor heap, which can only allocate CPU handles.");
+    assert(freeIndices.size() >= numHandles && "Not enough free descriptors in heap.");
 
     if (indicesPtr) {
         for (UINT i = 0; i < numHandles; i++) {
@@ -133,10 +134,9 @@ void Vertix::DescriptorHeap::AllocDescriptorHandle(
 
 UINT Vertix::DescriptorHeap::GetIndexOfDescriptorHandle(const D3D12_CPU_DESCRIPTOR_HANDLE handle) const {
     const UINT64 offset = handle.ptr - heapStartCpuHandle.ptr;
-    if (offset % descriptorLength != 0) throw std::exception("Invalid descriptor handle");
+    assert(!(offset % descriptorLength) && "Invalid descriptor handle");
     const UINT index = static_cast<UINT>(offset / descriptorLength);
-    if (index >= maxDescriptors) throw std::exception("The descriptor handle does not belong to this heap.");
-
+    assert(index < maxDescriptors && "The descriptor handle does not belong to this heap.");
     return index;
 }
 

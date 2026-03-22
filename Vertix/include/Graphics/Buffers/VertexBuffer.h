@@ -9,10 +9,10 @@
 #include <d3d12/d3d12.h>
 #include <wrl/client.h>
 
+#include "VERTIX_EXPORT.h"
 #include "Graphics/GraphicsCommandList.h"
 #include "Graphics/ResourceUploadHeap.hpp"
 #include "Primitive/Vertex.h"
-#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class VertexBuffer {
@@ -23,8 +23,8 @@ namespace Vertix {
 
         static VERTIX_API VertexBuffer* Create(
             const std::vector<Vertex> &vertices,
-            const GraphicsDevice* graphicsDevice,
-            const GraphicsCommandList* graphicsCommandList,
+            const Microsoft::WRL::ComPtr<ID3D12Device> &d3d12Device,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
             ResourceUploadHeap &resourceUploadHeap);
 
         static VERTIX_API VertexBuffer* CreateFullScreenRect(

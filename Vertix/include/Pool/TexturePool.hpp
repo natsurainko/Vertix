@@ -33,51 +33,35 @@ namespace Vertix {
         [[nodiscard]]
         TextureHandle AllocateNamed(
             const std::wstring &name,
-            std::unique_ptr<Texture> resource = nullptr)
+            std::unique_ptr<Texture> resource = nullptr) noexcept
         {
-            const TextureHandle handle = ResourcePool<Texture, TextureHandle>::Allocate(std::move(resource));
+            const TextureHandle handle = ResourcePool<Texture, TextureHandle, Capacity>::Allocate(std::move(resource));
             NameResource(handle, name);
             return handle;
         }
 
-        void Fulfill(
-            const TextureHandle handle,
-            std::unique_ptr<Texture> resource) override
-        {
-            ResourcePool<Texture, TextureHandle>::Fulfill(handle, std::move(resource));
-            NotifyReady(handle);
-        }
-
-        void Free(const TextureHandle handle) override {
+        void Free(const TextureHandle handle) noexcept override {
             namedResources.erase(handle);
-            ResourcePool<Texture, TextureHandle>::Free(handle);
+            ResourcePool<Texture, TextureHandle, Capacity>::Free(handle);
         }
 
-        void OnReady(const TextureHandle handle, std::function<void(TextureHandle)> textureLoadedCallback) {
-            if (this->IsReady(handle)) {
-                textureLoadedCallback(handle);
-                return;
-            }
-            readyCallbacks[handle.slot - 1].emplace_back(std::move(textureLoadedCallback));
-        }
-
-        void NameResource(const TextureHandle handle, const std::wstring &name) {
+        void NameResource(const TextureHandle handle, const std::wstring &name) noexcept {
             namedResources[handle] = name;
             namedResourceHandles[name] = handle;
         }
 
         [[nodiscard]]
-        bool ContainsNamedResource(const std::wstring &name) const {
+        bool ContainsNamedResource(const std::wstring &name) const noexcept {
             return namedResourceHandles.contains(name);
         }
 
         [[nodiscard]]
-        TextureHandle GetNamedHandle(const std::wstring &name) {
+        TextureHandle GetNamedHandle(const std::wstring &name) noexcept {
             return namedResourceHandles[name];
         }
 
         [[nodiscard]]
-        D3D12_RESOURCE_DESC GetResourceDesc(const TextureHandle handle) {
+        D3D12_RESOURCE_DESC GetResourceDesc(const TextureHandle handle) const noexcept {
             auto* texture = this->template GetAs<Texture>(handle);
             return texture->GetResource()->GetDesc();
         }
@@ -90,7 +74,7 @@ namespace Vertix {
         [[nodiscard]]
         D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorHandle(const TextureHandle handle) const noexcept {
             const uint32_t index = handle.slot - 1;
-            return CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
+            return CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, static_cast<INT>(index), descriptorLength);
         }
 
     private:
@@ -99,26 +83,10 @@ namespace Vertix {
         D3D12_GPU_DESCRIPTOR_HANDLE heapStartGpuHandle{};
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
 
-        std::mutex readyCallbackMutex;
-        std::array<std::vector<std::function<void(TextureHandle)>>, Capacity> readyCallbacks{};
-
         std::unordered_map<TextureHandle, std::wstring> namedResources{};
         std::unordered_map<std::wstring, TextureHandle> namedResourceHandles{};
 
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
-
-        void NotifyReady(const TextureHandle handle) {
-            std::vector<std::function<void(TextureHandle)>> callbacks;
-            {
-                std::lock_guard lock(readyCallbackMutex);
-                std::swap(callbacks, readyCallbacks[handle.slot - 1]);
-            }
-            for (auto& callback : callbacks) {
-                if (callback) {
-                    callback(handle);
-                }
-            }
-        }
     };
 }
 

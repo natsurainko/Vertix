@@ -50,10 +50,7 @@ namespace Vertix {
             const UINT index,
             const T &value)
         {
-            if (index >= elementCount) {
-                throw std::out_of_range("Index out of range");
-            }
-
+            assert(index < elementCount && "Index out of range");
             memcpy(bufferDataBegin + index * sizeof(T), &value, sizeof(T));
         }
 

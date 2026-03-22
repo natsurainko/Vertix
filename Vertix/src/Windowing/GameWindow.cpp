@@ -25,15 +25,11 @@ Vertix::GameWindow::GameWindow(const WindowOptions &options) {
 }
 
 Vertix::GameWindow::~GameWindow() {
-    if (frameCommandList) {
-        delete frameCommandList;
-        frameCommandList = nullptr;
-    }
+    delete frameCommandList;
+    delete swapChain;
 
-    if (swapChain) {
-        delete swapChain;
-        swapChain = nullptr;
-    }
+    frameCommandList = nullptr;
+    swapChain = nullptr;
 }
 
 void Vertix::GameWindow::NativeInitialize(const HINSTANCE &hInstance) {
@@ -134,6 +130,7 @@ void Vertix::GameWindow::OnTick() {
 
 void Vertix::GameWindow::OnInternalUpdate(const double deltaTime) {
     OnUpdate(deltaTime);
+    dispatcherQueue.FlushQueue();
 }
 
 void Vertix::GameWindow::OnInternalRender(const double deltaTime) {

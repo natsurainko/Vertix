@@ -48,10 +48,7 @@ namespace Vertix {
             const UINT index,
             const T &value)
         {
-            if (index >= totalElementCount) {
-                throw std::out_of_range("Index out of range");
-            }
-
+            assert(index < totalElementCount && "Index out of range");
             const int pageIndex = index / pageElementCount;
             const int elementIndex = index % pageElementCount;
             const ConstantBufferPage& bufferPage = bufferPages[pageIndex];

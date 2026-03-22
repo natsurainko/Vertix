@@ -14,15 +14,12 @@
 
 Vertix::VertexBuffer* Vertix::VertexBuffer::Create(
     const std::vector<Vertex> &vertices,
-    const GraphicsDevice* graphicsDevice,
-    const GraphicsCommandList* graphicsCommandList,
+    const Microsoft::WRL::ComPtr<ID3D12Device> &d3d12Device,
+    const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
     ResourceUploadHeap &resourceUploadHeap)
 {
     const auto defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     const auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-
-    const auto &device = graphicsDevice->GetD3D12Device();
-    const auto &commandList = graphicsCommandList->GetD3D12GraphicsCommandList();
     const auto buffer = new VertexBuffer();
 
     Microsoft::WRL::ComPtr<ID3D12Resource> uploadResource;
@@ -31,7 +28,7 @@ Vertix::VertexBuffer* Vertix::VertexBuffer::Create(
         const UINT64 vertexBufferSize = vertices.size() * sizeof(Vertex);
         const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
 
-        ThrowIfFailed(device->CreateCommittedResource(
+        ThrowIfFailed(d3d12Device->CreateCommittedResource(
             &defaultHeapProps,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
@@ -39,13 +36,7 @@ Vertix::VertexBuffer* Vertix::VertexBuffer::Create(
             nullptr,
             IID_PPV_ARGS(&(buffer->d3d12Resource))));
 
-        const CD3DX12_RESOURCE_BARRIER commonToCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(
-            buffer->d3d12Resource.Get(),
-            D3D12_RESOURCE_STATE_COMMON,
-            D3D12_RESOURCE_STATE_COPY_DEST);
-        commandList->ResourceBarrier(1, &commonToCopyDest);
-
-        ThrowIfFailed(device->CreateCommittedResource(
+        ThrowIfFailed(d3d12Device->CreateCommittedResource(
             &uploadHeapProps,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
@@ -63,12 +54,6 @@ Vertix::VertexBuffer* Vertix::VertexBuffer::Create(
             uploadResource.Get(),
             0, 0, 1, &subresourceData);
 
-        const CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-            buffer->d3d12Resource.Get(),
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        commandList->ResourceBarrier(1, &barrier);
-
         buffer->d3d12VertexBufferView.BufferLocation = buffer->d3d12Resource->GetGPUVirtualAddress();
         buffer->d3d12VertexBufferView.StrideInBytes = sizeof(Vertex);
         buffer->d3d12VertexBufferView.SizeInBytes = static_cast<UINT>(vertexBufferSize);
@@ -85,10 +70,17 @@ Vertix::VertexBuffer* Vertix::VertexBuffer::CreateFullScreenRect(
     const GraphicsCommandList *graphicsCommandList,
     ResourceUploadHeap &resourceUploadHeap)
 {
-    std::vector<Vertex> vertices;
-    vertices.push_back({ .Position = {-1, -1, 0}, .TexCoord = {0,1} });
-    vertices.push_back({ .Position = {-1, 1, 0}, .TexCoord = {0,0} });
-    vertices.push_back({ .Position = {1, -1, 0}, .TexCoord = {1,1} });
-    vertices.push_back({ .Position = {1, 1, 0}, .TexCoord = {1,0} });
-    return Create(vertices, graphicsDevice, graphicsCommandList, resourceUploadHeap);
+    const std::vector<Vertex> vertices
+    {
+        { .Position = {-1, -1, 0}, .TexCoord = {0,1} },
+        { .Position = {-1, 1, 0}, .TexCoord = {0,0} },
+        { .Position = {1, -1, 0}, .TexCoord = {1,1} },
+        { .Position = {1, 1, 0}, .TexCoord = {1,0} }
+    };
+
+    return Create(
+        vertices,
+        graphicsDevice->GetD3D12Device(),
+        graphicsCommandList->GetD3D12GraphicsCommandList(),
+        resourceUploadHeap);
 }

@@ -19,7 +19,8 @@ namespace Vertix {
         uint32_t slot = Null;
 
         explicit operator bool() const noexcept { return slot; }
-        bool operator==(const ResourceHandle & handle) const noexcept { return slot == handle.slot; }
+        bool operator == (const ResourceHandle & handle) const noexcept { return slot == handle.slot; }
+        bool operator <  (const ResourceHandle& other)   const noexcept { return slot < other.slot; }
     };
 }
 

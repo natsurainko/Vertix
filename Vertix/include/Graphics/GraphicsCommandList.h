@@ -22,7 +22,7 @@ namespace Vertix {
         virtual ~GraphicsCommandList() = default;
 
         virtual void BeginCommand(const Microsoft::WRL::ComPtr<ID3D12PipelineState> &pipelineState) const;
-        virtual void EndCommand(bool executeImmediately = true) const;
+        virtual void EndCommand() const;
         virtual void WaitForCommand();
 
         [[nodiscard]]

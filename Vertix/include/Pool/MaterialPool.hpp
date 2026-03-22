@@ -6,9 +6,8 @@
 #define VERTIX_MATERIALPOOL_H
 
 #include <array>
-#include <cassert>
+#include <assert.h>
 #include <memory>
-#include <mutex>
 
 #include "ResourcePool.hpp"
 #include "Graphics/Buffers/StructuredBuffer.hpp"
@@ -23,7 +22,7 @@ namespace Vertix {
         ~MaterialPool() override = default;
 
         [[nodiscard]]
-        MaterialHandle Allocate(std::unique_ptr<Material> resource = nullptr) override {
+        MaterialHandle Allocate(std::unique_ptr<Material> resource = nullptr) noexcept override {
             assert(this->freeTop > 0 && "ResourcePool capacity exceeded");
             const uint32_t index = this->freeSlots[--this->freeTop];
             const MaterialHandle handle{index + 1};
@@ -38,42 +37,34 @@ namespace Vertix {
 
         void Fulfill(
             MaterialHandle handle,
-            std::unique_ptr<Material> resource) override
+            std::unique_ptr<Material> resource) noexcept override
         {
             ResourcePool<Material, MaterialHandle, Capacity>::Fulfill(handle, std::move(resource));
             MarkDirty(handle);
         }
 
-        void Free(const MaterialHandle handle) override {
+        void Free(const MaterialHandle handle) noexcept override {
             ResourcePool<Material, MaterialHandle, Capacity>::Free(handle);
             MarkDirty(handle);
         }
 
-        void MarkDirty(const MaterialHandle handle) {
-            std::lock_guard lock(dirtyMutex);
+        void MarkDirty(const MaterialHandle handle) noexcept {
             dirtySlots[handle.slot - 1] = true;
-            needDirtyFlush.store(true, std::memory_order_release);
+            needDirtyFlush = true;
         }
 
         void FlushDirty() {
-            if (!needDirtyFlush.load(std::memory_order_acquire))
-                return;
-
-            std::array<bool, Capacity> toFlush{};
-            {
-                std::lock_guard lock(dirtyMutex);
-                std::swap(toFlush, dirtySlots);
-                needDirtyFlush.store(false, std::memory_order_relaxed);
-            }
+            if (!needDirtyFlush) return;
 
             for (uint32_t i = 0; i < Capacity; ++i) {
-                if (!toFlush[i]) continue;
+                if (!dirtySlots[i]) continue;
 
                 TConstants constants{};
                 if (this->slots[i]) {
                     FillConstants(*this->slots[i], constants);
                 }
                 constantBuffer.FillAt(i, constants);
+                dirtySlots[i] = false;
             }
         }
 
@@ -93,8 +84,7 @@ namespace Vertix {
         }
 
     private:
-        std::atomic<bool> needDirtyFlush = false;
-        std::mutex dirtyMutex;
+        bool needDirtyFlush = false;
         std::array<bool, Capacity> dirtySlots{};
 
         StructuredBuffer<TConstants> constantBuffer;

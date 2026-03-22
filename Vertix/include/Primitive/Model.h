@@ -11,21 +11,35 @@
 #include "VERTIX_EXPORT.h"
 
 namespace Vertix {
+    struct ModelTag {};
+    using ModelHandle = ResourceHandle<ModelTag>;
+
+    struct ModelTransformation {
+        DirectX::SimpleMath::Vector3 Position;
+        DirectX::SimpleMath::Vector3 Scale;
+        DirectX::SimpleMath::Quaternion Orientation;
+    };
+
     class GraphicsDevice;
     class GraphicsCommandList;
     class VERTIX_API Model {
     public:
         std::vector<Mesh> Meshes;
+        ModelTransformation Transformation = {
+            .Position = DirectX::SimpleMath::Vector3::Zero,
+            .Scale = DirectX::SimpleMath::Vector3::One,
+            .Orientation = DirectX::SimpleMath::Quaternion::Identity,
+        };
 
         void UploadToGPU(
-            const GraphicsDevice* graphicsDevice,
-            const GraphicsCommandList* graphicsCommandList,
+            const Microsoft::WRL::ComPtr<ID3D12Device> &device,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& commandList,
             ResourceUploadHeap &resourceUploadHeap);
 
-        void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
+        void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList) const;
 
         void DrawInstanced(
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
             UINT instanceCount) const;
     };
 }

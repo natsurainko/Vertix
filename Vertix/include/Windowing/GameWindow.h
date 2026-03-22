@@ -15,6 +15,7 @@
 
 #include "Math/Vector2D.hpp"
 #include "VERTIX_EXPORT.h"
+#include "Dispatching/DispatcherQueue.hpp"
 
 namespace Vertix {
     struct WindowOptions {
@@ -107,6 +108,7 @@ namespace Vertix {
     protected:
         GraphicsDevice* graphicsDevice = nullptr;
         FrameCommandList* frameCommandList = nullptr;
+        DispatcherQueue dispatcherQueue;
         SwapChain* swapChain = nullptr;
 
         virtual void InitializeSwapChain();

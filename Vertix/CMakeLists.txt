@@ -9,6 +9,7 @@ target_sources(Vertix
         src/Graphics/GraphicsDevice.cpp
         src/Graphics/SwapChain.cpp
         src/Graphics/Buffers/VertexBuffer.cpp
+        src/Graphics/Buffers/IndexBuffer.cpp
         src/Hosting/GameApplication.cpp
         src/Primitive/Mesh.cpp
         src/Primitive/Model.cpp
@@ -42,7 +43,9 @@ target_sources(Vertix
             include/Mixin/IResourceUploading.h
             include/Pool/ResourceHandle.h
             include/Pool/ResourcePool.hpp
+            include/Pool/DynamicResourcePool.h
             include/Pool/MaterialPool.hpp
+            include/Pool/ModelPool.hpp
             include/Pool/TexturePool.hpp
             include/Primitive/Vertex.h
             include/Primitive/Mesh.h

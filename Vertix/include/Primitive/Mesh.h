@@ -33,14 +33,14 @@ namespace Vertix {
         ~Mesh();
 
         void UploadToGPU(
-            const Microsoft::WRL::ComPtr<ID3D12Device10> &device,
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+            const Microsoft::WRL::ComPtr<ID3D12Device> &device,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
             ResourceUploadHeap &resourceUploadHeap);
 
-        void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) const;
+        void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList) const;
 
         void DrawInstanced(
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
             UINT instanceCount) const;
     };
 }

@@ -55,11 +55,8 @@ void Vertix::Engine::ModelLoader::ProcessNode(
 {
     if (node->mNumMeshes > 0) {
         ModelLoadCallbackContext callbackContext = {
-            .Model = std::make_unique<Model>(),
-            .Name = node->mName.length > 0 ? node->mName.C_Str() : "UnnamedModel",
-            .Position = Vector3::Zero,
-            .Scale = Vector3::One,
-            .Orientation = DirectX::SimpleMath::Quaternion::Identity,
+            .Model = new Model(),
+            .Name = node->mName.length > 0 ? node->mName.C_Str() : "UnnamedModel"
         };
 
         const auto transformation = loadingContext->importOptions.ApplyTransformationToModel
@@ -68,22 +65,21 @@ void Vertix::Engine::ModelLoader::ProcessNode(
 
         aiQuaternion aiRotation;
         transformation.Decompose(
-            *reinterpret_cast<aiVector3D*>(&callbackContext.Scale),
+            *reinterpret_cast<aiVector3D*>(&callbackContext.Model->Transformation.Scale),
             aiRotation,
-            *reinterpret_cast<aiVector3D*>(&callbackContext.Position)
+            *reinterpret_cast<aiVector3D*>(&callbackContext.Model->Transformation.Position)
         );
-        callbackContext.Orientation = DirectX::SimpleMath::Quaternion(
+        callbackContext.Model->Transformation.Orientation = DirectX::SimpleMath::Quaternion(
             aiRotation.x,
             aiRotation.y,
             aiRotation.z,
             aiRotation.w
         );
 
-        auto* model = callbackContext.Model.get();
         for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
             ProcessMesh(
                 scene->mMeshes[node->mMeshes[i]],
-                model->Meshes.emplace_back(),
+                callbackContext.Model->Meshes.emplace_back(),
                 aiMatrix_Identity,
                 loadingContext
             );
@@ -101,13 +97,17 @@ void Vertix::Engine::ModelLoader::ProcessMaterial(
     const aiScene *scene,
     ModelLoadingContext* loadingContext)
 {
+    ModelMaterialLoadCallbackContext callbackContext {
+        .MaterialHandles = loadingContext->materialHandles
+    };
+
     for (unsigned int mi = 0; mi  < scene->mNumMaterials; mi ++) {
         const aiMaterial* mat = scene->mMaterials[mi];
 
         aiString matName;
         mat->Get(AI_MATKEY_NAME, matName);
 
-        ModelMaterialLoadCallbackContext callbackContext {
+        ModelMaterialDeclaration materialDeclaration {
             .Name = matName.length > 0 ? matName.C_Str() : "UnnamedMaterial",
         };
 
@@ -119,17 +119,15 @@ void Vertix::Engine::ModelLoader::ProcessMaterial(
                 mat->GetTexture(type, i, &path);
 
                 if (const bool embedded = path.length > 0 && path.C_Str()[0] == '*'; !embedded) {
-                    callbackContext.Textures.emplace_back(ModelTextureLoadContext {
-                        .Type = type,
-                        .FilePath = path.C_Str(),
-                    });
+                    materialDeclaration.Textures.emplace_back(type, path.C_Str());
                 }
             }
         }
 
-        (*loadingContext->materialLoadCallback)(&callbackContext);
-        loadingContext->materialHandles.emplace_back(callbackContext.MaterialHandle);
+        callbackContext.Materials.emplace_back(std::move(materialDeclaration));
     }
+
+    (*loadingContext->materialLoadCallback)(&callbackContext);
 }
 
 void Vertix::Engine::ModelLoader::ProcessMesh(
@@ -190,4 +188,63 @@ void Vertix::Engine::ModelLoader::ProcessMesh(
                 aiMesh->mTextureCoords[0][i].y);
         }
     }
+}
+
+void Vertix::Engine::ModelAsyncLoader::LoadModelAsync(
+    const std::string &filePath,
+    const ModelLoadOptions &options,
+    const std::function<void(ModelHandle)> &modelLoadedCallback,
+    bool tryLoadMaterials)
+{
+    modelLoadRequests.emplace_back(
+        filePath,
+        options,
+        tryLoadMaterials,
+        modelLoadedCallback
+    );
+}
+
+void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(DispatcherQueue *dispatcherQueue) {
+    std::thread([
+        requests   = std::move(modelLoadRequests),
+        materialLoadCallback = std::move(materialLoadCallback),
+        device     = d3d12Device,
+        copyQueue  = copyCommandQueue,
+        pool       = modelPool,
+        dispatcherQueue
+    ]() mutable -> void
+    {
+        ResourceUploadHeap resourceUploadHeap{};
+        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
+        std::vector<ModelLoadingContext> modelLoadingContexts;
+
+        copyCommandList.BeginCommand(nullptr);
+        {
+            const auto& commandList = copyCommandList.GetD3D12GraphicsCommandList();
+            for (const auto &[filePath, options, loadMaterial, loadedCallback] : requests) {
+                const std::function callback = [&](ModelLoadCallbackContext* context) -> void {
+                    const ModelHandle handle = pool->Allocate();
+                    if (loadedCallback) {
+                        pool->OnReady(handle, loadedCallback);
+                    }
+
+                    modelLoadingContexts.emplace_back(handle, context->Model);
+                    context->Model->UploadToGPU(device, commandList, resourceUploadHeap);
+                };
+
+                ModelLoader::TryLoadFromFile(callback, filePath, options, loadMaterial ? &materialLoadCallback : nullptr);
+            }
+        }
+        copyCommandList.EndCommand();
+        copyCommandList.WaitForCommand();
+
+        dispatcherQueue->Enqueue([
+            modelFulfills = std::move(modelLoadingContexts),
+            pool
+        ] {
+            for (const auto &[handle, model] : modelFulfills) {
+                pool->Fulfill(handle, std::unique_ptr<Model>(model));
+            }
+        });
+    }).detach();
 }
