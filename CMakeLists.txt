@@ -42,6 +42,8 @@ set_target_properties(imgui PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${INCLUDES_DIR}/imgui"
 )
 
+include(Cmake.Includes/AddHlslShaders.cmake)
+
 add_subdirectory(Vertix)
 add_subdirectory(Vertix.Engine)
 add_subdirectory(Examples/D3D12GameDemo)

@@ -37,11 +37,15 @@ target_sources(Vertix.Engine
             include/Scene/DirectionalLight.h
             include/Scene/SceneObject3D.hpp
             include/GameObject3D.h
-        FILE_SET HEADERS
-        BASE_DIRS shaders
-        FILES
-            shaders/GenerateMipmap.h
 )
+
+set(HLSL_SHADER_FILES shaders/GenerateMipmap.hlsl)
+set_source_files_properties(shaders/GenerateMipmap.hlsl PROPERTIES
+        ShaderModel  "6_0"
+        CSMain       "CSMain"
+        ByteCodeName "GENERATE_MIPMAP_PASS"
+)
+add_hlsl_shaders(Vertix.Engine FILES ${HLSL_SHADER_FILES})
 
 target_include_directories(Vertix.Engine BEFORE PUBLIC ${INCLUDES_DIR})
 target_link_libraries(Vertix.Engine PUBLIC Vertix GameInput assimp)

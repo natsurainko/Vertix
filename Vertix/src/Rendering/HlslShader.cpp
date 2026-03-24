@@ -4,8 +4,6 @@
 
 #include "Rendering/HlslShader.h"
 
-#include <utility>
-
 #include "Exceptions/HResultException.h"
 
 using Microsoft::WRL::ComPtr;

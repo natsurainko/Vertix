@@ -4,11 +4,11 @@
 
 #include "Content/TextureMipmapGenerator.h"
 
+#include <GenerateMipmap_CS.h>
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "GenerateMipmap.h"
 #include "Exceptions/HResultException.h"
 #include "Graphics/DescriptorHeap.h"
 #include "Graphics/GraphicsDevice.h"
@@ -320,8 +320,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> Vertix::Engine::TextureMipmapGenerat
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
 
     D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc{};
-    psoDesc.CS.pShaderBytecode = SHADER_BYTECODE_GENERATE_MIPMAP;
-    psoDesc.CS.BytecodeLength = sizeof(SHADER_BYTECODE_GENERATE_MIPMAP);
+    psoDesc.CS.pShaderBytecode = SHADER_BYTECODE_GENERATE_MIPMAP_PASS_CS;
+    psoDesc.CS.BytecodeLength = sizeof(SHADER_BYTECODE_GENERATE_MIPMAP_PASS_CS);
     psoDesc.pRootSignature = rootSignature.Get();
     ThrowIfFailed(d3d12Device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
 
