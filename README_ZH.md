@@ -9,7 +9,9 @@
 - 基础的 D3D12 对象封装（交换链、命令列表、描述符堆、常量缓冲区、结构化缓冲区等）
 - 基础的 3D 场景类型（透视相机、GameObject3D、SceneObject3D 等）
 - 提供基础渲染资源的管理和异步加载功能（模型、纹理、材质等）
+- 使用计算着色器为不包含 mipmap 的纹理格式生成 mipmap。
 - 基础输入设备，基于 GameInput 实现（鼠标设备、键盘设备等）
+- 提供便捷的 HLSL 编译和 CMake 嵌入功能（CMake 函数 `add_hlsl_shaders`）
 - 示例/演示项目（Examples/D3D12GameDemo, Examples/D3D12ImGuiDemo, Examples/D3D12RenderPipelineDemo）
 
 ## 进行中的工作
@@ -118,7 +120,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
   - **HBAO (基于地平线的环境光遮蔽)**：使用 HBAO 提高阴影环境光的质量。
 
 #### 截图
-<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/61273dad-4bba-4806-a3ee-bec4fbd0d3ef" />
+<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/b15f48b2-8a57-46f2-bdae-4fa3daf35973" />
 
 #### 说明
 - **Shader Model 6.6 要求**：GeometryPass 着色器需要 Shader Model 6.6 支持。
