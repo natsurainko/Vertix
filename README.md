@@ -9,11 +9,12 @@ A lightweight 3D game development framework written in C++, targeting Windows wi
 - Basic D3D12 object wrappers (SwapChain, CommandList, DescriptorHeap, ConstantBuffer, StructuredBuffer etc.)
 - Basic 3D scene types (PerspectiveCamera, GameObject3D, SceneObject3D, etc.)
 - Provides management and asynchronous loading of basic rendering resources. (Model, Texture, Material, etc.)
+- Generate mipmaps for texture formats that do not have mipmaps using computational shaders.
 - Basic input devices, implemented using GameInput (MouseDevice, KeyboardDevice, ...)
 - Example/demo project (Examples/D3D12GameDemo, Examples/D3D12ImGuiDemo, Examples/D3D12RenderPipelineDemo)
+- Provides convenient HLSL compilation and embedding for CMake (CMake function `add_hlsl_shaders`)
 
 ## In Progress
-- Implement a Mipmap generator using compute shaders to generate mipmaps when loading texture formats that do not have mipmaps.
 - Improve the Mesh and Model to enable skeletal animation
 - Provide a scene resource manager for GameObject3D and SceneObject3D to facilitate subsequent optimization techniques such as scene object culling.
 - Implementation of more light source types in Vertix.Engine
@@ -118,7 +119,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
   - **HBAO (Horizon-Based Ambient Occlusion)**: Use HBAO to improve the quality of shaded ambient light.
 
 #### Screenshots
-<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/61273dad-4bba-4806-a3ee-bec4fbd0d3ef" />
+<img width="1332" height="850" alt="RenderPipelineDemo" src="https://github.com/user-attachments/assets/b15f48b2-8a57-46f2-bdae-4fa3daf35973" />
 
 #### Notes
 - **Shader Model 6.6 Requirement**: The GeometryPass shader requires Shader Model 6.6 support.
