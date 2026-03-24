@@ -61,6 +61,11 @@ namespace Vertix {
         }
 
         [[nodiscard]]
+        const std::wstring& GetHandleName(const TextureHandle handle) noexcept {
+            return namedResources[handle];
+        }
+
+        [[nodiscard]]
         D3D12_RESOURCE_DESC GetResourceDesc(const TextureHandle handle) const noexcept {
             auto* texture = this->template GetAs<Texture>(handle);
             return texture->GetResource()->GetDesc();

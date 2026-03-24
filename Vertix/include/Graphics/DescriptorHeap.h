@@ -62,6 +62,11 @@ namespace Vertix {
         }
 
         [[nodiscard]]
+        UINT GetDescriptorLength() const noexcept {
+            return descriptorLength;
+        }
+
+        [[nodiscard]]
         UINT GetIndexOfDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
     private:
         UINT maxDescriptors;

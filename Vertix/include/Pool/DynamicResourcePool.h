@@ -5,7 +5,7 @@
 #ifndef VERTIX_DYNAMICRESOURCEPOOL_H
 #define VERTIX_DYNAMICRESOURCEPOOL_H
 
-#include <assert.h>
+#include <cassert>
 #include <functional>
 #include <memory>
 #include <set>

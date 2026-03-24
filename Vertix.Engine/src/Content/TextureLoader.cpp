@@ -4,10 +4,11 @@
 
 #include "Content/TextureLoader.h"
 
-#include <d3dx12_core.h>
-#include <d3dx12_resource_helpers.h>
-#include <DDSTextureLoader.h>
+#include <d3d12/d3dx12_core.h>
+#include <d3d12/d3dx12_resource_helpers.h>
+#include <DirectXTK12/DDSTextureLoader.h>
 
+#include "Content/TextureMipmapGenerator.h"
 #include "Exceptions/HResultException.h"
 #include "Graphics/GraphicsDevice.h"
 
@@ -237,39 +238,64 @@ Vertix::TextureHandle Vertix::Engine::TextureAsyncLoader::LoadTextureAsync(
 
 void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatcherQueue) {
     std::thread([
-        requests   = std::move(textureLoadRequests),
-        device     = d3d12Device,
-        copyQueue  = copyCommandQueue,
-        pool       = texturePool,
-        dispatcherQueue,
-        graphicsDevice = graphicsDevice
+        requests       = std::move(textureLoadRequests),
+        device         = d3d12Device,
+        copyQueue      = copyCommandQueue,
+        computeQueue   = computeCommandQueue,
+        pool           = texturePool,
+        graphicsDevice = graphicsDevice,
+        genMipmaps     = autoGenerateTextureMipmaps,
+        dispatcherQueue
     ]() mutable -> void
     {
-        ThrowIfFailed(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
-
-        ResourceUploadHeap resourceUploadHeap{};
-        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
         std::vector<TextureLoadingContext> textureLoadingContexts;
 
-        copyCommandList.BeginCommand(nullptr);
+        // Load Textures
+        ThrowIfFailed(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
         {
-            for (const auto &[handle, filePath, flags] : requests) {
-                Texture* texture = filePath.ends_with(L".dds")
-                    ? TextureLoader::CreateFromDdsFile(
-                        filePath, device,
-                        copyCommandList.GetD3D12GraphicsCommandList(),
-                        resourceUploadHeap)
-                    : TextureLoader::CreateFromFileUsingWIC(
-                        filePath, device,
-                        copyCommandList.GetD3D12GraphicsCommandList(),
-                        resourceUploadHeap, flags);
+            ResourceUploadHeap resourceUploadHeap{};
+            GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
+            copyCommandList.BeginCommand(nullptr);
+            {
+                for (const auto &[handle, filePath, flags] : requests) {
+                    Texture* texture = filePath.ends_with(L".dds")
+                        ? TextureLoader::CreateFromDdsFile(
+                            filePath, device,
+                            copyCommandList.GetD3D12GraphicsCommandList(),
+                            resourceUploadHeap)
+                        : TextureLoader::CreateFromFileUsingWIC(
+                            filePath, device,
+                            copyCommandList.GetD3D12GraphicsCommandList(),
+                            resourceUploadHeap, flags);
 
-                textureLoadingContexts.emplace_back(handle, texture);
+                    textureLoadingContexts.emplace_back(handle, texture);
+                    ThrowIfFailed(texture->GetResource()->SetName(pool->GetHandleName(handle).c_str()));
+                }
             }
+            copyCommandList.EndCommand();
+            copyCommandList.WaitForCommand();
         }
-        copyCommandList.EndCommand();
-        copyCommandList.WaitForCommand();
         CoUninitialize();
+
+        // Generate Mipmaps
+        if (genMipmaps && computeQueue) {
+            ResourceUploadHeap resourceUploadHeap{};
+            const TextureMipmapGenerator textureMipmapGenerator { graphicsDevice };
+            GraphicsCommandList computeCommandList(device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+            computeCommandList.BeginCommand(nullptr);
+            {
+                for (const auto &[_, texture] : textureLoadingContexts) {
+                    textureMipmapGenerator.Generate(
+                        texture->GetResource(),
+                        computeCommandList.GetD3D12GraphicsCommandList(),
+                        resourceUploadHeap,
+                        D3D12_RESOURCE_STATE_COMMON,
+                        D3D12_RESOURCE_STATE_COMMON);
+                }
+            }
+            computeCommandList.EndCommand();
+            computeCommandList.WaitForCommand();
+        }
 
         dispatcherQueue->Enqueue([
             textureFulfills = std::move(textureLoadingContexts),

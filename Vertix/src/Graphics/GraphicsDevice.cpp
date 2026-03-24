@@ -46,9 +46,15 @@ Vertix::GraphicsDevice::GraphicsDevice(const bool useSoftware): useSoftwareRende
     ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
     ThrowIfFailed(CreateSuitableDevice());
 
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    SUCCEEDED(d3d12Device->CheckFeatureSupport(
+        D3D12_FEATURE_D3D12_OPTIONS,
+        &d3d12FeatureOptions,
+        sizeof(d3d12FeatureOptions)));
+
+    constexpr D3D12_COMMAND_QUEUE_DESC queueDesc {
+        .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
+        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE
+    };
 
     ThrowIfFailed(d3d12Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&d3d12CommandQueue)));
 }
@@ -58,7 +64,7 @@ void Vertix::GraphicsDevice::WaitForGPU() const {
     ThrowIfFailed(d3d12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 
     const HANDLE fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (fenceEvent == nullptr) {
+    if (!fenceEvent) {
         ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }
 

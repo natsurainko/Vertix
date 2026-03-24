@@ -4,7 +4,7 @@
 
 #include "Graphics/DescriptorHeap.h"
 
-#include <assert.h>
+#include <cassert>
 #include <exception>
 
 #include "d3d12/d3dx12_root_signature.h"

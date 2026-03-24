@@ -6,7 +6,7 @@
 #define VERTIX_MATERIALPOOL_H
 
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <memory>
 
 #include "ResourcePool.hpp"

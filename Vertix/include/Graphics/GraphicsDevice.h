@@ -20,7 +20,6 @@ namespace Vertix {
         ~GraphicsDevice();
 
         void CreateCommandQueue(Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue, const D3D12_COMMAND_QUEUE_DESC &queueDesc) const;
-
         void WaitForGPU() const;
 
         [[nodiscard]]
@@ -38,12 +37,24 @@ namespace Vertix {
             return d3d12CommandQueue;
         }
 
+        [[nodiscard]]
+        bool IsTypedUAVLoadAdditionalFormatsSupported() const noexcept {
+            return d3d12FeatureOptions.TypedUAVLoadAdditionalFormats;
+        }
+
+        [[nodiscard]]
+        bool IsStandardSwizzle64KBSupported() const noexcept {
+            return d3d12FeatureOptions.StandardSwizzle64KBSupported;
+        }
+
     private:
         bool useSoftwareRendering = false;
 
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<IDXGIFactory6> dxgiFactory;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> d3d12CommandQueue;
+
+        D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12FeatureOptions{};
 
 #ifndef NDEBUG
 #ifndef NO_D3D12_DEBUG_LAYER

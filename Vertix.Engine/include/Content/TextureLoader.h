@@ -6,7 +6,7 @@
 #define VERTIX_TEXTURELOADER_H
 
 #include <string>
-#include <WICTextureLoader.h>
+#include <DirectXTK12/WICTextureLoader.h>
 
 #include "VERTIX_ENGINE_EXPORT.h"
 #include "Dispatching/DispatcherQueue.hpp"
@@ -46,22 +46,28 @@ namespace Vertix::Engine {
 
     class VERTIX_ENGINE_API TextureAsyncLoader {
         struct TextureLoadRequest {
-            TextureHandle Handle;
-            std::wstring FilePath;
+            TextureHandle             Handle;
+            std::wstring              FilePath;
             DirectX::WIC_LOADER_FLAGS WicLoaderFlags;
         };
 
         struct TextureLoadingContext {
             TextureHandle Handle;
-            Texture* TexturePtr;
+            Texture*      TexturePtr = nullptr;
         };
 
     public:
         TextureAsyncLoader(
             TexturePool<>* texturePool,
             GraphicsDevice* graphicsDevice,
-            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &copyCommandQueue)
-            : texturePool(texturePool), graphicsDevice(graphicsDevice), copyCommandQueue(copyCommandQueue), d3d12Device(graphicsDevice->GetD3D12Device()) {}
+            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &copyCommandQueue,
+            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &computeCommandQueue = nullptr,
+            const bool autoGenerateTextureMipmaps = true)
+            : texturePool(texturePool), graphicsDevice(graphicsDevice),
+              autoGenerateTextureMipmaps(autoGenerateTextureMipmaps),
+              copyCommandQueue(copyCommandQueue), computeCommandQueue(computeCommandQueue) {
+            d3d12Device = graphicsDevice->GetD3D12Device();
+        }
 
         TextureHandle LoadTextureAsync(
             const std::wstring &filePath,
@@ -76,8 +82,11 @@ namespace Vertix::Engine {
         GraphicsDevice* graphicsDevice;
 
         std::vector<TextureLoadRequest> textureLoadRequests;
+        bool autoGenerateTextureMipmaps;
 
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> copyCommandQueue;
+        Microsoft::WRL::ComPtr<ID3D12CommandQueue> computeCommandQueue;
+
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
     };
 }

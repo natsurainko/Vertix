@@ -36,6 +36,7 @@ target_sources(Vertix
             include/Graphics/Buffers/ConstantBuffer.hpp
             include/Graphics/Buffers/ConstantBufferPageArray.hpp
             include/Graphics/Buffers/StructuredBuffer.hpp
+            include/Helpers/FormatsHelper.h
             include/Hosting/GameApplication.h
             include/Hosting/GameApplicationBuilder.hpp
             include/Math/Vector2D.hpp

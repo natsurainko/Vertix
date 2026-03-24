@@ -6,7 +6,7 @@
 #define VERTIX_RESOURCEPOOL_HPP
 
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <cstdint>
 #include <memory>
 

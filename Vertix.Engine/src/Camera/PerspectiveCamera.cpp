@@ -4,7 +4,7 @@
 
 #include "Camera/PerspectiveCamera.h"
 
-#include "Math/FloatExtensions.h"
+#include "../../include/Helpers/MathHelper.h"
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
