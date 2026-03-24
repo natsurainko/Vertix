@@ -17,12 +17,13 @@ constexpr D3D_FEATURE_LEVEL D3D12_Feature_Levels[] = {
     D3D_FEATURE_LEVEL_12_0,
 };
 
-Vertix::GraphicsDevice::GraphicsDevice(const bool useSoftware): useSoftwareRendering(useSoftware) {
+Vertix::GraphicsDevice::GraphicsDevice(
+    const bool useSoftware,
+    const bool enableDebugLayer) : useSoftwareRendering(useSoftware)
+{
     UINT dxgiFactoryFlags = 0;
 
-#ifndef NDEBUG
-#ifndef NO_D3D12_DEBUG_LAYER
-    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&d3dDebug)))) {
+    if (enableDebugLayer && SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&d3dDebug)))) {
         d3dDebug->EnableDebugLayer();
 
         // d3dDebug->SetEnableGPUBasedValidation(TRUE);
@@ -40,8 +41,6 @@ Vertix::GraphicsDevice::GraphicsDevice(const bool useSoftware): useSoftwareRende
         // d3dDebug->SetEnableAutoName(FALSE);
         OutputDebugStringW(L"D3D12 Debug Layer Enabled (ID3D12Debug5)\n");
     }
-#endif
-#endif
 
     ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
     ThrowIfFailed(CreateSuitableDevice());

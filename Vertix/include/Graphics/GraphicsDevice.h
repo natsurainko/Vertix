@@ -12,11 +12,19 @@
 #include "VERTIX_EXPORT.h"
 
 namespace Vertix {
+    struct GraphicsDeviceOptions {
+        bool useSoftware = false;
+        bool enableDebugLayer = false;
+    };
+
     class GameWindow;
     class SwapChain;
     class VERTIX_API GraphicsDevice {
     public:
-        explicit GraphicsDevice(bool useSoftware = false);
+        explicit GraphicsDevice(
+            bool useSoftware = false,
+            bool enableDebugLayer = false);
+
         ~GraphicsDevice();
 
         void CreateCommandQueue(Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue, const D3D12_COMMAND_QUEUE_DESC &queueDesc) const;
@@ -51,16 +59,11 @@ namespace Vertix {
         bool useSoftwareRendering = false;
 
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
+        Microsoft::WRL::ComPtr<ID3D12Debug5> d3dDebug;
         Microsoft::WRL::ComPtr<IDXGIFactory6> dxgiFactory;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> d3d12CommandQueue;
 
         D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12FeatureOptions{};
-
-#ifndef NDEBUG
-#ifndef NO_D3D12_DEBUG_LAYER
-        Microsoft::WRL::ComPtr<ID3D12Debug5> d3dDebug;
-#endif
-#endif
 
         HRESULT CreateSuitableDevice();
     };

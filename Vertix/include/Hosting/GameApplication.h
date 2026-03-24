@@ -5,8 +5,9 @@
 #ifndef VERTIX_GAMEAPPLICATION_H
 #define VERTIX_GAMEAPPLICATION_H
 
-#include "Windowing/GameWindow.h"
 #include "VERTIX_EXPORT.h"
+#include "Graphics/GraphicsDevice.h"
+#include "Windowing/GameWindow.h"
 
 namespace Vertix {
     class VERTIX_API GameApplication {
@@ -15,7 +16,8 @@ namespace Vertix {
             const HINSTANCE &hInstance,
             LPSTR lpCmdLine,
             int nCmdShow,
-            GameWindow* gameWindow);
+            GameWindow* gameWindow,
+            const GraphicsDeviceOptions &deviceOptions = {});
 
         ~GameApplication();
 

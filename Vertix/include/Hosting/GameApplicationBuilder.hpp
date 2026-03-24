@@ -43,16 +43,22 @@ namespace Vertix {
             return *this;
         }
 
+        GameApplicationBuilder ConfigureGraphicsDevice(const GraphicsDeviceOptions &options) {
+            graphicDeviceOptions = options;
+            return *this;
+        }
+
         [[nodiscard]]
         GameApplication Build() const {
             if (!gameWindow)
                 throw std::invalid_argument("GameWindow is null");
 
-            return {hInstance, lpCmdLine, nCmdShow, gameWindow};
+            return {hInstance, lpCmdLine, nCmdShow, gameWindow, graphicDeviceOptions};
         }
 
     private:
         GameWindow* gameWindow = nullptr;
+        GraphicsDeviceOptions graphicDeviceOptions{};
 
         HINSTANCE hInstance;
         LPSTR lpCmdLine;

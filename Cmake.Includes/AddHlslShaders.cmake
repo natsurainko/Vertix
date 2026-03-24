@@ -26,6 +26,7 @@
             string(TOLOWER ${ENTRY_TYPE} ENTRY_TYPE_LOWER)
 
             set(OUTPUT_H ${CMAKE_CURRENT_BINARY_DIR}/compiled_shaders/${FILE_WE}_${ENTRY_TYPE_UPPER}.h)
+            set(DEP_FILE ${OUTPUT_H}.d)
             set(VARIABLE_NAME SHADER_BYTECODE_${BYTECODE_NAME}_${ENTRY_TYPE_UPPER})
 
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -42,8 +43,10 @@
                     ${COMPILE_FLAGS}
                     -Fh ${OUTPUT_H}
                     -Vn ${VARIABLE_NAME}
+                    -MD -MF ${DEP_FILE}
                     ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+                    DEPFILE ${DEP_FILE}
                     COMMENT "[DXC] ${FILE}::${ENTRY_FUNC} [${ENTRY_TYPE_LOWER}_${SHADER_MODEL}] -> ${OUTPUT_H}"
                     VERBATIM
             )

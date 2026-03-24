@@ -11,9 +11,10 @@ Vertix::GameApplication::GameApplication(
     const HINSTANCE &hInstance,
     const LPSTR lpCmdLine,
     const int nCmdShow,
-    GameWindow *gameWindow) : hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow), gameWindow(gameWindow)
+    GameWindow *gameWindow,
+    const GraphicsDeviceOptions &deviceOptions) : hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow), gameWindow(gameWindow)
 {
-    graphicsDevice = new GraphicsDevice();
+    graphicsDevice = new GraphicsDevice(deviceOptions.useSoftware, deviceOptions.enableDebugLayer);
     gameWindow->InitializeDevice(graphicsDevice);
 }
 
