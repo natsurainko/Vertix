@@ -1,4 +1,4 @@
-﻿function(add_hlsl_shaders TARGET_NAME)
+function(add_hlsl_shaders TARGET_NAME)
     set(options)
     set(oneValueArgs)
     set(multiValueArgs FILES)
@@ -43,6 +43,7 @@
                     ${COMPILE_FLAGS}
                     -Fh ${OUTPUT_H}
                     -Vn ${VARIABLE_NAME}
+                    -MD -MF ${DEP_FILE}
                     ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPFILE ${DEP_FILE}
