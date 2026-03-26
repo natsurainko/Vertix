@@ -43,7 +43,6 @@
                     ${COMPILE_FLAGS}
                     -Fh ${OUTPUT_H}
                     -Vn ${VARIABLE_NAME}
-                    -MD -MF ${DEP_FILE}
                     ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPFILE ${DEP_FILE}
@@ -57,6 +56,9 @@
 
     add_custom_target(${TARGET_NAME}_Shaders DEPENDS ${GENERATED_HEADERS})
     add_dependencies(${TARGET_NAME} ${TARGET_NAME}_Shaders)
-    target_sources(${TARGET_NAME} PRIVATE ${GENERATED_HEADERS})
-    target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/compiled_shaders)
+    target_sources(${TARGET_NAME}
+            PUBLIC
+            FILE_SET HEADERS
+            BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/compiled_shaders
+            FILES ${GENERATED_HEADERS})
 endfunction()
