@@ -4,6 +4,7 @@
 
 #include "Rendering/RenderTargetView.h"
 
+#include <d3dx12_barriers.h>
 #include <d3d12/d3dx12_core.h>
 
 #include "Exceptions/HResultException.h"
@@ -36,7 +37,7 @@ Vertix::RenderTargetView::RenderTargetView(
     d3d12Device->CreateRenderTargetView(d3d12Resource.Get(), rtvDesc, rtvHandle);
 }
 
-CD3DX12_RESOURCE_BARRIER Vertix::RenderTargetView::CreateTransitionBarrier(
+D3D12_RESOURCE_BARRIER Vertix::RenderTargetView::CreateTransitionBarrier(
     const D3D12_RESOURCE_STATES before,
     const D3D12_RESOURCE_STATES after,
     const UINT subresource,

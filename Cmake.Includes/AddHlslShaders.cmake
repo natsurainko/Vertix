@@ -36,20 +36,27 @@ function(add_hlsl_shaders TARGET_NAME)
             endif()
 
             add_custom_command(
-                    OUTPUT ${OUTPUT_H}
+                    OUTPUT ${OUTPUT_H} ${DEP_FILE}
                     COMMAND dxc.exe
-                    -T ${ENTRY_TYPE_LOWER}_${SHADER_MODEL}
-                    -E ${ENTRY_FUNC}
-                    ${COMPILE_FLAGS}
-                    -Fh ${OUTPUT_H}
-                    -Vn ${VARIABLE_NAME}
-                    -MD -MF ${DEP_FILE}
+                        -T ${ENTRY_TYPE_LOWER}_${SHADER_MODEL}
+                        -E ${ENTRY_FUNC}
+                        ${COMPILE_FLAGS}
+                        -Fh ${OUTPUT_H}
+                        -Vn ${VARIABLE_NAME}
+                        ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+                    COMMAND dxc.exe
+                        -T ${ENTRY_TYPE_LOWER}_${SHADER_MODEL}
+                        -E ${ENTRY_FUNC}
+                        ${COMPILE_FLAGS}
+                        -MD -MF ${DEP_FILE}
+                        -Fo nul
                     ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
                     DEPFILE ${DEP_FILE}
                     COMMENT "[DXC] ${FILE}::${ENTRY_FUNC} [${ENTRY_TYPE_LOWER}_${SHADER_MODEL}] -> ${OUTPUT_H}"
                     VERBATIM
             )
+
 
             list(APPEND GENERATED_HEADERS ${OUTPUT_H})
         endforeach()

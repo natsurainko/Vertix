@@ -6,7 +6,6 @@
 #define VERTIX_RENDERTARGETVIEW_H
 
 #include <d3d12/d3d12.h>
-#include <d3d12/d3dx12_barriers.h>
 #include <wrl/client.h>
 
 #include "Math/Vector2D.hpp"
@@ -24,7 +23,7 @@ namespace Vertix {
             const D3D12_CLEAR_VALUE &clearValue = { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } });
 
         [[nodiscard]]
-        CD3DX12_RESOURCE_BARRIER CreateTransitionBarrier(
+        D3D12_RESOURCE_BARRIER CreateTransitionBarrier(
             D3D12_RESOURCE_STATES before,
             D3D12_RESOURCE_STATES after,
             UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
