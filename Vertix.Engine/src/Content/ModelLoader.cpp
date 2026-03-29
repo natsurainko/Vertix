@@ -204,13 +204,17 @@ void Vertix::Engine::ModelAsyncLoader::LoadModelAsync(
     );
 }
 
-void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(DispatcherQueue *dispatcherQueue) {
+void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(
+    DispatcherQueue* dispatcherQueue,
+    std::function<void()> endCallback)
+{
     std::thread([
-        requests   = std::move(modelLoadRequests),
+        requests    = std::move(modelLoadRequests),
         materialLoadCallback = std::move(materialLoadCallback),
-        device     = d3d12Device,
-        copyQueue  = copyCommandQueue,
-        pool       = modelPool,
+        device      = d3d12Device,
+        copyQueue   = copyCommandQueue,
+        pool        = modelPool,
+        endCallback = std::move(endCallback),
         dispatcherQueue
     ]() mutable -> void
     {
@@ -232,7 +236,7 @@ void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(DispatcherQueue *dispatcherQ
                     context->Model->UploadToGPU(device, commandList, resourceUploadHeap);
                 };
 
-                ModelLoader::TryLoadFromFile(callback, filePath, options, loadMaterial ? &materialLoadCallback : nullptr);
+                ModelLoader::TryLoadFromFile(callback, filePath, options, loadMaterial && materialLoadCallback ? &materialLoadCallback : nullptr);
             }
         }
         copyCommandList.EndCommand();
@@ -240,10 +244,15 @@ void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(DispatcherQueue *dispatcherQ
 
         dispatcherQueue->Enqueue([
             modelFulfills = std::move(modelLoadingContexts),
-            pool
+            pool,
+            endCallback = std::move(endCallback)
         ] {
             for (const auto &[handle, model] : modelFulfills) {
                 pool->Fulfill(handle, std::unique_ptr<Model>(model));
+            }
+
+            if (endCallback) {
+                endCallback();
             }
         });
     }).detach();

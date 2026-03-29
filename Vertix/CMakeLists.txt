@@ -10,12 +10,15 @@ target_sources(Vertix
         src/Graphics/SwapChain.cpp
         src/Graphics/Buffers/VertexBuffer.cpp
         src/Graphics/Buffers/IndexBuffer.cpp
+        src/Graphics/Raytracing/BottomLevelAccelerationStructure.cpp
+        src/Graphics/Raytracing/TopLevelAccelerationStructure.cpp
         src/Hosting/GameApplication.cpp
         src/Primitive/Mesh.cpp
         src/Primitive/Model.cpp
         src/Rendering/DepthStencilView.cpp
         src/Rendering/HlslShader.cpp
         src/Rendering/RenderTargetView.cpp
+        src/Rendering/UnorderedAccessView.cpp
         src/Windowing/GameWindow.cpp
     PUBLIC
         FILE_SET HEADERS
@@ -36,6 +39,8 @@ target_sources(Vertix
             include/Graphics/Buffers/ConstantBuffer.hpp
             include/Graphics/Buffers/ConstantBufferPageArray.hpp
             include/Graphics/Buffers/StructuredBuffer.hpp
+            include/Graphics/Raytracing/BottomLevelAccelerationStructure.h
+            include/Graphics/Raytracing/TopLevelAccelerationStructure.h
             include/Helpers/FormatsHelper.h
             include/Hosting/GameApplication.h
             include/Hosting/GameApplicationBuilder.hpp
@@ -55,6 +60,7 @@ target_sources(Vertix
             include/Primitive/Texture.h
             include/Rendering/DepthStencilView.h
             include/Rendering/RenderTargetView.h
+            include/Rendering/UnorderedAccessView.h
             include/Rendering/HlslShader.h
             include/Rendering/RenderPass.hpp
             include/Rendering/RenderPipeline.hpp

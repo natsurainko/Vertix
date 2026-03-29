@@ -108,7 +108,9 @@ namespace Vertix::Engine {
             const std::function<void(ModelHandle)> &modelLoadedCallback = nullptr,
             bool tryLoadMaterials = true);
 
-        void ExecuteAsync(DispatcherQueue* dispatcherQueue);
+        void ExecuteAsync(
+            DispatcherQueue* dispatcherQueue,
+            std::function<void()> endCallback = nullptr);
 
     private:
         ModelPool* modelPool;

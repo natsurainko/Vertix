@@ -12,9 +12,10 @@
 
 #include "Material.h"
 #include "Vertex.h"
+#include "VERTIX_EXPORT.h"
+#include "Graphics/Raytracing/BottomLevelAccelerationStructure.h"
 #include "Graphics/Buffers/IndexBuffer.h"
 #include "Graphics/Buffers/VertexBuffer.h"
-#include "VERTIX_EXPORT.h"
 
 namespace Vertix {
     class ResourceUploadHeap;
@@ -27,6 +28,7 @@ namespace Vertix {
 
         VertexBuffer* VertexBuffer = nullptr;
         IndexBuffer* IndexBuffer = nullptr;
+        BottomLevelAccelerationStructure* BLAS = nullptr;
 
         MaterialHandle Material;
 
@@ -36,6 +38,10 @@ namespace Vertix {
             const Microsoft::WRL::ComPtr<ID3D12Device> &device,
             const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
             ResourceUploadHeap &resourceUploadHeap);
+
+        void UploadBLASToGPU(
+            const Microsoft::WRL::ComPtr<ID3D12Device5> &device,
+            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> &commandList);
 
         void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList) const;
 

@@ -5,10 +5,7 @@
 #include "Primitive/Mesh.h"
 
 #include <d3d12/d3dx12_barriers.h>
-#include <d3d12/d3dx12_core.h>
-#include <d3d12/d3dx12_resource_helpers.h>
 
-#include "Exceptions/HResultException.h"
 #include "Graphics/FrameCommandList.h"
 #include "Graphics/GraphicsDevice.h"
 #include "Graphics/ResourceUploadHeap.hpp"
@@ -18,6 +15,7 @@ using Microsoft::WRL::ComPtr;
 Vertix::Mesh::~Mesh() {
     delete VertexBuffer;
     delete IndexBuffer;
+    delete BLAS;
 }
 
 void Vertix::Mesh::UploadToGPU(
@@ -27,6 +25,12 @@ void Vertix::Mesh::UploadToGPU(
 {
     VertexBuffer = VertexBuffer::Create(Vertices, device, commandList, resourceUploadHeap);
     IndexBuffer = IndexBuffer::Create(Indices, device, commandList, resourceUploadHeap);
+}
+
+void Vertix::Mesh::UploadBLASToGPU(
+    const ComPtr<ID3D12Device5> &device,
+    const ComPtr<ID3D12GraphicsCommandList4> &commandList) {
+    BLAS = BottomLevelAccelerationStructure::Create(device, commandList, this);
 }
 
 void Vertix::Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList> &commandList) const {

@@ -17,6 +17,15 @@ void Vertix::Model::UploadToGPU(
     }
 }
 
+void Vertix::Model::UploadBLASToGPU(
+    const Microsoft::WRL::ComPtr<ID3D12Device5> &device,
+    const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> &commandList)
+{
+    for (auto &mesh: Meshes) {
+        mesh.UploadBLASToGPU(device, commandList);
+    }
+}
+
 void Vertix::Model::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList) const {
     for (auto &mesh: Meshes) {
         mesh.Draw(commandList);
