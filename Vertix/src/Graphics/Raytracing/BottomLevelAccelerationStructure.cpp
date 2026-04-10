@@ -63,10 +63,6 @@ Vertix::BottomLevelAccelerationStructure* Vertix::BottomLevelAccelerationStructu
         nullptr,
         IID_PPV_ARGS(&blas->BLASScratchResource)));
 
-    mesh->VertexBuffer->d3d12Resource->SetName(L"BLAS Vertex Buffer");
-    mesh->IndexBuffer->d3d12Resource->SetName(L"BLAS Index Buffer");
-    blas->BLASResource->SetName(L"BLAS Resource Buffer");
-
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {};
     buildDesc.Inputs = inputs;
     buildDesc.DestAccelerationStructureData = blas->BLASResource->GetGPUVirtualAddress();

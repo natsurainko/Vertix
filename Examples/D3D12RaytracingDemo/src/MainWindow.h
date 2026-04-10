@@ -45,6 +45,7 @@ private:
     Vertix::Engine::DefaultRotationController defaultRotationController {&mouseControllerInput};
 
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> copyCommandQueue;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> computeCommandQueue;
 };
 
 #endif //VERTIX_MAINWINDOW_H

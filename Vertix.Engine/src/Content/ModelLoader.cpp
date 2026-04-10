@@ -209,19 +209,21 @@ void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(
     std::function<void()> endCallback)
 {
     std::thread([
-        requests    = std::move(modelLoadRequests),
+        requests     = std::move(modelLoadRequests),
         materialLoadCallback = std::move(materialLoadCallback),
-        device      = d3d12Device,
-        copyQueue   = copyCommandQueue,
-        pool        = modelPool,
-        endCallback = std::move(endCallback),
+        device       = d3d12Device,
+        copyQueue    = copyCommandQueue,
+        computeQueue = computeCommandQueue,
+        pool         = modelPool,
+        endCallback  = std::move(endCallback),
+        createBLAS   = createRaytracingAccelerationStructure,
         dispatcherQueue
     ]() mutable -> void
     {
-        ResourceUploadHeap resourceUploadHeap{};
-        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
         std::vector<ModelLoadingContext> modelLoadingContexts;
 
+        ResourceUploadHeap resourceUploadHeap{};
+        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
         copyCommandList.BeginCommand(nullptr);
         {
             const auto& commandList = copyCommandList.GetD3D12GraphicsCommandList();
@@ -241,6 +243,19 @@ void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(
         }
         copyCommandList.EndCommand();
         copyCommandList.WaitForCommand();
+
+        if (createBLAS && computeQueue) {
+            GraphicsCommandList computeCommandList(device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+            computeCommandList.BeginCommand(nullptr);
+            {
+                const auto& commandList = computeCommandList.GetD3D12GraphicsCommandList();
+                for (const auto &[handle, model] : modelLoadingContexts) {
+                    model->UploadBLASToGPU(device, commandList);
+                }
+            }
+            computeCommandList.EndCommand();
+            computeCommandList.WaitForCommand();
+        }
 
         dispatcherQueue->Enqueue([
             modelFulfills = std::move(modelLoadingContexts),

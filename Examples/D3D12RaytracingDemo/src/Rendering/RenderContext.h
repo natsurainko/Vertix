@@ -7,6 +7,7 @@
 
 #include <d3d12/d3dx12_core.h>
 #include <structures.h>
+#include <thread>
 
 #include "Camera/PerspectiveCamera.h"
 #include "Graphics/DescriptorHeap.h"
@@ -42,12 +43,11 @@ public:
         perspectiveCamera.Move({-2.5, 0.5, 0.0});
     }
 
-    std::vector<std::unique_ptr<Vertix::Engine::SceneObject3D>> sceneObjects;
+    std::vector<std::shared_ptr<Vertix::Engine::SceneObject3D>> sceneObjects;
 
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
-    ID3D12Resource* currentFrameBuffer = nullptr;
-    std::unique_ptr<Vertix::TopLevelAccelerationStructure> TLAS = nullptr;
+    std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
     std::unique_ptr<Vertix::VertexBuffer> fullScreenVertex = nullptr;
 
     Vertix::ConstantBuffer<FrameConstants> frameConstantsBuffer;
@@ -75,48 +75,49 @@ public:
     CD3DX12_VIEWPORT viewport{0.f,0.f, 0.f, 0.f};
     CD3DX12_RECT scissorRect{};
 
-    void BuildTLAS() {
-        if (TLAS) {
-            TLAS.reset();
-        }
+    void BuildTLASAsync(const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& computeCommandQueue) {
+        std::thread([
+            d3d12Device  = graphicsDevice->GetD3D12Device(),
+            computeQueue = computeCommandQueue,
+            sceneObjects = sceneObjects,
+            srvHandle    = tlasSrvHandle,
+            tlasOut      = &TLAS
+        ]() -> void {
+            Vertix::GraphicsCommandList graphicsCommandList { d3d12Device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE };
+            const auto& commandList = graphicsCommandList.GetD3D12GraphicsCommandList();
+            graphicsCommandList.BeginCommand(nullptr);
+            {
+                UINT instanceId = 1;
+                std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDescs;
 
-        Vertix::GraphicsCommandList graphicsCommandList { graphicsDevice->GetD3D12Device(), graphicsDevice->GetDefaultD3D12CommandQueue() };
-
-        const auto d3d12Device = graphicsDevice->GetD3D12Device();
-        const auto& commandList = graphicsCommandList.GetD3D12GraphicsCommandList();
-        graphicsCommandList.BeginCommand(nullptr);
-        {
-            UINT instanceId = 1;
-            std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDescs;
-
-            for (const auto &sceneObject : sceneObjects) {
-                sceneObject->SceneModel->UploadBLASToGPU(d3d12Device, commandList);
-                const auto world = sceneObject->GetWorldMatrix();
-                for (const auto &mesh : sceneObject->SceneModel->Meshes) {
-                    D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
-                    instanceDesc.AccelerationStructure = mesh.BLAS->BLASResource->GetGPUVirtualAddress();
-                    instanceDesc.InstanceID = instanceId++;
-                    instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-                    instanceDesc.InstanceContributionToHitGroupIndex = 0;
-                    instanceDesc.InstanceMask = 0xFF;
-                    instanceDesc.Transform[0][0] = world._11; instanceDesc.Transform[0][1] = world._21; instanceDesc.Transform[0][2] = world._31; instanceDesc.Transform[0][3] = world._41;
-                    instanceDesc.Transform[1][0] = world._12; instanceDesc.Transform[1][1] = world._22; instanceDesc.Transform[1][2] = world._32; instanceDesc.Transform[1][3] = world._42;
-                    instanceDesc.Transform[2][0] = world._13; instanceDesc.Transform[2][1] = world._23; instanceDesc.Transform[2][2] = world._33; instanceDesc.Transform[2][3] = world._43;
-                    instanceDescs.emplace_back(instanceDesc);
+                for (const auto &sceneObject : sceneObjects) {
+                    const auto world = sceneObject->GetWorldMatrix();
+                    for (const auto &mesh : sceneObject->SceneModel->Meshes) {
+                        D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
+                        instanceDesc.AccelerationStructure = mesh.BLAS->BLASResource->GetGPUVirtualAddress();
+                        instanceDesc.InstanceID = instanceId++;
+                        instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+                        instanceDesc.InstanceContributionToHitGroupIndex = 0;
+                        instanceDesc.InstanceMask = 0xFF;
+                        instanceDesc.Transform[0][0] = world._11; instanceDesc.Transform[0][1] = world._21; instanceDesc.Transform[0][2] = world._31; instanceDesc.Transform[0][3] = world._41;
+                        instanceDesc.Transform[1][0] = world._12; instanceDesc.Transform[1][1] = world._22; instanceDesc.Transform[1][2] = world._32; instanceDesc.Transform[1][3] = world._42;
+                        instanceDesc.Transform[2][0] = world._13; instanceDesc.Transform[2][1] = world._23; instanceDesc.Transform[2][2] = world._33; instanceDesc.Transform[2][3] = world._43;
+                        instanceDescs.emplace_back(instanceDesc);
+                    }
                 }
+
+                auto tlas = Vertix::TopLevelAccelerationStructure::Create(d3d12Device, commandList, instanceDescs);
+                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                srvDesc.RaytracingAccelerationStructure.Location = tlas->TLASResource->GetGPUVirtualAddress();
+                d3d12Device->CreateShaderResourceView(nullptr, &srvDesc, srvHandle);
+
+                tlasOut->store(std::shared_ptr<Vertix::TopLevelAccelerationStructure>(tlas), std::memory_order_release);
             }
-
-            TLAS = std::unique_ptr<Vertix::TopLevelAccelerationStructure>(
-                Vertix::TopLevelAccelerationStructure::Create(d3d12Device, commandList, instanceDescs));
-
-            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
-            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-            srvDesc.RaytracingAccelerationStructure.Location = TLAS->TLASResource->GetGPUVirtualAddress();
-            d3d12Device->CreateShaderResourceView(nullptr, &srvDesc, tlasSrvHandle);
-        }
-        graphicsCommandList.EndCommand();
-        graphicsCommandList.WaitForCommand();
+            graphicsCommandList.EndCommand();
+            graphicsCommandList.WaitForCommand();
+        }).detach();
     }
 
     void UpdateFrameConstants() {
@@ -159,7 +160,7 @@ public:
         .LightIntensity = 4.5f,
     };
 private:
-    const Vertix::GraphicsDevice *graphicsDevice = nullptr;
+    const Vertix::GraphicsDevice* graphicsDevice = nullptr;
 
     FrameConstants frameConstants;
     ObjectConstants objectConstants{};

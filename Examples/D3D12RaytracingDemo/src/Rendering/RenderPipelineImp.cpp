@@ -40,8 +40,6 @@ void RenderPipelineImp::Execute() {
     if (window->GetWindowState() == Vertix::Minimized) return;
 
     const auto rtvResource = swapChain->GetCurrentFrameRenderTargetResource().Get();
-    renderContext->currentFrameBuffer = rtvResource;
-
     const auto toRTBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rtvResource, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     const auto toPresBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rtvResource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 

@@ -188,7 +188,7 @@ void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderCont
 }
 
 void RayTracingShadowPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
-    if (!renderContext->TLAS) return;
+    if (!renderContext->TLAS.load(std::memory_order_acquire)) return;
 
     D3D12_DISPATCH_RAYS_DESC raytraceDesc = {};
     raytraceDesc.Width = renderContext->windowSize.X;

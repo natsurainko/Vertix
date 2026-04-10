@@ -90,7 +90,7 @@ namespace Vertix::Engine {
 
         struct ModelLoadingContext {
             ModelHandle Handle;
-            Model* ModelPtr;
+            Model* ModelPtr = nullptr;
         };
 
     public:
@@ -98,9 +98,12 @@ namespace Vertix::Engine {
             ModelPool* modelPool,
             GraphicsDevice* graphicsDevice,
             const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &copyCommandQueue,
-            std::function<void(ModelMaterialLoadCallbackContext*)> materialLoadCallback = nullptr)
+            const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &computeCommandQueue = nullptr,
+            std::function<void(ModelMaterialLoadCallbackContext*)> materialLoadCallback = nullptr,
+            const bool createRaytracingAccelerationStructure = false)
             : modelPool(modelPool), graphicsDevice(graphicsDevice), materialLoadCallback(std::move(materialLoadCallback)),
-              copyCommandQueue(copyCommandQueue), d3d12Device(graphicsDevice->GetD3D12Device()) {}
+              copyCommandQueue(copyCommandQueue), computeCommandQueue(computeCommandQueue), d3d12Device(graphicsDevice->GetD3D12Device()),
+              createRaytracingAccelerationStructure(createRaytracingAccelerationStructure) {}
 
         void LoadModelAsync(
             const std::string &filePath,
@@ -120,7 +123,10 @@ namespace Vertix::Engine {
         std::function<void(ModelMaterialLoadCallbackContext*)> materialLoadCallback;
 
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> copyCommandQueue;
+        Microsoft::WRL::ComPtr<ID3D12CommandQueue> computeCommandQueue;
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
+
+        bool createRaytracingAccelerationStructure = false;
     };
 }
 

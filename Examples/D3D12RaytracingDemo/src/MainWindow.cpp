@@ -23,14 +23,18 @@ void MainWindow::OnInitialize() {
         .Type = D3D12_COMMAND_LIST_TYPE_COPY,
         .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE
     });
+    graphicsDevice->CreateCommandQueue(computeCommandQueue, {
+        .Type = D3D12_COMMAND_LIST_TYPE_COMPUTE,
+        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE
+    });
 
-    Vertix::Engine::ModelAsyncLoader modelAsyncLoader {&renderContext->modelPool, graphicsDevice, copyCommandQueue};
+    Vertix::Engine::ModelAsyncLoader modelAsyncLoader {&renderContext->modelPool, graphicsDevice, copyCommandQueue, computeCommandQueue, nullptr, true};
     modelAsyncLoader.LoadModelAsync("assets/block.fbx", {}, [
         modelPool = &renderContext->modelPool,
         sceneObjects = &renderContext->sceneObjects
     ] (const Vertix::ModelHandle handle) -> void {
         auto* model = modelPool->Get(handle);
-        auto* sceneObject = sceneObjects->emplace_back(std::make_unique<Vertix::Engine::SceneObject3D>()).get();
+        auto* sceneObject = sceneObjects->emplace_back(std::make_shared<Vertix::Engine::SceneObject3D>()).get();
 
         sceneObject->SceneModel = model;
         sceneObject->SetScale(model->Transformation.Scale);
@@ -42,14 +46,14 @@ void MainWindow::OnInitialize() {
         sceneObjects = &renderContext->sceneObjects
     ] (const Vertix::ModelHandle handle) -> void {
         auto* model = modelPool->Get(handle);
-        auto* sceneObject = sceneObjects->emplace_back(std::make_unique<Vertix::Engine::SceneObject3D>()).get();
+        auto* sceneObject = sceneObjects->emplace_back(std::make_shared<Vertix::Engine::SceneObject3D>()).get();
 
         sceneObject->SceneModel = model;
         sceneObject->SetScale(model->Transformation.Scale);
         sceneObject->SetPosition(model->Transformation.Position);
         sceneObject->SetOrientation(model->Transformation.Orientation);
     });
-    modelAsyncLoader.ExecuteAsync(&dispatcherQueue, [&]() -> void { renderContext->BuildTLAS(); });
+    modelAsyncLoader.ExecuteAsync(&dispatcherQueue, [&]() -> void { renderContext->BuildTLASAsync(computeCommandQueue); });
 }
 
 void MainWindow::OnRender(const double deltaTime) {
