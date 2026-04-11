@@ -9,7 +9,6 @@
 
 #include "ResourcePool.hpp"
 #include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsCommandList.h"
 #include "Primitive/Texture.h"
 
 namespace Vertix {

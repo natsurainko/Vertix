@@ -89,12 +89,6 @@ namespace Vertix {
 
         StructuredBuffer<TConstants> constantBuffer;
     };
-
-    template<uint32_t Capacity = 1024>
-    class DefaultMaterialPool : public MaterialPool<DefaultMaterialConstants, Capacity> {
-    public:
-        explicit DefaultMaterialPool(const GraphicsDevice* graphicsDevice) : MaterialPool<DefaultMaterialConstants, Capacity>(graphicsDevice) {}
-    };
 }
 
 #endif //VERTIX_MATERIALPOOL_H

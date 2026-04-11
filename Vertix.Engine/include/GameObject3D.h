@@ -51,17 +51,17 @@ namespace Vertix::Engine {
             return orientation;
         }
 
-        void SetPosition(const DirectX::SimpleMath::Vector3 &newPosition) noexcept {
+        virtual void SetPosition(const DirectX::SimpleMath::Vector3 &newPosition) noexcept {
             this->position = newPosition;
             UpdateWorldMatrix();
         }
 
-        void SetOrientation(const DirectX::SimpleMath::Quaternion &newOrientation) noexcept {
+        virtual void SetOrientation(const DirectX::SimpleMath::Quaternion &newOrientation) noexcept {
             this->orientation = newOrientation;
             UpdateWorldMatrix();
         }
 
-        void SetScale(const DirectX::SimpleMath::Vector3 &newScale) noexcept {
+        virtual void SetScale(const DirectX::SimpleMath::Vector3 &newScale) noexcept {
             this->scale = newScale;
             UpdateWorldMatrix();
         }

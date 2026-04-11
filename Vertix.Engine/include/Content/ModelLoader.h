@@ -19,22 +19,17 @@ namespace Vertix::Engine {
     struct ModelLoadOptions {
         bool ApplyTransformationToModel = true;
         unsigned int AssimpPostProcessSteps =
-                aiProcess_Triangulate |
-                aiProcess_GenSmoothNormals |
-                aiProcess_CalcTangentSpace |
-                aiProcess_MakeLeftHanded |
-                aiProcess_FlipUVs |
-                aiProcess_OptimizeMeshes;
-    };
-
-    struct ModelTextureDeclaration {
-        aiTextureType Type;
-        std::string FilePath;
+            aiProcess_Triangulate |
+            aiProcess_GenSmoothNormals |
+            aiProcess_CalcTangentSpace |
+            aiProcess_FlipWindingOrder |
+            aiProcess_FlipUVs |
+            aiProcess_OptimizeMeshes;
     };
 
     struct ModelMaterialDeclaration {
+        const aiMaterial* AssimpMaterial;
         std::string Name;
-        std::vector<ModelTextureDeclaration> Textures;
     };
 
     struct ModelMaterialLoadCallbackContext {

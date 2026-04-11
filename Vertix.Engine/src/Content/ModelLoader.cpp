@@ -102,27 +102,15 @@ void Vertix::Engine::ModelLoader::ProcessMaterial(
     };
 
     for (unsigned int mi = 0; mi  < scene->mNumMaterials; mi ++) {
-        const aiMaterial* mat = scene->mMaterials[mi];
+        const aiMaterial* aiMaterial = scene->mMaterials[mi];
 
         aiString matName;
-        mat->Get(AI_MATKEY_NAME, matName);
+        aiMaterial->Get(AI_MATKEY_NAME, matName);
 
         ModelMaterialDeclaration materialDeclaration {
+            .AssimpMaterial = aiMaterial,
             .Name = matName.length > 0 ? matName.C_Str() : "UnnamedMaterial",
         };
-
-        for (int t = 1; t < aiTextureType_GLTF_METALLIC_ROUGHNESS; ++t) {
-            const auto type = static_cast<aiTextureType>(t);
-
-            for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
-                aiString path;
-                mat->GetTexture(type, i, &path);
-
-                if (const bool embedded = path.length > 0 && path.C_Str()[0] == '*'; !embedded) {
-                    materialDeclaration.Textures.emplace_back(type, path.C_Str());
-                }
-            }
-        }
 
         callbackContext.Materials.emplace_back(std::move(materialDeclaration));
     }

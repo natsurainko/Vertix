@@ -6,15 +6,15 @@
 #define VERTIX_TEXTURE_H
 
 #include <wrl/client.h>
+#include <d3d12/d3d12.h>
 
-#include "VERTIX_EXPORT.h"
 #include "Pool/ResourceHandle.h"
 
 namespace Vertix {
     struct TextureTag {};
     using TextureHandle = ResourceHandle<TextureTag>;
 
-    class VERTIX_API Texture {
+    class Texture {
     public:
         explicit Texture(const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource): d3d12Resource(d3d12Resource) {}
         virtual ~Texture() = default;

@@ -10,6 +10,7 @@ target_sources(Vertix.Engine
         src/Input/GameInputInterface.cpp
         src/Input/KeyboardDevice.cpp
         src/Input/MouseDevice.cpp
+        src/Primitive/DefaultPBRMaterial.cpp
         src/GameObject3D.cpp
     PUBLIC
         FILE_SET HEADERS
@@ -34,6 +35,8 @@ target_sources(Vertix.Engine
             include/Input/KeyboardDevice.h
             include/Input/MouseDevice.h
             include/Input/InputDevice.hpp
+            include/Pool/DefaultMaterialPool.hpp
+            include/Primitive/DefaultPBRMaterial.h
             include/Scene/DirectionalLight.h
             include/Scene/SceneObject3D.hpp
             include/GameObject3D.h

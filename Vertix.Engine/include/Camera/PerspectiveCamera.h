@@ -41,6 +41,13 @@ namespace Vertix::Engine {
             projectionMatrix = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(fov, aspect, nearPlane, farPlane);
         }
 
+        void SetOrientation(const DirectX::SimpleMath::Quaternion &newOrientation) noexcept override {
+            GameObject3D::SetOrientation(newOrientation);
+            forward = DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Forward, orientation);
+            right = DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Right, orientation);
+            up = DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Up, orientation);
+        }
+
         [[nodiscard]]
         float GetAspect() const noexcept {
             return aspect;
