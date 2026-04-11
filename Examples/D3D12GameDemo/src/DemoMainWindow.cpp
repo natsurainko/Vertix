@@ -25,7 +25,7 @@ void DemoMainWindow::OnInitialize() {
             // release after command list executed
             Vertix::Engine::ModelLoader::TryLoadFromFile([&](const auto* context) -> void {
                 cubeModel = *context->Model;
-                cubeModel.UploadToGPU(graphicsDevice, frameCommandList, resourceUploadHeap);
+                cubeModel.UploadToGPU(device, frameCommandList->GetD3D12GraphicsCommandList(), resourceUploadHeap);
             }, "assets/models/block.fbx");
         }
         frameCommandList->EndCommand();

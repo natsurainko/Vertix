@@ -39,7 +39,7 @@ private:
 // GameInput Implementation
 
 #include "Input/GameInputInterface.h"
-#include "Input/GeneralKeyboardDevice.h"
+#include "Input/GeneralKeyboardDevice.hpp"
 
 class KeyboardControllerInput : public Vertix::Engine::IControllerInput<DirectX::SimpleMath::Vector3> {
 public:

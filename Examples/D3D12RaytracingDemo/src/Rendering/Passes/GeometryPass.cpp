@@ -122,10 +122,10 @@ void GeometryPass::Initialize(
 void GeometryPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
     constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    commandList->SetDescriptorHeaps(1, renderContext->texturePool.GetDescriptorHeap().GetAddressOf());
+    // commandList->SetDescriptorHeaps(1, renderContext->texturePool.GetDescriptorHeap().GetAddressOf());
     commandList->SetGraphicsRootSignature(rootSignature.Get());
     commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer.GetGpuVirtualAddress());
-    commandList->SetGraphicsRootShaderResourceView(3, renderContext->materialPool.GetGpuVirtualAddress());
+    // commandList->SetGraphicsRootShaderResourceView(3, renderContext->materialPool.GetGpuVirtualAddress());
 
     commandList->OMSetRenderTargets(renderTargetFormats.size(), &rtvHandles[0], FALSE, &dsvHandle);
     commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH , 1.0f, 0, 0, nullptr);

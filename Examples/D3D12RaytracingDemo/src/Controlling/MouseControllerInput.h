@@ -101,7 +101,7 @@ private:
 // GameInput Implementation
 
 #include "Input/GameInputInterface.h"
-#include "Input/GeneralMouseDevice.h"
+#include "Input/GeneralMouseDevice.hpp"
 
 class MouseControllerInput : public Vertix::Engine::IControllerInput<DirectX::SimpleMath::Vector3> {
 public:

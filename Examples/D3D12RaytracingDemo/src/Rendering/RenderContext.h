@@ -17,9 +17,8 @@
 #include "Helpers/MathHelper.h"
 #include "Helpers/VectorHelper.h"
 #include "Math/Vector2D.hpp"
-#include "Pool/MaterialPool.hpp"
+#include "Pool/DefaultMaterialPool.hpp"
 #include "Pool/ModelPool.hpp"
-#include "Pool/TexturePool.hpp"
 #include "Scene/SceneObject3D.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
@@ -33,8 +32,6 @@ public:
         srvUavDescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 512, true),
         rtvDescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV),
         dsvDescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV),
-        texturePool(graphicsDevice),
-        materialPool(graphicsDevice),
         graphicsDevice(graphicsDevice)
     {
         srvUavDescriptorHeap.AllocDescriptorHandle(tlasSrvHandle, tlasSrvGpuHandle);
@@ -67,8 +64,6 @@ public:
     Vertix::DescriptorHeap rtvDescriptorHeap;
     Vertix::DescriptorHeap dsvDescriptorHeap;
 
-    Vertix::TexturePool<> texturePool;
-    Vertix::DefaultMaterialPool<> materialPool;
     Vertix::ModelPool modelPool;
 
     Vertix::Vector2D<UINT> windowSize;
