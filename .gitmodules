@@ -1,0 +1,6 @@
+[submodule "Vertix.Dependencies"]
+	path = dependencies
+	url = https://github.com/natsurainko/Vertix.Dependencies.git
+[submodule "dependencies"]
+	path = dependencies
+	url = https://github.com/natsurainko/Vertix.Dependencies.git

@@ -3,8 +3,8 @@ project(Vertix)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(INCLUDES_DIR ${CMAKE_SOURCE_DIR}/includes)
-set(LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/libraries)
+set(INCLUDES_DIR ${CMAKE_SOURCE_DIR}/dependencies/includes)
+set(LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/dependencies/libraries)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
 link_directories(AFTER ${LIBRARIES_DIR})
@@ -42,7 +42,7 @@ set_target_properties(imgui PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${INCLUDES_DIR}/imgui"
 )
 
-include(Cmake.Includes/AddHlslShaders.cmake)
+include(cmake-modules/AddHlslShaders.cmake)
 
 add_subdirectory(Vertix)
 add_subdirectory(Vertix.Engine)

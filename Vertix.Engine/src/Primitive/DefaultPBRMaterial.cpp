@@ -65,6 +65,7 @@ void Vertix::Engine::DefaultPBRMaterial::ReadTexturesFromAssimp(
 DirectX::WIC_LOADER_FLAGS Vertix::Engine::DefaultPBRMaterial::GetWicLoaderFlags(const aiTextureType aiTextureType) {
     switch (aiTextureType) {
         case aiTextureType_BASE_COLOR:
+        case aiTextureType_DIFFUSE:
         case aiTextureType_LIGHTMAP:
             return DirectX::WIC_LOADER_FORCE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
         default:
