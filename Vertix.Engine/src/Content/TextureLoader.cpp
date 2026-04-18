@@ -4,6 +4,7 @@
 
 #include "Content/TextureLoader.h"
 
+#include <filesystem>
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_resource_helpers.h>
 #include <DirectXTK12/DDSTextureLoader.h>
@@ -258,6 +259,8 @@ void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatche
             copyCommandList.BeginCommand(nullptr);
             {
                 for (const auto &[handle, filePath, flags] : requests) {
+                    if (!std::filesystem::exists(filePath)) continue;
+
                     Texture* texture = filePath.ends_with(L".dds")
                         ? TextureLoader::CreateFromDdsFile(
                             filePath, device,

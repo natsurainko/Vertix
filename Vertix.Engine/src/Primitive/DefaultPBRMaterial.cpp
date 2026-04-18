@@ -48,6 +48,7 @@ void Vertix::Engine::DefaultPBRMaterial::ReadTexturesFromAssimp(
 {
     const std::map<aiTextureType, TextureHandle*> textureTypeToPtr = {
         { aiTextureType_BASE_COLOR, &this->baseColorTexture },
+        { aiTextureType_DIFFUSE, &this->baseColorTexture },
         { aiTextureType_GLTF_METALLIC_ROUGHNESS, &this->metallicRoughnessTexture },
         { aiTextureType_NORMALS, &this->normalTexture },
         { aiTextureType_LIGHTMAP, &this->occlusionTexture },

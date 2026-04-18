@@ -25,8 +25,8 @@ target_sources(Vertix.Engine
             include/Controlling/DefaultPositionController.hpp
             include/Controlling/DefaultRotationController.hpp
             include/Controlling/IControllerInput.hpp
+            include/Effect/Shadow/CascadeShadowMapping.h
             include/Helpers/MathHelper.h
-            include/Helpers/MatrixHelper.h
             include/Helpers/VectorHelper.h
             include/Helpers/FrameCounter.hpp
             include/Input/GeneralKeyboardDevice.hpp
