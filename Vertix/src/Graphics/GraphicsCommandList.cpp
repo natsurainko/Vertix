@@ -2,10 +2,10 @@
 // Created by Natsurainko on 2026/1/13.
 //
 
-#include "Graphics/GraphicsCommandList.h"
+#include "Vertix/Graphics/GraphicsCommandList.h"
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
 
 using Microsoft::WRL::ComPtr;
 

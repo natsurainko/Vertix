@@ -2,13 +2,13 @@
 // Created by Natsurainko on 2026/1/29.
 //
 
-#include "Graphics/DescriptorHeap.h"
+#include "Vertix/Graphics/DescriptorHeap.h"
 
 #include <cassert>
 #include <exception>
+#include <d3d12/d3dx12_root_signature.h>
 
-#include "d3d12/d3dx12_root_signature.h"
-#include "Exceptions/HResultException.h"
+#include "Vertix/Exceptions/HResultException.h"
 
 Vertix::DescriptorHeap::DescriptorHeap(
     const GraphicsDevice *graphicsDevice,

@@ -7,7 +7,7 @@
 #include <LightingPass_PS.h>
 #include <LightingPass_VS.h>
 
-#include "Graphics/SwapChain.h"
+#include "Vertix/Graphics/SwapChain.h"
 
 LightingPass::LightingPass(Vertix::SwapChain *swapChain) : swapChain(swapChain) {}
 

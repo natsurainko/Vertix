@@ -2,9 +2,9 @@
 // Created by Natsurainko on 2026/1/10.
 //
 
-#include "Rendering/HlslShader.h"
+#include "Vertix/Rendering/HlslShader.h"
 
-#include "Exceptions/HResultException.h"
+#include "Vertix/Exceptions/HResultException.h"
 
 using Microsoft::WRL::ComPtr;
 

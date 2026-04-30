@@ -2,15 +2,15 @@
 // Created by Natsurainko on 2026/3/22.
 //
 
-#include "Graphics/Buffers/IndexBuffer.h"
+#include "Vertix/Graphics/Buffers/IndexBuffer.h"
 
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_resource_helpers.h>
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsCommandList.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/ResourceUploadHeap.hpp"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsCommandList.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/ResourceUploadHeap.hpp"
 
 Vertix::IndexBuffer* Vertix::IndexBuffer::Create(
     const std::vector<UINT32> &indices,

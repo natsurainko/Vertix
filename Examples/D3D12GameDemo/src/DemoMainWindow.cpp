@@ -6,11 +6,11 @@
 
 #include <d3d12/d3dx12_barriers.h>
 
-#include "Content/ModelLoader.h"
-#include "Exceptions/HResultException.h"
-#include "Graphics/FrameCommandList.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/SwapChain.h"
+#include "Vertix.Engine/Content/ModelLoader.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/FrameCommandList.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/SwapChain.h"
 
 void DemoMainWindow::OnInitialize() {
     const auto &device = graphicsDevice->GetD3D12Device();

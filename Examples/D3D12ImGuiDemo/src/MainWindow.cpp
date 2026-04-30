@@ -8,8 +8,8 @@
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <imgui/backends/imgui_impl_win32.h>
 
-#include "Graphics/FrameCommandList.h"
-#include "Graphics/SwapChain.h"
+#include "Vertix/Graphics/FrameCommandList.h"
+#include "Vertix/Graphics/SwapChain.h"
 
 void MainWindow::OnInitialize() {
     imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 64, true);
@@ -155,5 +155,3 @@ void MainWindow::OnRender(double deltaTime) {
         commandList->ResourceBarrier(1, &renderTargetToPresentBarrier);
     }
 }
-
-

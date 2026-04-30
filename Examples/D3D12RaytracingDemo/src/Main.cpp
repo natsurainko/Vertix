@@ -5,7 +5,7 @@
 #include <crtdbg.h>
 
 #include "MainWindow.h"
-#include "Hosting/GameApplicationBuilder.hpp"
+#include "Vertix/Hosting/GameApplicationBuilder.hpp"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nShowCmd) {
 #ifndef NDEBUG

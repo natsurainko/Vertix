@@ -2,13 +2,13 @@
 // Created by Natsurainko on 2026/3/28.
 //
 
-#include "Rendering/UnorderedAccessView.h"
+#include "Vertix/Rendering/UnorderedAccessView.h"
 
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_core.h>
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
 
 Vertix::UnorderedAccessView::UnorderedAccessView(
     const GraphicsDevice* graphicsDevice,

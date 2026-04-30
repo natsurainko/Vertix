@@ -2,7 +2,7 @@
 // Created by Natsurainko on 2026/1/25.
 //
 
-#include "Content/ModelLoader.h"
+#include "Vertix.Engine/Content/ModelLoader.h"
 
 #include <assimp/Importer.hpp>
 #include <DirectXTK12/SimpleMath.h>

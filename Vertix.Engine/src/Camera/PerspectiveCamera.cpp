@@ -2,9 +2,9 @@
 // Created by Natsurainko on 2025/12/28.
 //
 
-#include "Camera/PerspectiveCamera.h"
+#include "Vertix.Engine/Camera/PerspectiveCamera.h"
 
-#include "Helpers/MathHelper.h"
+#include "Vertix.Engine/Helpers/MathHelper.h"
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;

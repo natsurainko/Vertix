@@ -4,14 +4,14 @@
 
 #include <utility>
 
-#include "Windowing/GameWindow.h"
+#include "Vertix/Windowing/GameWindow.h"
 
 #include <dwmapi.h>
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/FrameCommandList.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/SwapChain.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/FrameCommandList.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/SwapChain.h"
 
 Vertix::GameWindow::GameWindow() {
     windowSize = windowOptions.windowSize;

@@ -6,7 +6,7 @@
 #define VERTIX_LIGHTINGPASS_H
 
 #include "../RenderContext.h"
-#include "Rendering/RenderPass.hpp"
+#include "Vertix/Rendering/RenderPass.hpp"
 
 class LightingPass : public Vertix::RenderPass<RenderContext> {
 public:

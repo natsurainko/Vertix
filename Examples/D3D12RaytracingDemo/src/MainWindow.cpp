@@ -6,7 +6,7 @@
 
 #include <filesystem>
 
-#include "Content/ModelLoader.h"
+#include "Vertix.Engine/Content/ModelLoader.h"
 
 void MainWindow::OnInitialize() {
     renderPipeline = new RenderPipelineImp(graphicsDevice, frameCommandList, this);

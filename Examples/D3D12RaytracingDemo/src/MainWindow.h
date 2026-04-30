@@ -6,13 +6,13 @@
 #define VERTIX_MAINWINDOW_H
 
 #include <imgui/imgui.h>
+#include <Vertix.Engine/Controlling/DefaultPositionController.hpp>
+#include <Vertix.Engine/Controlling/DefaultRotationController.hpp>
+#include <Vertix/Windowing/GameWindow.h>
 
-#include "Controlling/DefaultPositionController.hpp"
-#include "Controlling/DefaultRotationController.hpp"
 #include "Controlling/KeyboardControllerInput.h"
 #include "Controlling/MouseControllerInput.h"
 #include "Rendering/RenderPipelineImp.h"
-#include "Windowing/GameWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

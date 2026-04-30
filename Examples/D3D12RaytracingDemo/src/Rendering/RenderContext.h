@@ -5,21 +5,21 @@
 #ifndef VERTIX_RENDERCONTEXT_H
 #define VERTIX_RENDERCONTEXT_H
 
-#include <d3d12/d3dx12_core.h>
 #include <structures.h>
 #include <thread>
+#include <d3d12/d3dx12_core.h>
 
-#include "Camera/PerspectiveCamera.h"
-#include "Graphics/DescriptorHeap.h"
-#include "Graphics/Buffers/ConstantBuffer.hpp"
-#include "Graphics/Buffers/ConstantBufferPageArray.hpp"
-#include "Graphics/Raytracing/TopLevelAccelerationStructure.h"
-#include "Helpers/MathHelper.h"
-#include "Helpers/VectorHelper.h"
-#include "Math/Vector2D.hpp"
-#include "Pool/DefaultMaterialPool.hpp"
-#include "Pool/ModelPool.hpp"
-#include "Scene/SceneObject3D.hpp"
+#include "Vertix.Engine/Camera/PerspectiveCamera.h"
+#include "Vertix/Graphics/DescriptorHeap.h"
+#include "Vertix/Graphics/Buffers/ConstantBuffer.hpp"
+#include "Vertix/Graphics/Buffers/ConstantBufferPageArray.hpp"
+#include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
+#include "Vertix.Engine/Helpers/MathHelper.h"
+#include "Vertix.Engine/Helpers/VectorHelper.h"
+#include "Vertix.Engine/Pool/DefaultMaterialPool.hpp"
+#include "Vertix.Engine/Scene/SceneObject3D.hpp"
+#include "Vertix/Math/Vector2D.hpp"
+#include "Vertix/Pool/ModelPool.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 

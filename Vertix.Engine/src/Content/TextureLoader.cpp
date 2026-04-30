@@ -2,16 +2,16 @@
 // Created by Natsurainko on 2026/3/17.
 //
 
-#include "Content/TextureLoader.h"
+#include "Vertix.Engine/Content/TextureLoader.h"
 
 #include <filesystem>
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_resource_helpers.h>
 #include <DirectXTK12/DDSTextureLoader.h>
+#include <Vertix/Exceptions/HResultException.h>
+#include <Vertix/Graphics/GraphicsDevice.h>
 
-#include "Content/TextureMipmapGenerator.h"
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix.Engine/Content/TextureMipmapGenerator.h"
 
 Vertix::Texture2D* Vertix::Engine::TextureLoader::CreatePixelColorTexture(
     const float color[4],

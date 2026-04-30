@@ -7,9 +7,9 @@
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <imgui/backends/imgui_impl_win32.h>
 
-#include "Graphics/DescriptorHeap.h"
-#include "Graphics/SwapChain.h"
-#include "Windowing/GameWindow.h"
+#include "Vertix/Graphics/DescriptorHeap.h"
+#include "Vertix/Graphics/SwapChain.h"
+#include "Vertix/Windowing/GameWindow.h"
 
 ImGuiPass::ImGuiPass(const Vertix::GameWindow *window) : window(window) {
     swapChain = window->GetSwapChain();

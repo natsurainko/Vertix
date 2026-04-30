@@ -8,9 +8,9 @@
 #include <array>
 
 #include "../RenderContext.h"
-#include "Rendering/DepthStencilView.h"
-#include "Rendering/RenderPass.hpp"
-#include "Rendering/RenderTargetView.h"
+#include "Vertix/Rendering/DepthStencilView.h"
+#include "Vertix/Rendering/RenderPass.hpp"
+#include "Vertix/Rendering/RenderTargetView.h"
 
 constexpr std::array renderTargetFormats = {
     DXGI_FORMAT_R16G16B16A16_FLOAT,

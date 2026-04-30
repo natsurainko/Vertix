@@ -2,9 +2,9 @@
 // Created by Natsurainko on 2026/1/25.
 //
 
-#include "Input/KeyboardDevice.h"
+#include "Vertix.Engine/Input/KeyboardDevice.h"
 
-#include "Exceptions/HResultException.h"
+#include <Vertix/Exceptions/HResultException.h>
 
 using namespace GameInput::v3;
 using Microsoft::WRL::ComPtr;

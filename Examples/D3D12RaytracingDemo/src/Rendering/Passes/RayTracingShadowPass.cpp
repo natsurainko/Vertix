@@ -8,7 +8,7 @@
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "Exceptions/HResultException.h"
+#include "Vertix/Exceptions/HResultException.h"
 
 #define align_to(_alignment, _val) (((_val + _alignment - 1) / _alignment) * _alignment)
 

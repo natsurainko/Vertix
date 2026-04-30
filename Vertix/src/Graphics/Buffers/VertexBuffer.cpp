@@ -2,15 +2,15 @@
 // Created by Natsurainko on 2026/2/2.
 //
 
-#include "Graphics/Buffers/VertexBuffer.h"
+#include "Vertix/Graphics/Buffers/VertexBuffer.h"
 
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_resource_helpers.h>
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsCommandList.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/ResourceUploadHeap.hpp"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsCommandList.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/ResourceUploadHeap.hpp"
 
 Vertix::VertexBuffer* Vertix::VertexBuffer::Create(
     const std::vector<Vertex> &vertices,

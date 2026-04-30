@@ -2,13 +2,13 @@
 // Created by Natsurainko on 2026/3/28.
 //
 
-#include "Graphics/Raytracing/BottomLevelAccelerationStructure.h"
+#include "Vertix/Graphics/Raytracing/BottomLevelAccelerationStructure.h"
 
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_core.h>
 
-#include "Exceptions/HResultException.h"
-#include "Primitive/Mesh.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Primitive/Mesh.h"
 
 Vertix::BottomLevelAccelerationStructure* Vertix::BottomLevelAccelerationStructure::Create(
     const Microsoft::WRL::ComPtr<ID3D12Device5> &d3d12Device,

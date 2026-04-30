@@ -6,9 +6,9 @@
 #define D3D12_RENDER_PIPELINE_DEMO_RENDER_PIPELINE_IMP_H
 
 #include "RenderContext.h"
-#include "Graphics/FrameCommandList.h"
-#include "Rendering/RenderPipeline.hpp"
-#include "Windowing/GameWindow.h"
+#include "Vertix/Graphics/FrameCommandList.h"
+#include "Vertix/Rendering/RenderPipeline.hpp"
+#include "Vertix/Windowing/GameWindow.h"
 
 class RenderPipelineImp : public Vertix::RenderPipeline<RenderContext> {
 public:

@@ -2,10 +2,10 @@
 // Created by Natsurainko on 2025/12/23.
 //
 
-#include "Graphics/SwapChain.h"
+#include "Vertix/Graphics/SwapChain.h"
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
 
 using Microsoft::WRL::ComPtr;
 

@@ -2,12 +2,12 @@
 // Created by Natsurainko on 2026/3/28.
 //
 
-#include "Graphics/Raytracing/TopLevelAccelerationStructure.h"
+#include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
 
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_core.h>
 
-#include "Exceptions/HResultException.h"
+#include "Vertix/Exceptions/HResultException.h"
 
 Vertix::TopLevelAccelerationStructure* Vertix::TopLevelAccelerationStructure::Create(
     const Microsoft::WRL::ComPtr<ID3D12Device5> &d3d12Device,

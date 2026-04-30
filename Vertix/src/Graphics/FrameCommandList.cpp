@@ -2,11 +2,11 @@
 // Created by Natsurainko on 2025/12/24.
 //
 
-#include "Graphics/FrameCommandList.h"
+#include "Vertix/Graphics/FrameCommandList.h"
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/SwapChain.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/SwapChain.h"
 
 using Microsoft::WRL::ComPtr;
 

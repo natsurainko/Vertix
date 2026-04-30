@@ -2,10 +2,10 @@
 // Created by Natsurainko on 2026/1/13.
 //
 
-#include "Primitive/Model.h"
+#include "Vertix/Primitive/Model.h"
 
-#include "Graphics/FrameCommandList.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/FrameCommandList.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
 
 void Vertix::Model::UploadToGPU(
     const Microsoft::WRL::ComPtr<ID3D12Device> &device,

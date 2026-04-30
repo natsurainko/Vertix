@@ -2,12 +2,12 @@
 // Created by Natsurainko on 2026/1/25.
 //
 
-#include "Input/GameInputInterface.h"
+#include "Vertix.Engine/Input/GameInputInterface.h"
 
 #include <GameInput/GameInput.h>
+#include <Vertix/Exceptions/HResultException.h>
 
-#include "Exceptions/HResultException.h"
-#include "Input/InputDevice.hpp"
+#include "Vertix.Engine/Input/InputDevice.hpp"
 
 using namespace GameInput::v3;
 using Microsoft::WRL::ComPtr;

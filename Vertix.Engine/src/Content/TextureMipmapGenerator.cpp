@@ -2,18 +2,17 @@
 // Created by Natsurainko on 2026/3/23.
 //
 
-#include "Content/TextureMipmapGenerator.h"
+#include "Vertix.Engine/Content/TextureMipmapGenerator.h"
 
 #include <GenerateMipmap_CS.h>
 #include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_root_signature.h>
-
-#include "Exceptions/HResultException.h"
-#include "Graphics/DescriptorHeap.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/ResourceUploadHeap.hpp"
-#include "Helpers/FormatsHelper.h"
+#include <Vertix/Exceptions/HResultException.h>
+#include <Vertix/Graphics/DescriptorHeap.h>
+#include <Vertix/Graphics/GraphicsDevice.h>
+#include <Vertix/Graphics/ResourceUploadHeap.hpp>
+#include <Vertix/Helpers/FormatsHelper.h>
 
 Vertix::Engine::TextureMipmapGenerator::TextureMipmapGenerator(const GraphicsDevice* graphicsDevice) : graphicsDevice(graphicsDevice) {
     d3d12Device = graphicsDevice->GetD3D12Device();

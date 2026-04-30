@@ -2,13 +2,13 @@
 // Created by Natsurainko on 2026/1/13.
 //
 
-#include "Primitive/Mesh.h"
+#include "Vertix/Primitive/Mesh.h"
 
 #include <d3d12/d3dx12_barriers.h>
 
-#include "Graphics/FrameCommandList.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Graphics/ResourceUploadHeap.hpp"
+#include "Vertix/Graphics/FrameCommandList.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Graphics/ResourceUploadHeap.hpp"
 
 using Microsoft::WRL::ComPtr;
 

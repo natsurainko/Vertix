@@ -6,9 +6,9 @@
 #define VERTIX_RAYTRACINGPASS_H
 
 #include "../RenderContext.h"
-#include "Graphics/GraphicsDevice.h"
-#include "Rendering/RenderPass.hpp"
-#include "Rendering/UnorderedAccessView.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Rendering/RenderPass.hpp"
+#include "Vertix/Rendering/UnorderedAccessView.h"
 
 class RayTracingShadowPass : public Vertix::RenderPass<RenderContext> {
 public:

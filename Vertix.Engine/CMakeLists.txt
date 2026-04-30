@@ -16,30 +16,30 @@ target_sources(Vertix.Engine
         FILE_SET HEADERS
         BASE_DIRS include
         FILES
-            include/VERTIX_ENGINE_EXPORT.h
+            include/Vertix.Engine/VERTIX_ENGINE_EXPORT.h
 
-            include/Camera/PerspectiveCamera.h
-            include/Content/ModelLoader.h
-            include/Content/TextureLoader.h
-            include/Content/TextureMipmapGenerator.h
-            include/Controlling/DefaultPositionController.hpp
-            include/Controlling/DefaultRotationController.hpp
-            include/Controlling/IControllerInput.hpp
-            include/Effect/Shadow/CascadeShadowMapping.h
-            include/Helpers/MathHelper.h
-            include/Helpers/VectorHelper.h
-            include/Helpers/FrameCounter.hpp
-            include/Input/GeneralKeyboardDevice.hpp
-            include/Input/GeneralMouseDevice.hpp
-            include/Input/GameInputInterface.h
-            include/Input/KeyboardDevice.h
-            include/Input/MouseDevice.h
-            include/Input/InputDevice.hpp
-            include/Pool/DefaultMaterialPool.hpp
-            include/Primitive/DefaultPBRMaterial.h
-            include/Scene/DirectionalLight.h
-            include/Scene/SceneObject3D.hpp
-            include/GameObject3D.h
+            include/Vertix.Engine/Camera/PerspectiveCamera.h
+            include/Vertix.Engine/Content/ModelLoader.h
+            include/Vertix.Engine/Content/TextureLoader.h
+            include/Vertix.Engine/Content/TextureMipmapGenerator.h
+            include/Vertix.Engine/Controlling/DefaultPositionController.hpp
+            include/Vertix.Engine/Controlling/DefaultRotationController.hpp
+            include/Vertix.Engine/Controlling/IControllerInput.hpp
+            include/Vertix.Engine/Effect/Shadow/CascadeShadowMapping.h
+            include/Vertix.Engine/Helpers/MathHelper.h
+            include/Vertix.Engine/Helpers/VectorHelper.h
+            include/Vertix.Engine/Helpers/FrameCounter.hpp
+            include/Vertix.Engine/Input/GeneralKeyboardDevice.hpp
+            include/Vertix.Engine/Input/GeneralMouseDevice.hpp
+            include/Vertix.Engine/Input/GameInputInterface.h
+            include/Vertix.Engine/Input/KeyboardDevice.h
+            include/Vertix.Engine/Input/MouseDevice.h
+            include/Vertix.Engine/Input/InputDevice.hpp
+            include/Vertix.Engine/Pool/DefaultMaterialPool.hpp
+            include/Vertix.Engine/Primitive/DefaultPBRMaterial.h
+            include/Vertix.Engine/Scene/DirectionalLight.h
+            include/Vertix.Engine/Scene/SceneObject3D.hpp
+            include/Vertix.Engine/GameObject3D.h
 )
 
 set(HLSL_SHADER_FILES shaders/GenerateMipmap.hlsl)

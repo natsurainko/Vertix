@@ -2,7 +2,7 @@
 // Created by Natsurainko on 2026/1/25.
 //
 
-#include "Input/MouseDevice.h"
+#include "Vertix.Engine/Input/MouseDevice.h"
 
 using namespace GameInput::v3;
 using Microsoft::WRL::ComPtr;

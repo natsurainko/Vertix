@@ -2,13 +2,13 @@
 // Created by Natsurainko on 2026/1/16.
 //
 
-#include "Rendering/DepthStencilView.h"
+#include "Vertix/Rendering/DepthStencilView.h"
 
 #include <algorithm>
 #include <d3d12/d3dx12_core.h>
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
 
 Vertix::DepthStencilView::DepthStencilView(
     const GraphicsDevice *graphicsDevice,

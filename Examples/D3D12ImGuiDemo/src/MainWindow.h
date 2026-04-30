@@ -7,8 +7,8 @@
 
 #include <imgui/imgui.h>
 
-#include "Graphics/DescriptorHeap.h"
-#include "Windowing/GameWindow.h"
+#include "Vertix/Graphics/DescriptorHeap.h"
+#include "Vertix/Windowing/GameWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static Vertix::DescriptorHeap* imguiSrvDescriptorHeap = nullptr;

@@ -4,12 +4,12 @@
 
 #include "RenderPipelineImp.h"
 
-#include "Graphics/SwapChain.h"
 #include "Passes/GeometryPass.h"
 #include "Passes/ImGuiPass.h"
 #include "Passes/LightingPass.h"
 #include "Passes/RayTracingShadowPass.h"
-#include "Windowing/GameWindow.h"
+#include "Vertix/Graphics/SwapChain.h"
+#include "Vertix/Windowing/GameWindow.h"
 
 RenderPipelineImp::RenderPipelineImp(
     Vertix::GraphicsDevice* graphicsDevice,

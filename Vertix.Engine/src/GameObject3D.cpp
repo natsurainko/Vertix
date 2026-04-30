@@ -2,7 +2,7 @@
 // Created by Natsurainko on 2025/12/29.
 //
 
-#include "GameObject3D.h"
+#include "Vertix.Engine/GameObject3D.h"
 
 void Vertix::Engine::GameObject3D::Move(
     const DirectX::SimpleMath::Vector3 &offset,

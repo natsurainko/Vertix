@@ -8,16 +8,16 @@
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "Camera/PerspectiveCamera.h"
-#include "Graphics/Buffers/ConstantBuffer.hpp"
-#include "Helpers/FrameCounter.hpp"
-#include "Input/GameInputInterface.h"
-#include "Input/GeneralKeyboardDevice.hpp"
-#include "Input/GeneralMouseDevice.hpp"
-#include "Primitive/Model.h"
-#include "Rendering/DepthStencilView.h"
-#include "Rendering/HlslShader.h"
-#include "Windowing/GameWindow.h"
+#include "Vertix/Graphics/Buffers/ConstantBuffer.hpp"
+#include "Vertix.Engine/Camera/PerspectiveCamera.h"
+#include "Vertix.Engine/Helpers/FrameCounter.hpp"
+#include "Vertix.Engine/Input/GameInputInterface.h"
+#include "Vertix.Engine/Input/GeneralKeyboardDevice.hpp"
+#include "Vertix.Engine/Input/GeneralMouseDevice.hpp"
+#include "Vertix/Primitive/Model.h"
+#include "Vertix/Rendering/DepthStencilView.h"
+#include "Vertix/Rendering/HlslShader.h"
+#include "Vertix/Windowing/GameWindow.h"
 
 using Microsoft::WRL::ComPtr;
 

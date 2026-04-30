@@ -2,13 +2,12 @@
 // Created by Natsurainko on 2026/4/10.
 //
 
-#include "Primitive/DefaultPBRMaterial.h"
+#include "Vertix.Engine/Primitive/DefaultPBRMaterial.h"
 
 #include <map>
-#include <assimp/material.h>
 #include <assimp/GltfMaterial.h>
-
-#include "WICTextureLoader.h"
+#include <assimp/material.h>
+#include <DirectXTK12/WICTextureLoader.h>
 
 void Vertix::Engine::DefaultPBRMaterial::ReadPropertiesFromAssimp(const aiMaterial* material) {
     material->Get(AI_MATKEY_BASE_COLOR, *reinterpret_cast<aiColor4D*>(this->baseColorFactor));
@@ -72,5 +71,3 @@ DirectX::WIC_LOADER_FLAGS Vertix::Engine::DefaultPBRMaterial::GetWicLoaderFlags(
             return DirectX::WIC_LOADER_IGNORE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
     }
 }
-
-

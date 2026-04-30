@@ -2,10 +2,10 @@
 // Created by Natsurainko on 2025/12/23.
 //
 
-#include "Hosting/GameApplication.h"
+#include "Vertix/Hosting/GameApplication.h"
 
-#include "Graphics/GraphicsDevice.h"
-#include "Windowing/GameWindow.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
+#include "Vertix/Windowing/GameWindow.h"
 
 Vertix::GameApplication::GameApplication(
     const HINSTANCE &hInstance,

@@ -9,8 +9,8 @@
 #include <d3d12/d3dx12_core.h>
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "Exceptions/HResultException.h"
-#include "Graphics/GraphicsDevice.h"
+#include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/GraphicsDevice.h"
 
 GeometryPass::~GeometryPass() {
     delete depthStencilView;
