@@ -37,14 +37,16 @@ public:
         delete depthStencilTexture;
         delete renderTextureAllocator;
     }
-private:
+
     void OnInitialize() override;
 
+protected:
     void OnUpdate(double deltaTime) override;
     void OnRender(double deltaTime) override;
     void OnResized(const Vertix::Vector2D<UINT> &size) override;
     void OnFocusLost() override;
 
+private:
     void FillConstantBuffer() const;
 
     bool enableRotating = false;
