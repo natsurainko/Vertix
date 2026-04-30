@@ -7,11 +7,12 @@
 
 #include <dxgi1_4.h>
 #include <vector>
-#include <d3d12/d3dx12_root_signature.h>
 #include <wrl/client.h>
 
 #include "Vertix/VERTIX_EXPORT.h"
 #include "Vertix/Math/Vector2D.hpp"
+#include "Vertix/Rendering/RenderTexture.hpp"
+#include "Vertix/Rendering/RenderTextureAllocator.hpp"
 
 namespace Vertix {
     class GraphicsDevice;
@@ -20,8 +21,7 @@ namespace Vertix {
         VERTIX_API SwapChain(
             const GraphicsDevice *graphicsDevice,
             const HWND &hwnd,
-            const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
-            const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc = nullptr);
+            const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc);
 
         VERTIX_API void PresentFrame();
         VERTIX_API void Resize(const Vector2D<UINT> &size);
@@ -48,40 +48,30 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        DXGI_FORMAT GetRenderTargetFormat() const noexcept {
-            if (hasRenderTargetDesc) {
-                return renderTargetDesc.Format;
-            }
-
-            return swapChainDesc.Format;
+        RenderTexture<RenderTarget>* GetRenderTarget(const UINT index) const noexcept {
+            return renderTargets[index].get();
         }
 
         [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCurrentFrameRenderTargetResource() const noexcept {
-            return rtvResources[currentFrameIndex];
-        }
-
-        [[nodiscard]]
-        const CD3DX12_CPU_DESCRIPTOR_HANDLE& GetCurrentFrameRenderTargetHandle() const noexcept {
-            return rtvHandles[currentFrameIndex];
+        RenderTexture<RenderTarget>* GetCurrentFrameRenderTarget() const noexcept {
+            return renderTargets[currentFrameIndex].get();
         }
 
     private:
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
-        D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc{};
-        std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
 
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<IDXGISwapChain3> dxgiSwapChain;
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-        std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> rtvResources;
+
+        RenderTextureAllocator renderTextureAllocator;
+        std::vector<std::unique_ptr<RenderTexture<RenderTarget>>> renderTargets;
+        std::vector<RenderTextureRenderTargetView*> renderTargetViews;
 
         UINT currentFrameIndex = 0;
         UINT presentFlags = 0;
         UINT presentSyncInterval = 1;
 
         bool enableVSync = true;
-        bool hasRenderTargetDesc = false;
     };
 }
 

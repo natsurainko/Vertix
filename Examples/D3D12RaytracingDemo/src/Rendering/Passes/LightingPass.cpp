@@ -6,6 +6,7 @@
 
 #include <LightingPass_PS.h>
 #include <LightingPass_VS.h>
+#include <d3d12/d3dx12_root_signature.h>
 
 #include "Vertix/Graphics/SwapChain.h"
 
@@ -17,6 +18,8 @@ void LightingPass::Initialize(
 {
     RenderPass::Initialize(device, context);
     const auto &d3d12Device = device->GetD3D12Device();
+
+    shadowMaskSRV = renderContext->shadowMaskTexture->CreateShaderResourceView();
 
     {
         CD3DX12_DESCRIPTOR_RANGE srvRanges[1];
@@ -61,7 +64,7 @@ void LightingPass::Initialize(
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC2(D3D12_DEFAULT);
         psoDesc.DepthStencilState.DepthEnable = FALSE;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.RTVFormats[0] = swapChain->GetRenderTargetFormat();
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
         psoDesc.NumRenderTargets = 1;
         psoDesc.SampleDesc.Count = 1;
         psoDesc.SampleMask = UINT_MAX;
@@ -70,27 +73,20 @@ void LightingPass::Initialize(
 }
 
 void LightingPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
-    constexpr float clearColor[] = { 0.127437680, 0.300543794, 0.846873232, 1.0f };
-    const auto &rtvHandle = swapChain->GetCurrentFrameRenderTargetHandle();
-    const D3D12_RESOURCE_BARRIER restoreBarriers[] = {
-        renderContext->geometryRtvBarriers[0],
-        renderContext->geometryRtvBarriers[1],
-        renderContext->geometryRtvBarriers[2],
-        renderContext->geometryRtvBarriers[3],
-        renderContext->shadowUavBarrier,
-    };
+    constexpr float clearColor[] = { 0.127437680f, 0.300543794f, 0.846873232f, 1.0f };
+    const auto commandListPtr = commandList.Get();
+    const auto scopedTransition = renderContext->shadowMaskTexture->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    {
+        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator.GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
+        commandList->SetGraphicsRootSignature(rootSignature.Get());
+        commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->srvGpuHandle);
 
-    commandList->SetDescriptorHeaps(1, renderContext->srvUavDescriptorHeap.GetDescriptorHeap().GetAddressOf());
-    commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootDescriptorTable(0, renderContext->shadowSrvGpuHandle);
+        renderContext->currentRenderTargetView->SetRenderTarget(commandListPtr);
+        renderContext->currentRenderTargetView->Clear(commandListPtr, clearColor);
 
-    commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    commandList->SetPipelineState(pipelineState.Get());
-
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    commandList->IASetVertexBuffers(0, 1, &renderContext->fullScreenVertex->d3d12VertexBufferView);
-    commandList->DrawInstanced(renderContext->fullScreenVertex->vertexCount, 1, 0, 0);
-
-    commandList->ResourceBarrier(5, restoreBarriers);
+        commandList->SetPipelineState(pipelineState.Get());
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+        commandList->IASetVertexBuffers(0, 1, &renderContext->fullScreenVertex->d3d12VertexBufferView);
+        commandList->DrawInstanced(renderContext->fullScreenVertex->vertexCount, 1, 0, 0);
+    }
 }

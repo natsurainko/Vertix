@@ -15,10 +15,7 @@ target_sources(Vertix
         src/Hosting/GameApplication.cpp
         src/Primitive/Mesh.cpp
         src/Primitive/Model.cpp
-        src/Rendering/DepthStencilView.cpp
         src/Rendering/HlslShader.cpp
-        src/Rendering/RenderTargetView.cpp
-        src/Rendering/UnorderedAccessView.cpp
         src/Windowing/GameWindow.cpp
     PUBLIC
         FILE_SET HEADERS
@@ -58,12 +55,11 @@ target_sources(Vertix
             include/Vertix/Primitive/Model.h
             include/Vertix/Primitive/Material.h
             include/Vertix/Primitive/Texture.h
-            include/Vertix/Rendering/DepthStencilView.h
-            include/Vertix/Rendering/RenderTargetView.h
-            include/Vertix/Rendering/UnorderedAccessView.h
             include/Vertix/Rendering/HlslShader.h
             include/Vertix/Rendering/RenderPass.hpp
             include/Vertix/Rendering/RenderPipeline.hpp
+        include/Vertix/Rendering/RenderTexture.hpp
+        include/Vertix/Rendering/RenderTextureAllocator.hpp
             include/Vertix/Windowing/GameWindow.h
 )
 

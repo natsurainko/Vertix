@@ -4,13 +4,12 @@
 
 #include "DemoMainWindow.h"
 
-#include <d3d12/d3dx12_barriers.h>
-
 #include "Vertix.Engine/Content/ModelLoader.h"
 #include "Vertix/Exceptions/HResultException.h"
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Graphics/GraphicsDevice.h"
 #include "Vertix/Graphics/SwapChain.h"
+#include "Vertix/Rendering/HlslShader.h"
 
 void DemoMainWindow::OnInitialize() {
     const auto &device = graphicsDevice->GetD3D12Device();
@@ -26,6 +25,7 @@ void DemoMainWindow::OnInitialize() {
             Vertix::Engine::ModelLoader::TryLoadFromFile([&](const auto* context) -> void {
                 cubeModel = *context->Model;
                 cubeModel.UploadToGPU(device, frameCommandList->GetD3D12GraphicsCommandList(), resourceUploadHeap);
+                delete context->Model;
             }, "assets/models/block.fbx");
         }
         frameCommandList->EndCommand();
@@ -53,25 +53,23 @@ void DemoMainWindow::OnInitialize() {
     }
 
     {
-        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {
-            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-            .NumDescriptors = 1
-        };
-        ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&depthStencilDescriptorHeap)));
+        renderTextureAllocator = new Vertix::RenderTextureAllocator(graphicsDevice);
+        renderTextureAllocator->InitDepthStencilDescriptorHeap(1);
 
-        dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-        depthStencilView = new Vertix::DepthStencilView(graphicsDevice,
-            CD3DX12_RESOURCE_DESC::Tex2D(
-                DXGI_FORMAT_D24_UNORM_S8_UINT,
-                windowSize.X, windowSize.Y,
-                1, 0, 1, 0,
-                D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
-            ),
-            dsvHandle
-        );
+        const auto dsvResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, windowSize.X, windowSize.Y);
+        constexpr auto clearValue = D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_D24_UNORM_S8_UINT, .DepthStencil = { .Depth = 1.0 } };
+        depthStencilTexture = new Vertix::RenderTexture<Vertix::DepthStencil>(renderTextureAllocator, &dsvResDesc, &clearValue);
+        depthStencilView = depthStencilTexture->CreateDepthStencilView();
+
+        for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
+            renderTargetViews[i] = swapChain->GetRenderTarget(i)->CreateRenderTargetView();
+        }
     }
 
     {
+        Vertix::HlslShader vertexShader{L"assets/shaders/Simple3dShader.hlsl"};
+        Vertix::HlslShader pixelShader{L"assets/shaders/Simple3dShader.hlsl"};
+
         vertexShader.Compile("VSMain", "vs_5_0");
         pixelShader.Compile("PSMain", "ps_5_0");
 
@@ -136,7 +134,7 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
         if (enableRotating) {
             const Vertix::Vector2D<float> mouseDeltaOffset = -mouseDevice.GetDeltaOffset().Cast<float>();
             const DirectX::SimpleMath::Vector3 rotationOffset {mouseDeltaOffset.Y, mouseDeltaOffset.X, 0.0f};
-            perspectiveCamera.Rotate(rotationOffset * 0.002);
+            perspectiveCamera.Rotate(rotationOffset * 0.002f);
             SetCursorCenterWindow();
         }
     }
@@ -155,26 +153,22 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
 void DemoMainWindow::OnRender(const double deltaTime) {
     FillConstantBuffer();
     constexpr float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    const auto rtvResource = swapChain->GetCurrentFrameRenderTargetResource();
-    const auto rtvHandle = swapChain->GetCurrentFrameRenderTargetHandle();
 
-    const auto presentToRenderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        rtvResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    const auto renderTargetToPresentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        rtvResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-
-    commandList->RSSetViewports(1, &viewport);
-    commandList->RSSetScissorRects(1, &scissorRect);
-    commandList->ResourceBarrier(1, &presentToRenderTargetBarrier);
-    commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetD3D12Resource()->GetGPUVirtualAddress());
-    commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-    commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH , 1.0f, 0, 0, nullptr);
-    commandList->SetPipelineState(pipelineState.Get());
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    cubeModel.Draw(commandList);
-    commandList->ResourceBarrier(1, &renderTargetToPresentBarrier);
+    const auto commandListPtr = commandList.Get();
+    const auto renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
+    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    {
+        commandList->RSSetViewports(1, &viewport);
+        commandList->RSSetScissorRects(1, &scissorRect);
+        commandList->SetGraphicsRootSignature(rootSignature.Get());
+        commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetD3D12Resource()->GetGPUVirtualAddress());
+        renderTarget->SetRenderTarget(commandListPtr, depthStencilView);
+        renderTarget->Clear(commandListPtr, clearColor);
+        depthStencilView->ClearDepth(commandListPtr);
+        commandList->SetPipelineState(pipelineState.Get());
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        cubeModel.Draw(commandList);
+    }
 }
 
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
@@ -182,7 +176,7 @@ void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
 
     frameCommandList->WaitForCommand();
     swapChain->Resize(size);
-    depthStencilView->Resize(size);
+    depthStencilTexture->Resize(size);
 
     perspectiveCamera.SetAspect(static_cast<float>(size.X) / static_cast<float>(size.Y));
     perspectiveCamera.GetProjectionMatrix(projectionMatrix);

@@ -8,6 +8,7 @@
 #include <imgui/imgui.h>
 
 #include "Vertix/Graphics/DescriptorHeap.h"
+#include "Vertix/Rendering/RenderTexture.hpp"
 #include "Vertix/Windowing/GameWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -20,6 +21,7 @@ public:
     void OnInitialize() override;
     void OnDestroy() override;
 
+protected:
     void OnResized(const Vertix::Vector2D<unsigned> &size) override;
     void OnRender(double deltaTime) override;
 
@@ -31,6 +33,7 @@ private:
     float dpiScale = 1;
     ImGuiIO* io = nullptr;
 
+    const Vertix::RenderTextureRenderTargetView* renderTargetViews[2] = {};
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> commandList;
 };
 

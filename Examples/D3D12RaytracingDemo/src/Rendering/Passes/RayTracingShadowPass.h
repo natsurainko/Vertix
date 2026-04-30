@@ -8,7 +8,6 @@
 #include "../RenderContext.h"
 #include "Vertix/Graphics/GraphicsDevice.h"
 #include "Vertix/Rendering/RenderPass.hpp"
-#include "Vertix/Rendering/UnorderedAccessView.h"
 
 class RayTracingShadowPass : public Vertix::RenderPass<RenderContext> {
 public:
@@ -22,14 +21,9 @@ public:
     void Resize(const Vertix::Vector2D<unsigned> &size) override;
 
 private:
-    Vertix::UnorderedAccessView* unorderedAccessView = nullptr;
-
-    D3D12_CPU_DESCRIPTOR_HANDLE uavHandle{};
-    D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
-
-    D3D12_GPU_DESCRIPTOR_HANDLE uavGpuHandle{};
-
-    D3D12_RESOURCE_BARRIER srvBarrier{};
+    const Vertix::RenderTextureShaderResourceView* gPositionDepthSRV = nullptr;
+    const Vertix::RenderTextureShaderResourceView* gNormalRoughnessSRV = nullptr;
+    const Vertix::RenderTextureUnorderedAccessView* shadowMaskUAV = nullptr;
 
     uint32_t shaderTableEntrySize = 0;
 

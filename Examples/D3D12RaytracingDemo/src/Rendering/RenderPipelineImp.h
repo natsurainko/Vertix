@@ -8,7 +8,6 @@
 #include "RenderContext.h"
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Rendering/RenderPipeline.hpp"
-#include "Vertix/Windowing/GameWindow.h"
 
 class RenderPipelineImp : public Vertix::RenderPipeline<RenderContext> {
 public:

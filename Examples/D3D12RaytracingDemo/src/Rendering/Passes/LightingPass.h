@@ -21,6 +21,8 @@ public:
 private:
     Vertix::SwapChain* swapChain;
 
+    const Vertix::RenderTextureShaderResourceView* shadowMaskSRV = nullptr;
+
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 };

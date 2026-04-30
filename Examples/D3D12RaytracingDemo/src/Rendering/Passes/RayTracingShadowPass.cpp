@@ -5,7 +5,6 @@
 #include "RayTracingShadowPass.h"
 
 #include <RaytracingShadowPass_DXR.h>
-#include <d3d12/d3dx12_barriers.h>
 #include <d3d12/d3dx12_root_signature.h>
 
 #include "Vertix/Exceptions/HResultException.h"
@@ -13,7 +12,7 @@
 #define align_to(_alignment, _val) (((_val + _alignment - 1) / _alignment) * _alignment)
 
 RayTracingShadowPass::~RayTracingShadowPass() {
-    delete unorderedAccessView;
+    delete renderContext->shadowMaskTexture;
 }
 
 void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderContext *context) {
@@ -21,26 +20,20 @@ void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderCont
     const auto &d3d12Device = device->GetD3D12Device();
 
     {
-        renderContext->srvUavDescriptorHeap.AllocDescriptorHandle(uavHandle, uavGpuHandle);
-        renderContext->srvUavDescriptorHeap.AllocDescriptorHandle(srvHandle, renderContext->shadowSrvGpuHandle);
-
         auto uavResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT,context->windowSize.X, context->windowSize.Y, 1, 1);
-        const auto uavDesc = CD3DX12_UNORDERED_ACCESS_VIEW_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT);
-        const auto srvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT, 1);
+        renderContext->shadowMaskTexture = new Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>(&renderContext->renderTextureAllocator, &uavResourceDesc);
 
-        uavResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        unorderedAccessView = new Vertix::UnorderedAccessView(graphicsDevice, uavResourceDesc, uavHandle, &uavDesc);
-        unorderedAccessView->CreateShaderResourceView(&srvDesc, srvHandle);
-
-        renderContext->shadowUavBarrier = unorderedAccessView->CreateTransitionBarrier(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-        srvBarrier = unorderedAccessView->CreateTransitionBarrier(D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        shadowMaskUAV = renderContext->shadowMaskTexture->CreateUnorderedAccessView();
+        gPositionDepthSRV = renderContext->gPositionDepthTexture->CreateShaderResourceView();
+        gNormalRoughnessSRV = renderContext->gNormalRoughnessTexture->CreateShaderResourceView();
     }
 
     {
-        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        CD3DX12_DESCRIPTOR_RANGE ranges[4];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);
-        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+        ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
         CD3DX12_STATIC_SAMPLER_DESC pointSampler(0);
         pointSampler.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
@@ -48,11 +41,12 @@ void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderCont
         pointSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
         pointSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
-        CD3DX12_ROOT_PARAMETER rootParams[4];
+        CD3DX12_ROOT_PARAMETER rootParams[5];
         rootParams[0].InitAsDescriptorTable(1, &ranges[0]);
         rootParams[1].InitAsDescriptorTable(1, &ranges[1]);
         rootParams[2].InitAsDescriptorTable(1, &ranges[2]);
-        rootParams[3].InitAsConstantBufferView(0);
+        rootParams[3].InitAsDescriptorTable(1, &ranges[3]);
+        rootParams[4].InitAsConstantBufferView(0);
 
         CD3DX12_ROOT_SIGNATURE_DESC desc;
         desc.Init(_countof(rootParams), rootParams);
@@ -208,23 +202,23 @@ void RayTracingShadowPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCo
     raytraceDesc.HitGroupTable.StrideInBytes = shaderTableEntrySize;
     raytraceDesc.HitGroupTable.SizeInBytes = shaderTableEntrySize;
 
-    commandList->SetDescriptorHeaps(1, renderContext->srvUavDescriptorHeap.GetDescriptorHeap().GetAddressOf());
-    commandList->SetComputeRootSignature(globalRootSig.Get());
-    commandList->SetComputeRootDescriptorTable(0, renderContext->tlasSrvGpuHandle);
-    commandList->SetComputeRootDescriptorTable(1, renderContext->geometrySrvGpuHandles[0]);
-    commandList->SetComputeRootDescriptorTable(2, uavGpuHandle);
-    commandList->SetComputeRootConstantBufferView(3, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
+    const auto commandListPtr = commandList.Get();
+    const auto scopedTransition1 = renderContext->gPositionDepthTexture->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    const auto scopedTransition2 = renderContext->gNormalRoughnessTexture->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    {
+        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator.GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
+        commandList->SetComputeRootSignature(globalRootSig.Get());
+        commandList->SetComputeRootDescriptorTable(0, renderContext->tlasSrvGpuHandle);
+        commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->srvGpuHandle);
+        commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->srvGpuHandle);
+        commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->uavGpuHandle);
+        commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
 
-    commandList->SetPipelineState1(rtStateObject.Get());
-    commandList->DispatchRays(&raytraceDesc);
-
-    commandList->ResourceBarrier(1, &srvBarrier);
+        commandList->SetPipelineState1(rtStateObject.Get());
+        commandList->DispatchRays(&raytraceDesc);
+    }
 }
 
 void RayTracingShadowPass::Resize(const Vertix::Vector2D<unsigned> &size) {
-    const auto srvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT, 1);
-    unorderedAccessView->Resize(size);
-    unorderedAccessView->CreateShaderResourceView(&srvDesc, srvHandle);
-    renderContext->shadowUavBarrier = unorderedAccessView->CreateTransitionBarrier(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    srvBarrier = unorderedAccessView->CreateTransitionBarrier(D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    renderContext->shadowMaskTexture->Resize(size);
 }

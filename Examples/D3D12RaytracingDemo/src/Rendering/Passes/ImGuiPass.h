@@ -9,7 +9,6 @@
 
 #include "../RenderContext.h"
 #include "Vertix/Graphics/DescriptorHeap.h"
-#include "Vertix/Rendering/DepthStencilView.h"
 #include "Vertix/Rendering/RenderPass.hpp"
 
 static Vertix::DescriptorHeap* imguiSrvDescriptorHeap = nullptr;

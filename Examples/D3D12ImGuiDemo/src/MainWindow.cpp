@@ -4,7 +4,6 @@
 
 #include "MainWindow.h"
 
-#include <d3d12/d3dx12_barriers.h>
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <imgui/backends/imgui_impl_win32.h>
 
@@ -14,6 +13,10 @@
 void MainWindow::OnInitialize() {
     imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 64, true);
     commandList = frameCommandList->GetD3D12GraphicsCommandList();
+
+    for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
+        renderTargetViews[i] = swapChain->GetRenderTarget(i)->CreateRenderTargetView();
+    }
 
     ImGui_ImplWin32_EnableDpiAwareness();
 
@@ -136,22 +139,13 @@ void MainWindow::OnRender(double deltaTime) {
     // Rendering
     ImGui::Render();
 
+    const auto commandListPtr = commandList.Get();
+    const auto renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
+    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
-        ID3D12DescriptorHeap* descriptorHeaps[] = { imguiSrvDescriptorHeap->GetDescriptorHeap().Get() };
-
-        const auto rtvResource = swapChain->GetCurrentFrameRenderTargetResource();
-        const auto rtvHandle = swapChain->GetCurrentFrameRenderTargetHandle();
-        const auto presentToRenderTargetBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-            rtvResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        const auto renderTargetToPresentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-            rtvResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-
-        // Render Dear ImGui graphics
-        commandList->ResourceBarrier(1, &presentToRenderTargetBarrier);
-        commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-        commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-        commandList->SetDescriptorHeaps(1, descriptorHeaps);
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
-        commandList->ResourceBarrier(1, &renderTargetToPresentBarrier);
+        renderTarget->SetRenderTarget(commandListPtr);
+        renderTarget->Clear(commandListPtr, clearColor);
+        commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandListPtr); // Render Dear ImGui graphics
     }
 }

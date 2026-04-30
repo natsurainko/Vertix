@@ -23,6 +23,14 @@ RenderPipelineImp::RenderPipelineImp(
     renderContext = new RenderContext(graphicsDevice);
     renderContext->SetWindowSize(window->GetWindowSize());
 
+    constexpr auto rtvDesc = D3D12_RENDER_TARGET_VIEW_DESC {
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+        .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+    };
+    for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
+        renderContext->renderTargetViews[i] = swapChain->GetRenderTarget(i)->CreateRenderTargetView(&rtvDesc);
+    }
+
     // release after command list executed
     Vertix::ResourceUploadHeap resourceUploadHeap {};
     frameCommandList->BeginCommand(nullptr);
@@ -39,15 +47,15 @@ RenderPipelineImp::RenderPipelineImp(
 void RenderPipelineImp::Execute() {
     if (window->GetWindowState() == Vertix::Minimized) return;
 
-    const auto rtvResource = swapChain->GetCurrentFrameRenderTargetResource().Get();
-    const auto toRTBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rtvResource, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    const auto toPresBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rtvResource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    renderContext->currentRenderTargetView = renderContext->renderTargetViews[swapChain->GetCurrentFrameIndex()];
 
-    commandList->RSSetViewports(1, &renderContext->viewport);
-    commandList->RSSetScissorRects(1, &renderContext->scissorRect);
-    commandList->ResourceBarrier(1, &toRTBarrier);
-    RenderPipeline::Execute();
-    commandList->ResourceBarrier(1, &toPresBarrier);
+    const auto commandListPtr = commandList.Get();
+    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    {
+        commandList->RSSetViewports(1, &renderContext->viewport);
+        commandList->RSSetScissorRects(1, &renderContext->scissorRect);
+        RenderPipeline::Execute();
+    }
 }
 
 void RenderPipelineImp::Resize(const Vertix::Vector2D<unsigned> &size) {

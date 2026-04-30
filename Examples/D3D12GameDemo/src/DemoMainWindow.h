@@ -15,8 +15,8 @@
 #include "Vertix.Engine/Input/GeneralKeyboardDevice.hpp"
 #include "Vertix.Engine/Input/GeneralMouseDevice.hpp"
 #include "Vertix/Primitive/Model.h"
-#include "Vertix/Rendering/DepthStencilView.h"
-#include "Vertix/Rendering/HlslShader.h"
+#include "Vertix/Rendering/RenderTexture.hpp"
+#include "Vertix/Rendering/RenderTextureAllocator.hpp"
 #include "Vertix/Windowing/GameWindow.h"
 
 using Microsoft::WRL::ComPtr;
@@ -33,8 +33,9 @@ public:
     }
 
     ~DemoMainWindow() override {
-        delete depthStencilView;
         delete constantBuffer;
+        delete depthStencilTexture;
+        delete renderTextureAllocator;
     }
 private:
     void OnInitialize() override;
@@ -55,17 +56,17 @@ private:
     Vertix::Model cubeModel;
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
-    Vertix::HlslShader vertexShader{L"assets/shaders/Simple3dShader.hlsl"};
-    Vertix::HlslShader pixelShader{L"assets/shaders/Simple3dShader.hlsl"};
     Vertix::ConstantBuffer<RootConstants>* constantBuffer = nullptr;
-    Vertix::DepthStencilView* depthStencilView = nullptr;
+
+    Vertix::RenderTextureAllocator* renderTextureAllocator;
+    Vertix::RenderTexture<Vertix::DepthStencil>* depthStencilTexture;
+    const Vertix::RenderTextureDepthStencilView* depthStencilView;
+    const Vertix::RenderTextureRenderTargetView* renderTargetViews[2];
 
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;
     ComPtr<ID3D12GraphicsCommandList5> commandList;
-    ComPtr<ID3D12DescriptorHeap> depthStencilDescriptorHeap;
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle{};
     CD3DX12_VIEWPORT viewport{0.0,0.0, 0.0, 0.0};
     CD3DX12_RECT scissorRect{};
 

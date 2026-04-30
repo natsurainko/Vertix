@@ -53,8 +53,8 @@ void ImGuiPass::Initialize(
     ImGui_ImplDX12_InitInfo init_info = {};
     init_info.Device = graphicsDevice->GetD3D12Device().Get();
     init_info.CommandQueue = graphicsDevice->GetDefaultD3D12CommandQueue().Get();
-    init_info.NumFramesInFlight = static_cast<int>(swapChain->GetFrameCount());
-    init_info.RTVFormat = swapChain->GetRenderTargetFormat();
+    init_info.NumFramesInFlight = 2;
+    init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
 
     init_info.SrvDescriptorHeap = imguiSrvDescriptorHeap->GetDescriptorHeap().Get();
@@ -99,7 +99,8 @@ void ImGuiPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5>
     }
     ImGui::Render();
 
-    commandList->OMSetRenderTargets(1, &swapChain->GetCurrentFrameRenderTargetHandle(), FALSE, nullptr);
+    const auto commandListPtr = commandList.Get();
+    renderContext->currentRenderTargetView->SetRenderTarget(commandListPtr);
     commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandListPtr);
 }

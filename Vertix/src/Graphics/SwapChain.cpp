@@ -12,13 +12,9 @@ using Microsoft::WRL::ComPtr;
 Vertix::SwapChain::SwapChain(
     const GraphicsDevice* graphicsDevice,
     const HWND &hwnd,
-    const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc,
-    const D3D12_RENDER_TARGET_VIEW_DESC* renderTargetDesc) : swapChainDesc(swapChainDesc)
+    const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) : swapChainDesc(swapChainDesc), renderTextureAllocator(graphicsDevice)
 {
-    if (renderTargetDesc) {
-        this->renderTargetDesc = *renderTargetDesc;
-        hasRenderTargetDesc = true;
-    }
+    renderTextureAllocator.InitRenderTargetDescriptorHeap(swapChainDesc.BufferCount);
 
     const UINT frameCount = swapChainDesc.BufferCount;
     const ComPtr<IDXGIFactory6>& dxgiFactory = graphicsDevice->GetDxgiFactory();
@@ -39,24 +35,10 @@ Vertix::SwapChain::SwapChain(
     }
 
     {
-        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = frameCount;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-        ThrowIfFailed(d3d12Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap)));
-    }
-
-    {
-        rtvResources = std::vector<ComPtr<ID3D12Resource>>(frameCount);
-        const UINT renderTargetsDescriptorLength = d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
         for (UINT i = 0; i < frameCount; i++) {
-            ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
-            d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), renderTargetDesc, rtvHandle);
-            rtvHandles.push_back(rtvHandle);
-            rtvHandle.Offset(1, renderTargetsDescriptorLength);
+            ComPtr<ID3D12Resource> resource;
+            ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&resource)));
+            renderTargets.push_back(std::make_unique<RenderTexture<RenderTarget>>(&renderTextureAllocator, resource, D3D12_RESOURCE_STATE_PRESENT));
         }
     }
 }
@@ -71,7 +53,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
 	swapChainDesc.Height = (std::max)(size.Y, static_cast<UINT>(1));
 
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
-        rtvResources[i].Reset();
+        renderTargets[i]->ResetResource();
     }
 
     ThrowIfFailed(dxgiSwapChain->ResizeBuffers(
@@ -82,8 +64,9 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
         swapChainDesc.Flags));
 
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
-        ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
-        d3d12Device->CreateRenderTargetView(rtvResources[i].Get(), hasRenderTargetDesc ? &renderTargetDesc : nullptr, rtvHandles[i]);
+        ComPtr<ID3D12Resource> resource;
+        ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&resource)));
+        renderTargets[i]->ReplaceResource(resource);
     }
 
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();

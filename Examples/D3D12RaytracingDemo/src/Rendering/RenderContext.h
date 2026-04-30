@@ -16,10 +16,10 @@
 #include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
 #include "Vertix.Engine/Helpers/MathHelper.h"
 #include "Vertix.Engine/Helpers/VectorHelper.h"
-#include "Vertix.Engine/Pool/DefaultMaterialPool.hpp"
 #include "Vertix.Engine/Scene/SceneObject3D.hpp"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
+#include "Vertix/Rendering/RenderTexture.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 
@@ -29,12 +29,13 @@ public:
         frameConstantsBuffer(graphicsDevice),
         lightConstantsBuffer(graphicsDevice),
         objectConstantsBuffer(graphicsDevice, 512),
-        srvUavDescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 512, true),
-        rtvDescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV),
-        dsvDescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV),
+        renderTextureAllocator(graphicsDevice),
         graphicsDevice(graphicsDevice)
     {
-        srvUavDescriptorHeap.AllocDescriptorHandle(tlasSrvHandle, tlasSrvGpuHandle);
+        renderTextureAllocator.InitRenderTargetDescriptorHeap(4);
+        renderTextureAllocator.InitDepthStencilDescriptorHeap(2);
+        renderTextureAllocator.InitSharedDescriptorHeap();
+        renderTextureAllocator.GetShaderResourceDescriptorHeap()->AllocDescriptorHandle(tlasSrvHandle, tlasSrvGpuHandle);
 
         perspectiveCamera.SetFieldOfView(Vertix::Engine::DegreesToRadians(60));
         perspectiveCamera.Move({-2.5, 0.5, 0.0});
@@ -52,17 +53,16 @@ public:
     Vertix::ConstantBufferPageArray<ObjectConstants> objectConstantsBuffer;
 
     D3D12_CPU_DESCRIPTOR_HANDLE tlasSrvHandle{};
-
-    D3D12_GPU_DESCRIPTOR_HANDLE geometrySrvGpuHandles[4] = {};
-    D3D12_GPU_DESCRIPTOR_HANDLE shadowSrvGpuHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE tlasSrvGpuHandle{};
 
-    D3D12_RESOURCE_BARRIER geometryRtvBarriers[4] = {};
-    D3D12_RESOURCE_BARRIER shadowUavBarrier{};
+    Vertix::RenderTextureAllocator renderTextureAllocator;
+    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gPositionDepthTexture;
+    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gNormalRoughnessTexture;
+    Vertix::RenderTexture<Vertix::DepthStencil>* gDepthTexture;
+    Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>* shadowMaskTexture;
 
-    Vertix::DescriptorHeap srvUavDescriptorHeap;
-    Vertix::DescriptorHeap rtvDescriptorHeap;
-    Vertix::DescriptorHeap dsvDescriptorHeap;
+    const Vertix::RenderTextureRenderTargetView* renderTargetViews[2] = {};
+    const Vertix::RenderTextureRenderTargetView* currentRenderTargetView = nullptr;
 
     Vertix::ModelPool modelPool;
 
