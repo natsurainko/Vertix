@@ -12,10 +12,8 @@ using Microsoft::WRL::ComPtr;
 Vertix::SwapChain::SwapChain(
     const GraphicsDevice* graphicsDevice,
     const HWND &hwnd,
-    const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) : swapChainDesc(swapChainDesc), renderTextureAllocator(graphicsDevice)
+    const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) : swapChainDesc(swapChainDesc)
 {
-    renderTextureAllocator.InitRenderTargetDescriptorHeap(swapChainDesc.BufferCount);
-
     const UINT frameCount = swapChainDesc.BufferCount;
     const ComPtr<IDXGIFactory6>& dxgiFactory = graphicsDevice->GetDxgiFactory();
     d3d12Device = graphicsDevice->GetD3D12Device();
@@ -38,7 +36,7 @@ Vertix::SwapChain::SwapChain(
         for (UINT i = 0; i < frameCount; i++) {
             ComPtr<ID3D12Resource> resource;
             ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&resource)));
-            renderTargets.push_back(std::make_unique<RenderTexture<RenderTarget>>(&renderTextureAllocator, resource, D3D12_RESOURCE_STATE_PRESENT));
+            renderTargets.push_back(std::make_unique<RenderTexture<RenderTarget>>(d3d12Device, resource, D3D12_RESOURCE_STATE_PRESENT));
         }
     }
 }
@@ -53,7 +51,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
 	swapChainDesc.Height = (std::max)(size.Y, static_cast<UINT>(1));
 
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
-        renderTargets[i]->ResetResource();
+        renderTargets[i]->Reset();
     }
 
     ThrowIfFailed(dxgiSwapChain->ResizeBuffers(
@@ -66,7 +64,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
         ComPtr<ID3D12Resource> resource;
         ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&resource)));
-        renderTargets[i]->ReplaceResource(resource);
+        renderTargets[i]->Replace(resource);
     }
 
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();

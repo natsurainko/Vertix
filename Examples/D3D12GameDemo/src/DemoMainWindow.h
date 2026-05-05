@@ -16,7 +16,7 @@
 #include "Vertix.Engine/Input/GeneralMouseDevice.hpp"
 #include "Vertix/Primitive/Model.h"
 #include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderTextureAllocator.hpp"
+#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
 #include "Vertix/Windowing/GameWindow.h"
 
 using Microsoft::WRL::ComPtr;
@@ -30,12 +30,6 @@ class DemoMainWindow : public Vertix::GameWindow {
 public:
     explicit DemoMainWindow(const Vertix::WindowOptions &options) : GameWindow(options) {
         GetD3D12ViewportRectSize(viewport, scissorRect);
-    }
-
-    ~DemoMainWindow() override {
-        delete constantBuffer;
-        delete depthStencilTexture;
-        delete renderTextureAllocator;
     }
 
     void OnInitialize() override;
@@ -58,12 +52,11 @@ private:
     Vertix::Model cubeModel;
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
-    Vertix::ConstantBuffer<RootConstants>* constantBuffer = nullptr;
-
-    Vertix::RenderTextureAllocator* renderTextureAllocator;
-    Vertix::RenderTexture<Vertix::DepthStencil>* depthStencilTexture;
-    const Vertix::RenderTextureDepthStencilView* depthStencilView;
-    const Vertix::RenderTextureRenderTargetView* renderTargetViews[2];
+    std::unique_ptr<Vertix::ConstantBuffer<RootConstants>> constantBuffer;
+    std::unique_ptr<Vertix::RenderTexture<Vertix::DepthStencil>> depthStencilTexture;
+    std::unique_ptr<Vertix::RenderTextureViewAllocator> renderTextureViewAllocator;
+    Vertix::RenderTextureView<Vertix::DepthStencil> depthStencilView{};
+    Vertix::RenderTextureView<Vertix::RenderTarget> renderTargetViews[2] = {};
 
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;

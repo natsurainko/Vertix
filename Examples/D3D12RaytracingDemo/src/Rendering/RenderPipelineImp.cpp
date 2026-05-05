@@ -28,7 +28,7 @@ RenderPipelineImp::RenderPipelineImp(
         .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
     };
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderContext->renderTargetViews[i] = swapChain->GetRenderTarget(i)->CreateRenderTargetView(&rtvDesc);
+        renderContext->renderTargetViews[i] = renderContext->renderTextureAllocator->CreateRenderTargetView(swapChain->GetRenderTarget(i), &rtvDesc);
     }
 
     // release after command list executed
@@ -47,7 +47,7 @@ RenderPipelineImp::RenderPipelineImp(
 void RenderPipelineImp::Execute() {
     if (window->GetWindowState() == Vertix::Minimized) return;
 
-    renderContext->currentRenderTargetView = renderContext->renderTargetViews[swapChain->GetCurrentFrameIndex()];
+    renderContext->currentRenderTargetView = &renderContext->renderTargetViews[swapChain->GetCurrentFrameIndex()];
     const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         commandList->RSSetViewports(1, &renderContext->viewport);
@@ -58,8 +58,12 @@ void RenderPipelineImp::Execute() {
 
 void RenderPipelineImp::Resize(const Vertix::Vector2D<unsigned> &size) {
     frameCommandList->WaitForCommand();
-    swapChain->Resize(size);
     renderContext->SetWindowSize(size);
+
+    swapChain->Resize(size);
+    for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
+        renderContext->renderTargetViews[i].Reuse(graphicsDevice->GetD3D12Device(), swapChain->GetRenderTarget(i)->GetResource());
+    }
 
     for (const auto &pass : renderPasses) {
         pass->Resize(size);

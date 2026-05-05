@@ -10,8 +10,6 @@
 
 class GeometryPass : public Vertix::RenderPass<RenderContext> {
 public:
-    ~GeometryPass() override;
-
     void Initialize(
         Vertix::GraphicsDevice* device,
         RenderContext* context) override;
@@ -20,9 +18,13 @@ public:
     void Resize(const Vertix::Vector2D<unsigned> &size) override;
 
 private:
-    const Vertix::RenderTextureRenderTargetView* gPositionDepthRTV = nullptr;
-    const Vertix::RenderTextureRenderTargetView* gNormalRoughnessRTV = nullptr;
-    const Vertix::RenderTextureDepthStencilView* gDepthDSV = nullptr;
+    std::unique_ptr<Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>> gPositionDepthTexture;
+    std::unique_ptr<Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>> gNormalRoughnessTexture;
+    std::unique_ptr<Vertix::RenderTexture<Vertix::DepthStencil>> gDepthTexture;
+
+    Vertix::RenderTextureView<Vertix::RenderTarget> gPositionDepthRTV;
+    Vertix::RenderTextureView<Vertix::RenderTarget> gNormalRoughnessRTV;
+    Vertix::RenderTextureView<Vertix::DepthStencil> gDepthDSV;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

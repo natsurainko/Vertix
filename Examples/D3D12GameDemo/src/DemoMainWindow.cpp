@@ -53,16 +53,17 @@ void DemoMainWindow::OnInitialize() {
     }
 
     {
-        renderTextureAllocator = new Vertix::RenderTextureAllocator(graphicsDevice);
-        renderTextureAllocator->InitDepthStencilDescriptorHeap(1);
+        renderTextureViewAllocator = std::make_unique<Vertix::RenderTextureViewAllocator>(graphicsDevice);
+        renderTextureViewAllocator->InitRenderTargetDescriptorHeap(2);
+        renderTextureViewAllocator->InitDepthStencilDescriptorHeap(1);
 
         const auto dsvResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, windowSize.X, windowSize.Y);
         constexpr auto clearValue = D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_D24_UNORM_S8_UINT, .DepthStencil = { .Depth = 1.0 } };
-        depthStencilTexture = new Vertix::RenderTexture<Vertix::DepthStencil>(renderTextureAllocator, &dsvResDesc, &clearValue);
-        depthStencilView = depthStencilTexture->CreateDepthStencilView();
+        depthStencilTexture = std::make_unique<Vertix::RenderTexture<Vertix::DepthStencil>>(device, &dsvResDesc, &clearValue);
+        depthStencilView = renderTextureViewAllocator->CreateDepthStencilView(depthStencilTexture.get());
 
         for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-            renderTargetViews[i] = swapChain->GetRenderTarget(i)->CreateRenderTargetView();
+            renderTargetViews[i] = renderTextureViewAllocator->CreateRenderTargetView(swapChain->GetRenderTarget(i));
         }
     }
 
@@ -103,7 +104,7 @@ void DemoMainWindow::OnInitialize() {
         perspectiveCamera.GetProjectionMatrix(projectionMatrix);
         perspectiveCamera.GetViewMatrix(viewMatrix);
 
-        constantBuffer = new Vertix::ConstantBuffer<RootConstants>(graphicsDevice);
+        constantBuffer = std::make_unique<Vertix::ConstantBuffer<RootConstants>>(graphicsDevice);
         FillConstantBuffer();
     }
 }
@@ -155,16 +156,16 @@ void DemoMainWindow::OnRender(const double deltaTime) {
     constexpr float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 
     const auto commandListPtr = commandList.Get();
-    const auto renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
+    const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
     const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         commandList->RSSetViewports(1, &viewport);
         commandList->RSSetScissorRects(1, &scissorRect);
         commandList->SetGraphicsRootSignature(rootSignature.Get());
         commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetD3D12Resource()->GetGPUVirtualAddress());
-        renderTarget->SetRenderTarget(commandListPtr, depthStencilView);
-        renderTarget->Clear(commandListPtr, clearColor);
-        depthStencilView->ClearDepth(commandListPtr);
+        renderTarget.SetRenderTarget(commandListPtr, &depthStencilView);
+        renderTarget.Clear(commandListPtr, clearColor);
+        depthStencilView.ClearDepth(commandListPtr);
         commandList->SetPipelineState(pipelineState.Get());
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cubeModel.Draw(commandList);
@@ -172,11 +173,18 @@ void DemoMainWindow::OnRender(const double deltaTime) {
 }
 
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
-    GetD3D12ViewportRectSize(viewport, scissorRect);
+    const auto d3d12Device = graphicsDevice->GetD3D12Device();
 
+    GetD3D12ViewportRectSize(viewport, scissorRect);
     frameCommandList->WaitForCommand();
-    swapChain->Resize(size);
+
     depthStencilTexture->Resize(size);
+    depthStencilView.Reuse(d3d12Device, depthStencilTexture->GetResource());
+
+    swapChain->Resize(size);
+    for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
+        renderTargetViews[i].Reuse(d3d12Device, swapChain->GetRenderTarget(i)->GetResource());
+    }
 
     perspectiveCamera.SetAspect(static_cast<float>(size.X) / static_cast<float>(size.Y));
     perspectiveCamera.GetProjectionMatrix(projectionMatrix);

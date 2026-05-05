@@ -58,8 +58,9 @@ target_sources(Vertix
             include/Vertix/Rendering/HlslShader.h
             include/Vertix/Rendering/RenderPass.hpp
             include/Vertix/Rendering/RenderPipeline.hpp
-        include/Vertix/Rendering/RenderTexture.hpp
-        include/Vertix/Rendering/RenderTextureAllocator.hpp
+            include/Vertix/Rendering/RenderTexture.hpp
+        include/Vertix/Rendering/RenderTextureViewAllocator.hpp
+            include/Vertix/Rendering/RenderTextureView.h
             include/Vertix/Windowing/GameWindow.h
 )
 

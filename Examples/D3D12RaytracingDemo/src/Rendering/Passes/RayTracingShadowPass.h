@@ -11,8 +11,6 @@
 
 class RayTracingShadowPass : public Vertix::RenderPass<RenderContext> {
 public:
-    ~RayTracingShadowPass() override;
-
     void Initialize(
         Vertix::GraphicsDevice* device,
         RenderContext* context) override;
@@ -21,9 +19,11 @@ public:
     void Resize(const Vertix::Vector2D<unsigned> &size) override;
 
 private:
-    const Vertix::RenderTextureShaderResourceView* gPositionDepthSRV = nullptr;
-    const Vertix::RenderTextureShaderResourceView* gNormalRoughnessSRV = nullptr;
-    const Vertix::RenderTextureUnorderedAccessView* shadowMaskUAV = nullptr;
+    std::unique_ptr<Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>> shadowMaskTexture;
+
+    Vertix::RenderTextureView<Vertix::ShaderResource> gPositionDepthSRV;
+    Vertix::RenderTextureView<Vertix::ShaderResource> gNormalRoughnessSRV;
+    Vertix::RenderTextureView<Vertix::UnorderedAccess> shadowMaskUAV;
 
     uint32_t shaderTableEntrySize = 0;
 

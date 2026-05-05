@@ -11,21 +11,19 @@
 
 #define align_to(_alignment, _val) (((_val + _alignment - 1) / _alignment) * _alignment)
 
-RayTracingShadowPass::~RayTracingShadowPass() {
-    delete renderContext->shadowMaskTexture;
-}
-
 void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderContext *context) {
     RenderPass::Initialize(device, context);
     const auto &d3d12Device = device->GetD3D12Device();
 
     {
-        auto uavResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT,context->windowSize.X, context->windowSize.Y, 1, 1);
-        renderContext->shadowMaskTexture = new Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>(&renderContext->renderTextureAllocator, &uavResourceDesc);
+        const auto uavResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT,context->windowSize.X, context->windowSize.Y, 1, 1);
+        shadowMaskTexture = std::make_unique<Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>>(d3d12Device, &uavResourceDesc);
 
-        shadowMaskUAV = renderContext->shadowMaskTexture->CreateUnorderedAccessView();
-        gPositionDepthSRV = renderContext->gPositionDepthTexture->CreateShaderResourceView();
-        gNormalRoughnessSRV = renderContext->gNormalRoughnessTexture->CreateShaderResourceView();
+        renderContext->shadowMaskTexture = shadowMaskTexture.get();
+
+        shadowMaskUAV = renderContext->renderTextureAllocator->CreateUnorderedAccessView(renderContext->shadowMaskTexture);
+        gPositionDepthSRV = renderContext->renderTextureAllocator->CreateShaderResourceView(renderContext->gPositionDepthTexture);
+        gNormalRoughnessSRV = renderContext->renderTextureAllocator->CreateShaderResourceView(renderContext->gNormalRoughnessTexture);
     }
 
     {
@@ -205,12 +203,12 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     const auto scopedTransition1 = renderContext->gPositionDepthTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     const auto scopedTransition2 = renderContext->gNormalRoughnessTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     {
-        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator.GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
+        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator->GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
         commandList->SetComputeRootSignature(globalRootSig.Get());
         commandList->SetComputeRootDescriptorTable(0, renderContext->tlasSrvGpuHandle);
-        commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->srvGpuHandle);
-        commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->srvGpuHandle);
-        commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->uavGpuHandle);
+        commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV.GetGpuHandle());
+        commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV.GetGpuHandle());
+        commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV.GetGpuHandle());
         commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
 
         commandList->SetPipelineState1(rtStateObject.Get());
@@ -220,4 +218,9 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 
 void RayTracingShadowPass::Resize(const Vertix::Vector2D<unsigned> &size) {
     renderContext->shadowMaskTexture->Resize(size);
+
+    const auto &d3d12Device = graphicsDevice->GetD3D12Device();
+    shadowMaskUAV.Reuse(d3d12Device, renderContext->shadowMaskTexture->GetResource());
+    gPositionDepthSRV.Reuse(d3d12Device, renderContext->gPositionDepthTexture->GetResource());
+    gNormalRoughnessSRV.Reuse(d3d12Device, renderContext->gNormalRoughnessTexture->GetResource());
 }

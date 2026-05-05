@@ -17,11 +17,12 @@ public:
         RenderContext* context) override;
 
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
+    void Resize(const Vertix::Vector2D<unsigned> &size) override;
 
 private:
     Vertix::SwapChain* swapChain;
 
-    const Vertix::RenderTextureShaderResourceView* shadowMaskSRV = nullptr;
+    Vertix::RenderTextureView<Vertix::ShaderResource> shadowMaskSRV;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

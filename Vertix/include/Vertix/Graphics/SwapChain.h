@@ -12,7 +12,7 @@
 #include "Vertix/VERTIX_EXPORT.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderTextureAllocator.hpp"
+#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
 
 namespace Vertix {
     class GraphicsDevice;
@@ -63,9 +63,7 @@ namespace Vertix {
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<IDXGISwapChain3> dxgiSwapChain;
 
-        RenderTextureAllocator renderTextureAllocator;
         std::vector<std::unique_ptr<RenderTexture<RenderTarget>>> renderTargets;
-        std::vector<RenderTextureRenderTargetView*> renderTargetViews;
 
         UINT currentFrameIndex = 0;
         UINT presentFlags = 0;

@@ -12,12 +12,6 @@
 #include "Vertix/Exceptions/HResultException.h"
 #include "Vertix/Graphics/GraphicsDevice.h"
 
-GeometryPass::~GeometryPass() {
-    delete renderContext->gPositionDepthTexture;
-    delete renderContext->gNormalRoughnessTexture;
-    delete renderContext->gDepthTexture;
-}
-
 void GeometryPass::Initialize(
     Vertix::GraphicsDevice* device,
     RenderContext *context)
@@ -28,16 +22,20 @@ void GeometryPass::Initialize(
     {
         constexpr auto gResourceClearValue = D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_R32G32B32A32_FLOAT, .Color = { 0.0f, 0.0f, 0.0f, 0.0f } };
         const auto gResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT,context->windowSize.X, context->windowSize.Y);
-        renderContext->gPositionDepthTexture = new Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>(&renderContext->renderTextureAllocator, &gResourceDesc, &gResourceClearValue);
-        renderContext->gNormalRoughnessTexture = new Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>(&renderContext->renderTextureAllocator, &gResourceDesc, &gResourceClearValue);
+        gPositionDepthTexture = std::make_unique<Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>>(d3d12Device, &gResourceDesc, &gResourceClearValue);
+        gNormalRoughnessTexture = std::make_unique<Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>>(d3d12Device, &gResourceDesc, &gResourceClearValue);
 
         constexpr auto gDepthClearValue = D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_D32_FLOAT, .DepthStencil = { 1.0f } };
         const auto gDepthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,context->windowSize.X, context->windowSize.Y);
-        renderContext->gDepthTexture = new Vertix::RenderTexture<Vertix::DepthStencil>(&renderContext->renderTextureAllocator, &gDepthDesc, &gDepthClearValue);
+        gDepthTexture = std::make_unique<Vertix::RenderTexture<Vertix::DepthStencil>>(d3d12Device, &gDepthDesc, &gDepthClearValue);
 
-        gPositionDepthRTV = renderContext->gPositionDepthTexture->CreateRenderTargetView();
-        gNormalRoughnessRTV = renderContext->gNormalRoughnessTexture->CreateRenderTargetView();
-        gDepthDSV = renderContext->gDepthTexture->CreateDepthStencilView();
+        renderContext->gPositionDepthTexture = gPositionDepthTexture.get();
+        renderContext->gNormalRoughnessTexture = gNormalRoughnessTexture.get();
+        renderContext->gDepthTexture = gDepthTexture.get();
+
+        gPositionDepthRTV = renderContext->renderTextureAllocator->CreateRenderTargetView(renderContext->gPositionDepthTexture);
+        gNormalRoughnessRTV = renderContext->renderTextureAllocator->CreateRenderTargetView(renderContext->gNormalRoughnessTexture);
+        gDepthDSV = renderContext->renderTextureAllocator->CreateDepthStencilView(renderContext->gDepthTexture);
     }
 
     {
@@ -91,15 +89,15 @@ void GeometryPass::Initialize(
 
 void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV->rtvHandle, gNormalRoughnessRTV->rtvHandle };
+    const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV.GetHandle(), gNormalRoughnessRTV.GetHandle() };
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
     commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer.GetGpuVirtualAddress());
-    commandList->OMSetRenderTargets(2, renderTargets, FALSE, &gDepthDSV->dsvHandle);
+    commandList->OMSetRenderTargets(2, renderTargets, FALSE, gDepthDSV.GetHandleAddress());
 
-    gPositionDepthRTV->Clear(commandList, clearColor);
-    gNormalRoughnessRTV->Clear(commandList, clearColor);
-    gDepthDSV->ClearDepth(commandList);
+    gPositionDepthRTV.Clear(commandList, clearColor);
+    gNormalRoughnessRTV.Clear(commandList, clearColor);
+    gDepthDSV.ClearDepth(commandList);
 
     commandList->SetPipelineState(pipelineState.Get());
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -117,7 +115,12 @@ void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 }
 
 void GeometryPass::Resize(const Vertix::Vector2D<unsigned> &size) {
-    renderContext->gPositionDepthTexture->Resize(size);
-    renderContext->gNormalRoughnessTexture->Resize(size);
-    renderContext->gDepthTexture->Resize(size);
+    gPositionDepthTexture->Resize(size);
+    gNormalRoughnessTexture->Resize(size);
+    gDepthTexture->Resize(size);
+
+    const auto &d3d12Device = graphicsDevice->GetD3D12Device();
+    gPositionDepthRTV.Reuse(d3d12Device, renderContext->gPositionDepthTexture->GetResource());
+    gNormalRoughnessRTV.Reuse(d3d12Device, renderContext->gNormalRoughnessTexture->GetResource());
+    gDepthDSV.Reuse(d3d12Device, renderContext->gDepthTexture->GetResource());
 }

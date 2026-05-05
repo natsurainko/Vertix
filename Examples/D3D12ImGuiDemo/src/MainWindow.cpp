@@ -14,8 +14,11 @@ void MainWindow::OnInitialize() {
     imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 64, true);
     commandList = frameCommandList->GetD3D12GraphicsCommandList();
 
+    renderTextureViewAllocator = std::make_unique<Vertix::RenderTextureViewAllocator>(graphicsDevice);
+    renderTextureViewAllocator->InitRenderTargetDescriptorHeap(2);
+
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i] = swapChain->GetRenderTarget(i)->CreateRenderTargetView();
+        renderTargetViews[i] = renderTextureViewAllocator->CreateRenderTargetView(swapChain->GetRenderTarget(i));
     }
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -83,8 +86,14 @@ void MainWindow::OnDestroy() {
 }
 
 void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
+    const auto d3d12Device = graphicsDevice->GetD3D12Device();
+
     frameCommandList->WaitForCommand();
+
     swapChain->Resize(size);
+    for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
+        renderTargetViews[i].Reuse(d3d12Device, swapChain->GetRenderTarget(i)->GetResource());
+    }
 }
 
 void MainWindow::OnRender(double deltaTime) {
@@ -140,11 +149,11 @@ void MainWindow::OnRender(double deltaTime) {
     ImGui::Render();
 
     const auto commandListPtr = commandList.Get();
-    const auto renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
+    const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
     const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
-        renderTarget->SetRenderTarget(commandListPtr);
-        renderTarget->Clear(commandListPtr, clearColor);
+        renderTarget.SetRenderTarget(commandListPtr);
+        renderTarget.Clear(commandListPtr, clearColor);
         commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandListPtr); // Render Dear ImGui graphics
     }

@@ -19,7 +19,7 @@ void LightingPass::Initialize(
     RenderPass::Initialize(device, context);
     const auto &d3d12Device = device->GetD3D12Device();
 
-    shadowMaskSRV = renderContext->shadowMaskTexture->CreateShaderResourceView();
+    shadowMaskSRV = renderContext->renderTextureAllocator->CreateShaderResourceView(renderContext->shadowMaskTexture);
 
     {
         CD3DX12_DESCRIPTOR_RANGE srvRanges[1];
@@ -76,9 +76,9 @@ void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.127437680f, 0.300543794f, 0.846873232f, 1.0f };
     const auto scopedTransition = renderContext->shadowMaskTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     {
-        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator.GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
+        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator->GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
         commandList->SetGraphicsRootSignature(rootSignature.Get());
-        commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->srvGpuHandle);
+        commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV.GetGpuHandle());
 
         renderContext->currentRenderTargetView->SetRenderTarget(commandList);
         renderContext->currentRenderTargetView->Clear(commandList, clearColor);
@@ -88,4 +88,9 @@ void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
         commandList->IASetVertexBuffers(0, 1, &renderContext->fullScreenVertex->d3d12VertexBufferView);
         commandList->DrawInstanced(renderContext->fullScreenVertex->vertexCount, 1, 0, 0);
     }
+}
+
+void LightingPass::Resize(const Vertix::Vector2D<unsigned> &size) {
+    const auto &d3d12Device = graphicsDevice->GetD3D12Device();
+    shadowMaskSRV.Reuse(d3d12Device, renderContext->shadowMaskTexture->GetResource());
 }

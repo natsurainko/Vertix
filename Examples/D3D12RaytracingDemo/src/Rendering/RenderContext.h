@@ -20,6 +20,7 @@
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
 #include "Vertix/Rendering/RenderTexture.hpp"
+#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 
@@ -29,13 +30,13 @@ public:
         frameConstantsBuffer(graphicsDevice),
         lightConstantsBuffer(graphicsDevice),
         objectConstantsBuffer(graphicsDevice, 512),
-        renderTextureAllocator(graphicsDevice),
         graphicsDevice(graphicsDevice)
     {
-        renderTextureAllocator.InitRenderTargetDescriptorHeap(4);
-        renderTextureAllocator.InitDepthStencilDescriptorHeap(2);
-        renderTextureAllocator.InitSharedDescriptorHeap();
-        renderTextureAllocator.GetShaderResourceDescriptorHeap()->AllocDescriptorHandle(tlasSrvHandle, tlasSrvGpuHandle);
+        renderTextureAllocator = std::make_unique<Vertix::RenderTextureViewAllocator>(graphicsDevice);
+        renderTextureAllocator->InitRenderTargetDescriptorHeap(4);
+        renderTextureAllocator->InitDepthStencilDescriptorHeap(2);
+        renderTextureAllocator->InitSharedDescriptorHeap();
+        renderTextureAllocator->GetShaderResourceDescriptorHeap()->AllocDescriptorHandle(tlasSrvHandle, tlasSrvGpuHandle);
 
         perspectiveCamera.SetFieldOfView(Vertix::Engine::DegreesToRadians(60));
         perspectiveCamera.Move({-2.5, 0.5, 0.0});
@@ -46,7 +47,7 @@ public:
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
     std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
-    std::unique_ptr<Vertix::VertexBuffer> fullScreenVertex = nullptr;
+    std::unique_ptr<Vertix::VertexBuffer> fullScreenVertex;
 
     Vertix::ConstantBuffer<FrameConstants> frameConstantsBuffer;
     Vertix::ConstantBuffer<LightConstants> lightConstantsBuffer;
@@ -55,14 +56,14 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE tlasSrvHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE tlasSrvGpuHandle{};
 
-    Vertix::RenderTextureAllocator renderTextureAllocator;
-    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gPositionDepthTexture;
-    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gNormalRoughnessTexture;
-    Vertix::RenderTexture<Vertix::DepthStencil>* gDepthTexture;
-    Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>* shadowMaskTexture;
+    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gPositionDepthTexture = nullptr;
+    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gNormalRoughnessTexture = nullptr;
+    Vertix::RenderTexture<Vertix::DepthStencil>* gDepthTexture = nullptr;
+    Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>* shadowMaskTexture = nullptr;
 
-    const Vertix::RenderTextureRenderTargetView* renderTargetViews[2] = {};
-    const Vertix::RenderTextureRenderTargetView* currentRenderTargetView = nullptr;
+    std::unique_ptr<Vertix::RenderTextureViewAllocator> renderTextureAllocator;
+    Vertix::RenderTextureView<Vertix::RenderTarget> renderTargetViews[2] = {};
+    Vertix::RenderTextureView<Vertix::RenderTarget>* currentRenderTargetView = nullptr;
 
     Vertix::ModelPool modelPool;
 
