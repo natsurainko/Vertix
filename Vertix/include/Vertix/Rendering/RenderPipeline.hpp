@@ -26,13 +26,13 @@ namespace Vertix {
     protected:
         TContext* renderContext = nullptr;
         GraphicsDevice* graphicsDevice = nullptr;
+        ID3D12GraphicsCommandList5* commandList = nullptr;
 
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> commandList;
         std::vector<std::unique_ptr<RenderPass<TContext>>> renderPasses;
 
     public:
         RenderPipeline(GraphicsDevice* graphicsDevice, const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &graphicsCommandList)
-            : graphicsDevice(graphicsDevice), commandList(graphicsCommandList) {}
+            : graphicsDevice(graphicsDevice), commandList(graphicsCommandList.Get()) {}
 
         virtual ~RenderPipeline() {
             renderPasses.clear();

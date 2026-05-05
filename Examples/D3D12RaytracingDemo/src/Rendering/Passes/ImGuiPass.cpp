@@ -63,7 +63,7 @@ void ImGuiPass::Initialize(
     ImGui_ImplDX12_Init(&init_info);
 }
 
-void ImGuiPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
+void ImGuiPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
@@ -99,8 +99,7 @@ void ImGuiPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5>
     }
     ImGui::Render();
 
-    const auto commandListPtr = commandList.Get();
-    renderContext->currentRenderTargetView->SetRenderTarget(commandListPtr);
+    renderContext->currentRenderTargetView->SetRenderTarget(commandList);
     commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandListPtr);
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }

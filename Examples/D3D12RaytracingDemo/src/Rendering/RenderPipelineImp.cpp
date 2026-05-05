@@ -48,9 +48,7 @@ void RenderPipelineImp::Execute() {
     if (window->GetWindowState() == Vertix::Minimized) return;
 
     renderContext->currentRenderTargetView = renderContext->renderTargetViews[swapChain->GetCurrentFrameIndex()];
-
-    const auto commandListPtr = commandList.Get();
-    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         commandList->RSSetViewports(1, &renderContext->viewport);
         commandList->RSSetScissorRects(1, &renderContext->scissorRect);

@@ -89,18 +89,17 @@ void GeometryPass::Initialize(
     }
 }
 
-void GeometryPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
+void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV->rtvHandle, gNormalRoughnessRTV->rtvHandle };
-    const auto commandListPrt = commandList.Get();
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
     commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer.GetGpuVirtualAddress());
     commandList->OMSetRenderTargets(2, renderTargets, FALSE, &gDepthDSV->dsvHandle);
 
-    gPositionDepthRTV->Clear(commandListPrt, clearColor);
-    gNormalRoughnessRTV->Clear(commandListPrt, clearColor);
-    gDepthDSV->ClearDepth(commandListPrt);
+    gPositionDepthRTV->Clear(commandList, clearColor);
+    gNormalRoughnessRTV->Clear(commandList, clearColor);
+    gDepthDSV->ClearDepth(commandList);
 
     commandList->SetPipelineState(pipelineState.Get());
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

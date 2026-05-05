@@ -181,7 +181,7 @@ void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderCont
     }
 }
 
-void RayTracingShadowPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
+void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     if (!renderContext->TLAS.load(std::memory_order_acquire)) return;
 
     D3D12_DISPATCH_RAYS_DESC raytraceDesc = {};
@@ -202,9 +202,8 @@ void RayTracingShadowPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCo
     raytraceDesc.HitGroupTable.StrideInBytes = shaderTableEntrySize;
     raytraceDesc.HitGroupTable.SizeInBytes = shaderTableEntrySize;
 
-    const auto commandListPtr = commandList.Get();
-    const auto scopedTransition1 = renderContext->gPositionDepthTexture->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    const auto scopedTransition2 = renderContext->gNormalRoughnessTexture->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    const auto scopedTransition1 = renderContext->gPositionDepthTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    const auto scopedTransition2 = renderContext->gNormalRoughnessTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     {
         commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator.GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
         commandList->SetComputeRootSignature(globalRootSig.Get());

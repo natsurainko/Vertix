@@ -72,17 +72,16 @@ void LightingPass::Initialize(
     }
 }
 
-void LightingPass::Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) {
+void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.127437680f, 0.300543794f, 0.846873232f, 1.0f };
-    const auto commandListPtr = commandList.Get();
-    const auto scopedTransition = renderContext->shadowMaskTexture->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    const auto scopedTransition = renderContext->shadowMaskTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     {
         commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator.GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
         commandList->SetGraphicsRootSignature(rootSignature.Get());
         commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->srvGpuHandle);
 
-        renderContext->currentRenderTargetView->SetRenderTarget(commandListPtr);
-        renderContext->currentRenderTargetView->Clear(commandListPtr, clearColor);
+        renderContext->currentRenderTargetView->SetRenderTarget(commandList);
+        renderContext->currentRenderTargetView->Clear(commandList, clearColor);
 
         commandList->SetPipelineState(pipelineState.Get());
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

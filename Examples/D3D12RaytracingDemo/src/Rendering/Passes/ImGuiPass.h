@@ -22,7 +22,7 @@ public:
         Vertix::GraphicsDevice* device,
         RenderContext* context) override;
 
-    void Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) override;
+    void Execute(ID3D12GraphicsCommandList5* commandList) override;
 private:
     const Vertix::GameWindow *window;
     Vertix::SwapChain* swapChain;

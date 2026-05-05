@@ -7,7 +7,6 @@
 
 #include <d3d12/d3d12.h>
 #include <Vertix/Math/Vector2D.hpp>
-#include <wrl/client.h>
 
 namespace Vertix {
     class GraphicsDevice;
@@ -25,7 +24,7 @@ namespace Vertix {
             graphicsDevice = device;
         }
 
-        virtual void Execute(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> &commandList) = 0;
+        virtual void Execute(ID3D12GraphicsCommandList5* commandList) = 0;
         virtual void Resize(const Vector2D<UINT> &size) {}
     protected:
         TContext* renderContext = nullptr;
