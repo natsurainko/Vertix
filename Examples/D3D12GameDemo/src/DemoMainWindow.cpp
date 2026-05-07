@@ -157,7 +157,7 @@ void DemoMainWindow::OnRender(const double deltaTime) {
 
     const auto commandListPtr = commandList.Get();
     const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
-    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->TransitionScoped(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         commandList->RSSetViewports(1, &viewport);
         commandList->RSSetScissorRects(1, &scissorRect);
@@ -173,7 +173,7 @@ void DemoMainWindow::OnRender(const double deltaTime) {
 }
 
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
-    const auto d3d12Device = graphicsDevice->GetD3D12Device();
+    const auto d3d12Device = graphicsDevice->GetD3D12Device().Get();
 
     GetD3D12ViewportRectSize(viewport, scissorRect);
     frameCommandList->WaitForCommand();

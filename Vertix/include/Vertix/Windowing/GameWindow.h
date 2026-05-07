@@ -21,7 +21,6 @@ namespace Vertix {
     struct WindowOptions {
         UINT swapChainFrameCount = 2;
         DXGI_FORMAT swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-        DXGI_FORMAT renderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
         Vector2D<UINT> windowSize { 800, 600 };
         std::wstring windowTitle = L"Vertix.GameWindow";
         std::wstring windowClassName = L"Vertix_GameWindow";

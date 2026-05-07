@@ -5,25 +5,25 @@
 #ifndef VERTIX_RAYTRACINGPASS_H
 #define VERTIX_RAYTRACINGPASS_H
 
+#include <Vertix/Rendering/Pipeline/RenderPass.h>
+
 #include "../RenderContext.h"
-#include "Vertix/Graphics/GraphicsDevice.h"
-#include "Vertix/Rendering/RenderPass.hpp"
 
 class RayTracingShadowPass : public Vertix::RenderPass<RenderContext> {
 public:
     void Initialize(
-        Vertix::GraphicsDevice* device,
+        const Vertix::GraphicsDevice* device,
+        const Vertix::PassInitializationContext &passContext,
         RenderContext* context) override;
 
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
-    void Resize(const Vertix::Vector2D<unsigned> &size) override;
 
 private:
-    std::unique_ptr<Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>> shadowMaskTexture;
+    ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
-    Vertix::RenderTextureView<Vertix::ShaderResource> gPositionDepthSRV;
-    Vertix::RenderTextureView<Vertix::ShaderResource> gNormalRoughnessSRV;
-    Vertix::RenderTextureView<Vertix::UnorderedAccess> shadowMaskUAV;
+    const Vertix::RenderTextureView<Vertix::ShaderResource>* gPositionDepthSRV = nullptr;
+    const Vertix::RenderTextureView<Vertix::ShaderResource>* gNormalRoughnessSRV= nullptr;
+    const Vertix::RenderTextureView<Vertix::UnorderedAccess>* shadowMaskUAV = nullptr;
 
     uint32_t shaderTableEntrySize = 0;
 

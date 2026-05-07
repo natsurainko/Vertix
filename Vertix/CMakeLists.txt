@@ -55,12 +55,18 @@ target_sources(Vertix
             include/Vertix/Primitive/Model.h
             include/Vertix/Primitive/Material.h
             include/Vertix/Primitive/Texture.h
+            include/Vertix/Rendering/BoundRenderTargets.h
             include/Vertix/Rendering/HlslShader.h
-            include/Vertix/Rendering/RenderPass.hpp
-            include/Vertix/Rendering/RenderPipeline.hpp
             include/Vertix/Rendering/RenderTexture.hpp
-        include/Vertix/Rendering/RenderTextureViewAllocator.hpp
+            include/Vertix/Rendering/RenderTextureAccessor.h
             include/Vertix/Rendering/RenderTextureView.h
+            include/Vertix/Rendering/RenderTextureViewAllocator.hpp
+            include/Vertix/Rendering/RenderTextureViewDesc.h
+            include/Vertix/Rendering/Pipeline/RenderPass.h
+            include/Vertix/Rendering/Pipeline/RenderPipeline.h
+            include/Vertix/Rendering/Pipeline/RenderPipelineBuilder.h
+            include/Vertix/Rendering/Pipeline/PassInitializationContext.h
+            include/Vertix/Rendering/Pipeline/PassRequirementBuilder.h
             include/Vertix/Windowing/GameWindow.h
 )
 

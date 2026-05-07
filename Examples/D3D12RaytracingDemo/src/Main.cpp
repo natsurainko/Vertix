@@ -17,7 +17,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
     };
 
     const Vertix::WindowOptions windowOptions {
-        .renderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
         .windowSize = { 1280, 768 },
         .windowTitle = L"D3D12RaytracingDemo.MainWindow",
     };

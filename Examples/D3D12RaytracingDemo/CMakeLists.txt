@@ -1,8 +1,6 @@
 ﻿add_executable(D3D12RaytracingDemo WIN32
         src/Controlling/KeyboardControllerInput.h
         src/Controlling/MouseControllerInput.h
-        src/Rendering/RenderPipelineImp.cpp
-        src/Rendering/RenderPipelineImp.h
         src/Rendering/RenderContext.h
         src/Rendering/Passes/GeometryPass.cpp
         src/Rendering/Passes/GeometryPass.h

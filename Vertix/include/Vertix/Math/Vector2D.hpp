@@ -5,6 +5,8 @@
 #ifndef VERTIX_VECTOR2_H
 #define VERTIX_VECTOR2_H
 
+#define VERTIX_VECTOR2D_EXPAND(value) (value).X, (value).Y
+
 namespace Vertix {
     template <typename T>
     struct Vector2D {
@@ -41,4 +43,3 @@ namespace Vertix {
 }
 
 #endif //VERTIX_VECTOR2_H
-

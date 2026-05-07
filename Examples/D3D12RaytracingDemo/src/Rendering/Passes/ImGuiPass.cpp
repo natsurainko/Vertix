@@ -11,10 +11,6 @@
 #include "Vertix/Graphics/SwapChain.h"
 #include "Vertix/Windowing/GameWindow.h"
 
-ImGuiPass::ImGuiPass(const Vertix::GameWindow *window) : window(window) {
-    swapChain = window->GetSwapChain();
-}
-
 ImGuiPass::~ImGuiPass() {
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
@@ -24,13 +20,15 @@ ImGuiPass::~ImGuiPass() {
 }
 
 void ImGuiPass::Initialize(
-    Vertix::GraphicsDevice* device,
-    RenderContext *context)
+    const Vertix::GraphicsDevice* device,
+    const Vertix::PassInitializationContext &views,
+    RenderContext* context)
 {
-    RenderPass::Initialize(device, context);
+    renderContext   = context;
+    currentFrameRTV = views.GetCurrentFrameRTV();
 
     if (!imguiSrvDescriptorHeap) {
-        imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2, true);
+        imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2, true);
     }
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -51,8 +49,8 @@ void ImGuiPass::Initialize(
     ImGui_ImplWin32_Init(window->GetWindowHandle());
 
     ImGui_ImplDX12_InitInfo init_info = {};
-    init_info.Device = graphicsDevice->GetD3D12Device().Get();
-    init_info.CommandQueue = graphicsDevice->GetDefaultD3D12CommandQueue().Get();
+    init_info.Device = device->GetD3D12Device().Get();
+    init_info.CommandQueue = device->GetDefaultD3D12CommandQueue().Get();
     init_info.NumFramesInFlight = 2;
     init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
@@ -99,7 +97,7 @@ void ImGuiPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     }
     ImGui::Render();
 
-    renderContext->currentRenderTargetView->SetRenderTarget(commandList);
+    (*currentFrameRTV)->SetRenderTarget(commandList);
     commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }

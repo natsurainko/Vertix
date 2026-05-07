@@ -92,7 +92,7 @@ void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
 
     swapChain->Resize(size);
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i].Reuse(d3d12Device, swapChain->GetRenderTarget(i)->GetResource());
+        renderTargetViews[i].Reuse(d3d12Device.Get(), swapChain->GetRenderTarget(i)->GetResource());
     }
 }
 
@@ -150,7 +150,7 @@ void MainWindow::OnRender(double deltaTime) {
 
     const auto commandListPtr = commandList.Get();
     const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
-    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->ScopedTransition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->TransitionScoped(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         renderTarget.SetRenderTarget(commandListPtr);
         renderTarget.Clear(commandListPtr, clearColor);

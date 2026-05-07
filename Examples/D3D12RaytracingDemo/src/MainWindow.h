@@ -6,24 +6,23 @@
 #define VERTIX_MAINWINDOW_H
 
 #include <imgui/imgui.h>
+#include <Vertix/Rendering/Pipeline/RenderPipeline.h>
 #include <Vertix.Engine/Controlling/DefaultPositionController.hpp>
 #include <Vertix.Engine/Controlling/DefaultRotationController.hpp>
 #include <Vertix/Windowing/GameWindow.h>
 
 #include "Controlling/KeyboardControllerInput.h"
 #include "Controlling/MouseControllerInput.h"
-#include "Rendering/RenderPipelineImp.h"
+#include "Rendering/RenderContext.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 class MainWindow : public Vertix::GameWindow {
 public:
     explicit MainWindow(const Vertix::WindowOptions &options) : GameWindow(options) {}
-    ~MainWindow() override {
-        delete renderPipeline;
-    }
-
     void OnInitialize() override;
+
+protected:
     void OnRender(double deltaTime) override;
     void OnUpdate(double deltaTime) override;
     void OnResized(const Vertix::Vector2D<unsigned> &size) override;
@@ -34,9 +33,11 @@ public:
     }
 
 private:
-    RenderPipelineImp* renderPipeline = nullptr;
-    RenderContext* renderContext = nullptr;
+    void BuildRenderPipeline();
+
     ImGuiIO* imGuiIO = nullptr;
+    std::unique_ptr<RenderContext> renderContext;
+    std::unique_ptr<Vertix::RenderPipeline<RenderContext>> renderPipeline;
 
     KeyboardControllerInput keyboardControllerInput {};
     MouseControllerInput mouseControllerInput {this};

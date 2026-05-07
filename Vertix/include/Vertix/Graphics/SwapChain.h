@@ -6,13 +6,13 @@
 #define VERTIX_SWAPCHAIN_H
 
 #include <dxgi1_4.h>
+#include <memory>
 #include <vector>
 #include <wrl/client.h>
 
 #include "Vertix/VERTIX_EXPORT.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
 
 namespace Vertix {
     class GraphicsDevice;

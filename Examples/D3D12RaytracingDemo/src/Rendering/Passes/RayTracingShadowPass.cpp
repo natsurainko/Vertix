@@ -11,21 +11,18 @@
 
 #define align_to(_alignment, _val) (((_val + _alignment - 1) / _alignment) * _alignment)
 
-void RayTracingShadowPass::Initialize(Vertix::GraphicsDevice *device, RenderContext *context) {
-    RenderPass::Initialize(device, context);
+void RayTracingShadowPass::Initialize(
+    const Vertix::GraphicsDevice* device,
+    const Vertix::PassInitializationContext &passContext,
+    RenderContext* context)
+{
+    renderContext       = context;
+    shadowMaskUAV       = passContext.GetTextureView<Vertix::UnorderedAccess>("RT.ShadowMask.UAV");
+    gPositionDepthSRV   = passContext.GetTextureView<Vertix::ShaderResource>("GBuffer.PositionDepth.SRV");
+    gNormalRoughnessSRV = passContext.GetTextureView<Vertix::ShaderResource>("GBuffer.NormalRoughness.SRV");
+    descriptorHeap      = passContext.GetShaderDescriptorHeap();
+
     const auto &d3d12Device = device->GetD3D12Device();
-
-    {
-        const auto uavResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT,context->windowSize.X, context->windowSize.Y, 1, 1);
-        shadowMaskTexture = std::make_unique<Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>>(d3d12Device, &uavResourceDesc);
-
-        renderContext->shadowMaskTexture = shadowMaskTexture.get();
-
-        shadowMaskUAV = renderContext->renderTextureAllocator->CreateUnorderedAccessView(renderContext->shadowMaskTexture);
-        gPositionDepthSRV = renderContext->renderTextureAllocator->CreateShaderResourceView(renderContext->gPositionDepthTexture);
-        gNormalRoughnessSRV = renderContext->renderTextureAllocator->CreateShaderResourceView(renderContext->gNormalRoughnessTexture);
-    }
-
     {
         CD3DX12_DESCRIPTOR_RANGE ranges[4];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -200,27 +197,14 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     raytraceDesc.HitGroupTable.StrideInBytes = shaderTableEntrySize;
     raytraceDesc.HitGroupTable.SizeInBytes = shaderTableEntrySize;
 
-    const auto scopedTransition1 = renderContext->gPositionDepthTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    const auto scopedTransition2 = renderContext->gNormalRoughnessTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    {
-        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator->GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
-        commandList->SetComputeRootSignature(globalRootSig.Get());
-        commandList->SetComputeRootDescriptorTable(0, renderContext->tlasSrvGpuHandle);
-        commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV.GetGpuHandle());
-        commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV.GetGpuHandle());
-        commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV.GetGpuHandle());
-        commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
+    commandList->SetDescriptorHeaps(1, &descriptorHeap);
+    commandList->SetComputeRootSignature(globalRootSig.Get());
+    commandList->SetComputeRootDescriptorTable(0, renderContext->tlasSrvGpuHandle);
+    commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->GetGpuHandle());
+    commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->GetGpuHandle());
+    commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->GetGpuHandle());
+    commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
 
-        commandList->SetPipelineState1(rtStateObject.Get());
-        commandList->DispatchRays(&raytraceDesc);
-    }
-}
-
-void RayTracingShadowPass::Resize(const Vertix::Vector2D<unsigned> &size) {
-    renderContext->shadowMaskTexture->Resize(size);
-
-    const auto &d3d12Device = graphicsDevice->GetD3D12Device();
-    shadowMaskUAV.Reuse(d3d12Device, renderContext->shadowMaskTexture->GetResource());
-    gPositionDepthSRV.Reuse(d3d12Device, renderContext->gPositionDepthTexture->GetResource());
-    gNormalRoughnessSRV.Reuse(d3d12Device, renderContext->gNormalRoughnessTexture->GetResource());
+    commandList->SetPipelineState1(rtStateObject.Get());
+    commandList->DispatchRays(&raytraceDesc);
 }

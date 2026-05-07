@@ -7,36 +7,33 @@
 
 #include <structures.h>
 #include <thread>
-#include <d3d12/d3dx12_core.h>
 
 #include "Vertix.Engine/Camera/PerspectiveCamera.h"
-#include "Vertix/Graphics/DescriptorHeap.h"
 #include "Vertix/Graphics/Buffers/ConstantBuffer.hpp"
 #include "Vertix/Graphics/Buffers/ConstantBufferPageArray.hpp"
 #include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
 #include "Vertix.Engine/Helpers/MathHelper.h"
 #include "Vertix.Engine/Helpers/VectorHelper.h"
 #include "Vertix.Engine/Scene/SceneObject3D.hpp"
+#include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
-#include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 
 class RenderContext {
 public:
-    explicit RenderContext(const Vertix::GraphicsDevice* graphicsDevice) :
-        frameConstantsBuffer(graphicsDevice),
-        lightConstantsBuffer(graphicsDevice),
-        objectConstantsBuffer(graphicsDevice, 512),
-        graphicsDevice(graphicsDevice)
+    explicit RenderContext(
+        const Vertix::GraphicsDevice* graphicsDevice,
+        Vertix::FrameCommandList* frameCommandList)
+    : frameConstantsBuffer(graphicsDevice), lightConstantsBuffer(graphicsDevice), objectConstantsBuffer(graphicsDevice, 512),
+      graphicsDevice(graphicsDevice)
     {
-        renderTextureAllocator = std::make_unique<Vertix::RenderTextureViewAllocator>(graphicsDevice);
-        renderTextureAllocator->InitRenderTargetDescriptorHeap(4);
-        renderTextureAllocator->InitDepthStencilDescriptorHeap(2);
-        renderTextureAllocator->InitSharedDescriptorHeap();
-        renderTextureAllocator->GetShaderResourceDescriptorHeap()->AllocDescriptorHandle(tlasSrvHandle, tlasSrvGpuHandle);
+        Vertix::ResourceUploadHeap resourceUploadHeap {};
+        frameCommandList->BeginCommand(nullptr);
+        fullScreenVertex = std::unique_ptr<Vertix::VertexBuffer>(Vertix::VertexBuffer::CreateFullScreenRect(graphicsDevice, frameCommandList, resourceUploadHeap));
+        frameCommandList->EndCommand();
+        frameCommandList->WaitForCommand();
 
         perspectiveCamera.SetFieldOfView(Vertix::Engine::DegreesToRadians(60));
         perspectiveCamera.Move({-2.5, 0.5, 0.0});
@@ -56,20 +53,9 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE tlasSrvHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE tlasSrvGpuHandle{};
 
-    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gPositionDepthTexture = nullptr;
-    Vertix::RenderTexture<Vertix::DrawColorSampleAccessor>* gNormalRoughnessTexture = nullptr;
-    Vertix::RenderTexture<Vertix::DepthStencil>* gDepthTexture = nullptr;
-    Vertix::RenderTexture<Vertix::UnorderedAccessSampleAccessor>* shadowMaskTexture = nullptr;
-
-    std::unique_ptr<Vertix::RenderTextureViewAllocator> renderTextureAllocator;
-    Vertix::RenderTextureView<Vertix::RenderTarget> renderTargetViews[2] = {};
-    Vertix::RenderTextureView<Vertix::RenderTarget>* currentRenderTargetView = nullptr;
-
     Vertix::ModelPool modelPool;
 
     Vertix::Vector2D<UINT> windowSize;
-    CD3DX12_VIEWPORT viewport{0.f,0.f, 0.f, 0.f};
-    CD3DX12_RECT scissorRect{};
 
     void BuildTLASAsync(const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& computeCommandQueue) {
         std::thread([
@@ -140,11 +126,6 @@ public:
 
     void SetWindowSize(const Vertix::Vector2D<UINT> &size) {
         windowSize = size;
-        viewport.Width = static_cast<float>(windowSize.X);
-        viewport.Height = static_cast<float>(windowSize.Y);
-        scissorRect.right = static_cast<LONG>(windowSize.X);
-        scissorRect.bottom = static_cast<LONG>(windowSize.Y);
-
         perspectiveCamera.SetAspect(static_cast<float>(windowSize.X) / static_cast<float>(windowSize.Y));
         perspectiveCamera.GetProjectionMatrix(frameConstants.Projection);
     }

@@ -10,17 +10,17 @@
 
 #include "Vertix/Graphics/SwapChain.h"
 
-LightingPass::LightingPass(Vertix::SwapChain *swapChain) : swapChain(swapChain) {}
-
 void LightingPass::Initialize(
-    Vertix::GraphicsDevice* device,
-    RenderContext *context)
+    const Vertix::GraphicsDevice* device,
+    const Vertix::PassInitializationContext &passContext,
+    RenderContext* context)
 {
-    RenderPass::Initialize(device, context);
+    renderContext   = context;
+    shadowMaskSRV   = passContext.GetTextureView<Vertix::ShaderResource>("RT.ShadowMask.SRV");
+    currentFrameRTV = passContext.GetCurrentFrameRTV();
+    descriptorHeap  = passContext.GetShaderDescriptorHeap();
+
     const auto &d3d12Device = device->GetD3D12Device();
-
-    shadowMaskSRV = renderContext->renderTextureAllocator->CreateShaderResourceView(renderContext->shadowMaskTexture);
-
     {
         CD3DX12_DESCRIPTOR_RANGE srvRanges[1];
         srvRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -74,23 +74,16 @@ void LightingPass::Initialize(
 
 void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.127437680f, 0.300543794f, 0.846873232f, 1.0f };
-    const auto scopedTransition = renderContext->shadowMaskTexture->ScopedTransition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    {
-        commandList->SetDescriptorHeaps(1, renderContext->renderTextureAllocator->GetShaderResourceDescriptorHeap()->GetDescriptorHeap().GetAddressOf());
-        commandList->SetGraphicsRootSignature(rootSignature.Get());
-        commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV.GetGpuHandle());
 
-        renderContext->currentRenderTargetView->SetRenderTarget(commandList);
-        renderContext->currentRenderTargetView->Clear(commandList, clearColor);
+    commandList->SetDescriptorHeaps(1, &descriptorHeap);
+    commandList->SetGraphicsRootSignature(rootSignature.Get());
+    commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->GetGpuHandle());
 
-        commandList->SetPipelineState(pipelineState.Get());
-        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-        commandList->IASetVertexBuffers(0, 1, &renderContext->fullScreenVertex->d3d12VertexBufferView);
-        commandList->DrawInstanced(renderContext->fullScreenVertex->vertexCount, 1, 0, 0);
-    }
-}
+    (*currentFrameRTV)->SetRenderTarget(commandList);
+    (*currentFrameRTV)->Clear(commandList, clearColor);
 
-void LightingPass::Resize(const Vertix::Vector2D<unsigned> &size) {
-    const auto &d3d12Device = graphicsDevice->GetD3D12Device();
-    shadowMaskSRV.Reuse(d3d12Device, renderContext->shadowMaskTexture->GetResource());
+    commandList->SetPipelineState(pipelineState.Get());
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    commandList->IASetVertexBuffers(0, 1, &renderContext->fullScreenVertex->d3d12VertexBufferView);
+    commandList->DrawInstanced(renderContext->fullScreenVertex->vertexCount, 1, 0, 0);
 }
