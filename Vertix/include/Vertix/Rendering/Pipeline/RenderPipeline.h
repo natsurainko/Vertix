@@ -18,8 +18,8 @@
 #include "Vertix/Graphics/SwapChain.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderTextureView.h"
-#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
+#include "Vertix/Rendering/RenderResourceView.h"
+#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
 
 namespace Vertix {
     template<typename TContext>
@@ -29,7 +29,7 @@ namespace Vertix {
     class RenderPipeline {
     public:
         void Execute() {
-            auto* currentFrameResource = swapChain->GetCurrentFrameRenderTarget()->GetResource();
+            auto* currentFrameResource = swapChain->GetCurrentBuffer()->GetResource();
             const auto barrierToRT = CD3DX12_RESOURCE_BARRIER::Transition(
                 currentFrameResource,
                 D3D12_RESOURCE_STATE_PRESENT,
@@ -67,12 +67,12 @@ namespace Vertix {
 
             swapChain->Resize(size);
             for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-                frameRTVs[i].Reuse(d3d12Device, swapChain->GetRenderTarget(i)->GetResource());
+                frameRTVs[i].Reuse(d3d12Device, swapChain->GetBuffer(i)->GetResource());
             }
 
             for (auto& [texId, tex] : textures) {
                 if (resizableTextureIds.contains(texId))
-                    tex->Resize(size);
+                    tex->Resize(d3d12Device, size);
             }
 
             for (auto& [viewId, view] : rtvViews) {
@@ -109,8 +109,8 @@ namespace Vertix {
             }
         }
 
-        [[nodiscard]] TContext*                   GetRenderContext() noexcept { return renderContext; }
-        [[nodiscard]] RenderTextureViewAllocator* GetViewAllocator() const noexcept { return viewAllocator.get(); }
+        [[nodiscard]] TContext*                    GetRenderContext() noexcept { return renderContext; }
+        [[nodiscard]] RenderResourceViewAllocator* GetViewAllocator() const noexcept { return viewAllocator.get(); }
 
     private:
         explicit RenderPipeline(
@@ -142,14 +142,14 @@ namespace Vertix {
         std::unordered_set<std::string>              resizableTextureIds;
         std::unordered_map<std::string, std::unique_ptr<RenderTextureBase>> textures;
 
-        std::unique_ptr<RenderTextureViewAllocator> viewAllocator;
-        std::unordered_map<std::string, RenderTextureView<RenderTarget>>    rtvViews;
-        std::unordered_map<std::string, RenderTextureView<DepthStencil>>    dsvViews;
-        std::unordered_map<std::string, RenderTextureView<UnorderedAccess>> uavViews;
-        std::unordered_map<std::string, RenderTextureView<ShaderResource>>  srvViews;
+        std::unique_ptr<RenderResourceViewAllocator> viewAllocator;
+        std::unordered_map<std::string, RenderResourceView<RenderTarget>>    rtvViews;
+        std::unordered_map<std::string, RenderResourceView<DepthStencil>>    dsvViews;
+        std::unordered_map<std::string, RenderResourceView<UnorderedAccess>> uavViews;
+        std::unordered_map<std::string, RenderResourceView<ShaderResource>>  srvViews;
 
-        std::vector<RenderTextureView<RenderTarget>> frameRTVs;
-        const RenderTextureView<RenderTarget>* currentFrameRTV = nullptr;
+        std::vector<RenderResourceView<RenderTarget>> frameRTVs;
+        const RenderResourceView<RenderTarget>* currentFrameRTV = nullptr;
 
         std::vector<std::unique_ptr<RenderPass<TContext>>> passes;
 

@@ -15,9 +15,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nS
     ImGui_ImplWin32_EnableDpiAwareness();
     const float scale = ImGui_ImplWin32_GetDpiScaleForMonitor(MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
 
-    Vertix::WindowOptions windowOptions{};
-    windowOptions.windowTitle = L"D3D12ImGuiDemo.MainWindow";
-    windowOptions.windowSize = (Vertix::Vector2D<float>{ 1280, 720 } * scale).Cast<UINT>();
+    const Vertix::WindowOptions windowOptions {
+        .windowSize = (Vertix::Vector2D<float>{ 1280, 720 } * scale).Cast<UINT>(),
+        .windowTitle = L"D3D12ImGuiDemo.MainWindow"
+    };
 
     return Vertix::GameApplicationBuilder(hInstance, lpCmdLine, nShowCmd)
         .ConfigureWindow<MainWindow>(windowOptions, scale)

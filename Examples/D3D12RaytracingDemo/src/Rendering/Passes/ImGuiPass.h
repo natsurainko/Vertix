@@ -26,7 +26,7 @@ public:
 
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 private:
-    const Vertix::RenderTextureView<Vertix::RenderTarget>** currentFrameRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderTarget>** currentFrameRTV = nullptr;
 
     const Vertix::GameWindow *window;
     Vertix::SwapChain* swapChain;

@@ -27,15 +27,12 @@ void MainWindow::BuildRenderPipeline() {
 
     renderPipelineBuilder.Descriptor.reservedSharedDescriptorCount = 1;
 
-    constexpr auto colorClearValue = D3D12_CLEAR_VALUE { .Color = { 0.0f, 0.0f, 0.0f, 0.0f } };
-    constexpr auto depthClearValue = D3D12_CLEAR_VALUE { .DepthStencil = { .Depth = 1.0f, .Stencil = 0} };
-
     renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.PositionDepth", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true, &colorClearValue);
+        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
     renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.NormalRoughness", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true, &colorClearValue);
+        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
     renderPipelineBuilder.Textures.Add<Vertix::DrawDepthSampleAccessor>("GBuffer.Depth", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_D32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true, &depthClearValue);
+        DXGI_FORMAT_D32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
     renderPipelineBuilder.Textures.Add<Vertix::UnorderedAccessSampleAccessor>("RT.ShadowMask", CD3DX12_RESOURCE_DESC::Tex2D(
         DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
 
@@ -49,25 +46,25 @@ void MainWindow::BuildRenderPipeline() {
     renderPipelineBuilder.Views.Add<Vertix::ShaderResource>("RT.ShadowMask.SRV", "RT.ShadowMask");
 
     renderPipelineBuilder.Passes.Add<GeometryPass>([](Vertix::PassRequirementBuilder &builder) {
-        builder.RequireView<Vertix::RenderTarget>("GBuffer.PositionDepth.RTV", D3D12_RESOURCE_STATE_RENDER_TARGET);
-        builder.RequireView<Vertix::RenderTarget>("GBuffer.NormalRoughness.RTV", D3D12_RESOURCE_STATE_RENDER_TARGET);
-        builder.RequireView<Vertix::DepthStencil>("GBuffer.Depth.DSV", D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        builder.RequireView<Vertix::RenderTarget>("GBuffer.PositionDepth.RTV");
+        builder.RequireView<Vertix::RenderTarget>("GBuffer.NormalRoughness.RTV");
+        builder.RequireView<Vertix::DepthStencil>("GBuffer.Depth.DSV");
     });
 
     renderPipelineBuilder.Passes.Add<RayTracingShadowPass>([](Vertix::PassRequirementBuilder &builder) {
-        builder.RequireView<Vertix::ShaderResource>("GBuffer.PositionDepth.SRV", D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        builder.RequireView<Vertix::ShaderResource>("GBuffer.NormalRoughness.SRV", D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        builder.RequireView<Vertix::UnorderedAccess>("RT.ShadowMask.UAV", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        builder.RequireView<Vertix::ShaderResource>("GBuffer.PositionDepth.SRV");
+        builder.RequireView<Vertix::ShaderResource>("GBuffer.NormalRoughness.SRV");
+        builder.RequireView<Vertix::UnorderedAccess>("RT.ShadowMask.UAV");
     });
 
     renderPipelineBuilder.Passes.Add<LightingPass>([](Vertix::PassRequirementBuilder &builder) {
-        builder.RequireView<Vertix::ShaderResource>("RT.ShadowMask.SRV", D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        builder.RequireView<Vertix::ShaderResource>("RT.ShadowMask.SRV");
     }, swapChain);
 
     renderPipelineBuilder.Passes.Add<ImGuiPass>([](auto &) {}, this);
 
     renderPipeline = renderPipelineBuilder.Build();
-    renderPipeline->GetViewAllocator()->GetShaderResourceDescriptorHeap()->AllocDescriptorHandle(renderContext->tlasSrvHandle, renderContext->tlasSrvGpuHandle);
+    renderContext->viewAllocator = renderPipeline->GetViewAllocator();
 }
 
 void MainWindow::OnInitialize() {

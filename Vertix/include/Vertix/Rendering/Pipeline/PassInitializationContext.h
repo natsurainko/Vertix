@@ -9,15 +9,15 @@
 #include <string>
 #include <unordered_map>
 
-#include "Vertix/Rendering/RenderTextureView.h"
-#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
+#include "Vertix/Rendering/RenderResourceView.h"
+#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
 
 namespace Vertix {
     class PassInitializationContext {
     public:
-        template<RenderTextureAccessor Accessor> requires SingleAccessor<Accessor>
+        template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
         [[nodiscard]]
-        const RenderTextureView<Accessor>* GetTextureView(const std::string& id) const {
+        const RenderResourceView<Accessor>* GetTextureView(const std::string& id) const {
             if constexpr (Accessor == RenderTarget) {
                 return rtvViews.at(id);
             } else if constexpr (Accessor == DepthStencil) {
@@ -33,7 +33,7 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        const RenderTextureView<RenderTarget>** GetCurrentFrameRTV() const {
+        const RenderResourceView<RenderTarget>** GetCurrentFrameRTV() const {
             return currentFrameRTV;
         }
 
@@ -46,13 +46,13 @@ namespace Vertix {
         template <typename TContext>
         friend class RenderPipelineBuilder;
 
-        std::unordered_map<std::string, const RenderTextureView<RenderTarget>*>    rtvViews;
-        std::unordered_map<std::string, const RenderTextureView<DepthStencil>*>    dsvViews;
-        std::unordered_map<std::string, const RenderTextureView<UnorderedAccess>*> uavViews;
-        std::unordered_map<std::string, const RenderTextureView<ShaderResource>*>  srvViews;
+        std::unordered_map<std::string, const RenderResourceView<RenderTarget>*>    rtvViews;
+        std::unordered_map<std::string, const RenderResourceView<DepthStencil>*>    dsvViews;
+        std::unordered_map<std::string, const RenderResourceView<UnorderedAccess>*> uavViews;
+        std::unordered_map<std::string, const RenderResourceView<ShaderResource>*>  srvViews;
 
-        const RenderTextureView<RenderTarget>** currentFrameRTV = nullptr;
-        const RenderTextureViewAllocator* viewAllocator = nullptr;
+        const RenderResourceView<RenderTarget>** currentFrameRTV = nullptr;
+        const RenderResourceViewAllocator* viewAllocator = nullptr;
     };
 }
 

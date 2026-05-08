@@ -16,6 +16,7 @@ target_sources(Vertix
         src/Primitive/Mesh.cpp
         src/Primitive/Model.cpp
         src/Rendering/HlslShader.cpp
+        src/Rendering/RenderResource.cpp
         src/Windowing/GameWindow.cpp
     PUBLIC
         FILE_SET HEADERS
@@ -55,13 +56,13 @@ target_sources(Vertix
             include/Vertix/Primitive/Model.h
             include/Vertix/Primitive/Material.h
             include/Vertix/Primitive/Texture.h
-            include/Vertix/Rendering/BoundRenderTargets.h
             include/Vertix/Rendering/HlslShader.h
             include/Vertix/Rendering/RenderTexture.hpp
-            include/Vertix/Rendering/RenderTextureAccessor.h
-            include/Vertix/Rendering/RenderTextureView.h
-            include/Vertix/Rendering/RenderTextureViewAllocator.hpp
-            include/Vertix/Rendering/RenderTextureViewDesc.h
+            include/Vertix/Rendering/RenderResource.h
+            include/Vertix/Rendering/RenderResourceAccessor.h
+            include/Vertix/Rendering/RenderResourceView.h
+            include/Vertix/Rendering/RenderResourceViewAllocator.hpp
+            include/Vertix/Rendering/RenderResourceViewDesc.h
             include/Vertix/Rendering/Pipeline/RenderPass.h
             include/Vertix/Rendering/Pipeline/RenderPipeline.h
             include/Vertix/Rendering/Pipeline/RenderPipelineBuilder.h

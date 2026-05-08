@@ -18,6 +18,8 @@
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
+#include "Vertix/Rendering/RenderResourceView.h"
+#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 
@@ -43,15 +45,15 @@ public:
 
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
-    std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
     std::unique_ptr<Vertix::VertexBuffer> fullScreenVertex;
 
     Vertix::ConstantBuffer<FrameConstants> frameConstantsBuffer;
     Vertix::ConstantBuffer<LightConstants> lightConstantsBuffer;
     Vertix::ConstantBufferPageArray<ObjectConstants> objectConstantsBuffer;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE tlasSrvHandle{};
-    D3D12_GPU_DESCRIPTOR_HANDLE tlasSrvGpuHandle{};
+    Vertix::RenderResourceViewAllocator* viewAllocator = nullptr;
+    Vertix::RenderResourceView<Vertix::ShaderResource> tlasSRV;
+    std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
 
     Vertix::ModelPool modelPool;
 
@@ -62,8 +64,9 @@ public:
             d3d12Device  = graphicsDevice->GetD3D12Device(),
             computeQueue = computeCommandQueue,
             sceneObjects = sceneObjects,
-            srvHandle    = tlasSrvHandle,
-            tlasOut      = &TLAS
+            tlasSRV      = &tlasSRV,
+            tlasOut      = &TLAS,
+            allocator    = viewAllocator
         ]() -> void {
             Vertix::GraphicsCommandList graphicsCommandList { d3d12Device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE };
             const auto& commandList = graphicsCommandList.GetD3D12GraphicsCommandList();
@@ -93,7 +96,7 @@ public:
                 srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
                 srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
                 srvDesc.RaytracingAccelerationStructure.Location = tlas->TLASResource->GetGPUVirtualAddress();
-                d3d12Device->CreateShaderResourceView(nullptr, &srvDesc, srvHandle);
+                *tlasSRV = allocator->CreateView<Vertix::ShaderResource>(nullptr, &srvDesc);
 
                 tlasOut->store(std::shared_ptr<Vertix::TopLevelAccelerationStructure>(tlas), std::memory_order_release);
             }

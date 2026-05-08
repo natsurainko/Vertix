@@ -14,11 +14,11 @@ void MainWindow::OnInitialize() {
     imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 64, true);
     commandList = frameCommandList->GetD3D12GraphicsCommandList();
 
-    renderTextureViewAllocator = std::make_unique<Vertix::RenderTextureViewAllocator>(graphicsDevice);
+    renderTextureViewAllocator = std::make_unique<Vertix::RenderResourceViewAllocator>(graphicsDevice);
     renderTextureViewAllocator->InitRenderTargetDescriptorHeap(2);
 
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i] = renderTextureViewAllocator->CreateRenderTargetView(swapChain->GetRenderTarget(i));
+        renderTargetViews[i] = renderTextureViewAllocator->CreateViewForSwapChainBuffer(swapChain->GetBuffer(i));
     }
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -92,7 +92,7 @@ void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
 
     swapChain->Resize(size);
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i].Reuse(d3d12Device.Get(), swapChain->GetRenderTarget(i)->GetResource());
+        renderTargetViews[i].Reuse(d3d12Device.Get(), swapChain->GetBuffer(i)->GetResource());
     }
 }
 
@@ -150,7 +150,7 @@ void MainWindow::OnRender(double deltaTime) {
 
     const auto commandListPtr = commandList.Get();
     const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
-    const auto scopedTransition = swapChain->GetCurrentFrameRenderTarget()->TransitionScoped(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const auto scopedTransition = swapChain->GetCurrentBuffer()->TransitionScoped(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         renderTarget.SetRenderTarget(commandListPtr);
         renderTarget.Clear(commandListPtr, clearColor);

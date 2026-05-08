@@ -36,7 +36,7 @@ Vertix::SwapChain::SwapChain(
         for (UINT i = 0; i < frameCount; i++) {
             ComPtr<ID3D12Resource> resource;
             ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&resource)));
-            renderTargets.push_back(std::make_unique<RenderTexture<RenderTarget>>(d3d12Device, resource, D3D12_RESOURCE_STATE_PRESENT));
+            buffers.push_back(std::unique_ptr<SwapChainBuffer>(new SwapChainBuffer(resource)));
         }
     }
 }
@@ -51,7 +51,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
 	swapChainDesc.Height = (std::max)(size.Y, static_cast<UINT>(1));
 
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
-        renderTargets[i]->Reset();
+        buffers[i]->Reset();
     }
 
     ThrowIfFailed(dxgiSwapChain->ResizeBuffers(
@@ -64,7 +64,7 @@ void Vertix::SwapChain::Resize(const Vector2D<UINT> &size) {
     for (UINT i = 0; i < swapChainDesc.BufferCount; i++) {
         ComPtr<ID3D12Resource> resource;
         ThrowIfFailed(dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&resource)));
-        renderTargets[i]->Replace(resource);
+        buffers[i]->Replace(resource);
     }
 
     currentFrameIndex = dxgiSwapChain->GetCurrentBackBufferIndex();

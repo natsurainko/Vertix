@@ -199,7 +199,7 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 
     commandList->SetDescriptorHeaps(1, &descriptorHeap);
     commandList->SetComputeRootSignature(globalRootSig.Get());
-    commandList->SetComputeRootDescriptorTable(0, renderContext->tlasSrvGpuHandle);
+    renderContext->tlasSRV.SetComputeRootDescriptorTable(commandList, 0);
     commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->GetGpuHandle());
     commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->GetGpuHandle());
     commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->GetGpuHandle());

@@ -9,15 +9,15 @@
 #include <vector>
 #include <d3d12/d3d12.h>
 
-#include "Vertix/Rendering/RenderTextureAccessor.h"
-#include "Vertix/Rendering/RenderTextureView.h"
+#include "Vertix/Rendering/RenderResourceAccessor.h"
+#include "Vertix/Rendering/RenderResourceView.h"
 
 namespace Vertix {
     class PassRequirementBuilder {
     public:
         struct PassViewRequirement {
             std::string           viewId;
-            RenderTextureAccessor viewAccessor;
+            RenderResourceAccessor viewAccessor;
             D3D12_RESOURCE_STATES requiredState;
         };
 
@@ -25,7 +25,20 @@ namespace Vertix {
             std::vector<PassViewRequirement> viewRequirements;
         };
 
-        template<RenderTextureAccessor Accessor> requires SingleAccessor<Accessor>
+        template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
+        void RequireView(const std::string& viewId) {
+            if constexpr (Accessor == RenderTarget) {
+                passRequirement.viewRequirements.emplace_back(PassViewRequirement{ viewId, Accessor, D3D12_RESOURCE_STATE_RENDER_TARGET });
+            } else if constexpr (Accessor == DepthStencil) {
+                passRequirement.viewRequirements.emplace_back(PassViewRequirement{ viewId, Accessor, D3D12_RESOURCE_STATE_DEPTH_WRITE });
+            } else if constexpr (Accessor == UnorderedAccess) {
+                passRequirement.viewRequirements.emplace_back(PassViewRequirement{ viewId, Accessor, D3D12_RESOURCE_STATE_UNORDERED_ACCESS });
+            } else if constexpr (Accessor == ShaderResource) {
+                passRequirement.viewRequirements.emplace_back(PassViewRequirement{ viewId, Accessor, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE });
+            }
+        }
+
+        template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
         void RequireView(
             const std::string& viewId,
             const D3D12_RESOURCE_STATES requiredState)

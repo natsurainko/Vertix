@@ -12,9 +12,19 @@
 
 #include "Vertix/VERTIX_EXPORT.h"
 #include "Vertix/Math/Vector2D.hpp"
-#include "Vertix/Rendering/RenderTexture.hpp"
+#include "Vertix/Rendering/RenderResource.h"
 
 namespace Vertix {
+    class SwapChainBuffer : public RenderResource {
+        friend class SwapChain;
+        explicit SwapChainBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource) : RenderResource(d3d12Resource, D3D12_RESOURCE_STATE_PRESENT) {}
+
+        void Replace(const Microsoft::WRL::ComPtr<ID3D12Resource>& newResource) {
+            d3d12Resource        = newResource;
+            currentResourceState = D3D12_RESOURCE_STATE_PRESENT;
+        }
+    };
+
     class GraphicsDevice;
     class SwapChain {
     public:
@@ -48,13 +58,13 @@ namespace Vertix {
         }
 
         [[nodiscard]]
-        RenderTexture<RenderTarget>* GetRenderTarget(const UINT index) const noexcept {
-            return renderTargets[index].get();
+        SwapChainBuffer* GetBuffer(const UINT index) const noexcept {
+            return buffers[index].get();
         }
 
         [[nodiscard]]
-        RenderTexture<RenderTarget>* GetCurrentFrameRenderTarget() const noexcept {
-            return renderTargets[currentFrameIndex].get();
+        SwapChainBuffer* GetCurrentBuffer() const noexcept {
+            return buffers[currentFrameIndex].get();
         }
 
     private:
@@ -63,7 +73,7 @@ namespace Vertix {
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<IDXGISwapChain3> dxgiSwapChain;
 
-        std::vector<std::unique_ptr<RenderTexture<RenderTarget>>> renderTargets;
+        std::vector<std::unique_ptr<SwapChainBuffer>> buffers;
 
         UINT currentFrameIndex = 0;
         UINT presentFlags = 0;

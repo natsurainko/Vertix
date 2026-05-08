@@ -11,7 +11,7 @@
 
 #include "PassRequirementBuilder.h"
 #include "RenderPipeline.h"
-#include "Vertix/Rendering/RenderTextureViewDesc.h"
+#include "Vertix/Rendering/RenderResourceViewDesc.h"
 
 namespace Vertix {
     template<typename TContext>
@@ -19,7 +19,7 @@ namespace Vertix {
     public:
         class PipelineTextureDeclarationCollection {
         public:
-            template<RenderTextureAccessor Accessor>
+            template<RenderResourceAccessor Accessor>
             void Add(
                 const std::string &id,
                 const D3D12_RESOURCE_DESC &desc,
@@ -35,14 +35,16 @@ namespace Vertix {
                         capturedDesc = desc,
                         capturedClear = clearValue ? std::optional(*clearValue) : std::nullopt
                     ](const Microsoft::WRL::ComPtr<ID3D12Device> &d3d12Device) -> std::unique_ptr<RenderTextureBase> {
-                        return std::make_unique<RenderTexture<Accessor>>(d3d12Device, &capturedDesc, capturedClear.has_value() ? &capturedClear.value() : nullptr);
+                        return capturedClear.has_value()
+                            ? RenderTextureBase::Create<Accessor>(d3d12Device, capturedDesc, capturedClear)
+                            : RenderTextureBase::Create<Accessor>(d3d12Device, capturedDesc);
                     }
                 });
             }
         private:
             friend class RenderPipelineBuilder;
             struct PipelineTextureDeclaration {
-                RenderTextureAccessor accessor{};
+                RenderResourceAccessor accessor{};
                 std::optional<D3D12_CLEAR_VALUE> clearValue;
                 D3D12_RESOURCE_DESC resourceDesc{};
                 bool resizedWithSwapChain{};
@@ -54,7 +56,7 @@ namespace Vertix {
         };
         class PipelineViewDeclarationCollection {
         public:
-            template<RenderTextureAccessor Accessor> requires SingleAccessor<Accessor>
+            template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
             void Add(
                 const std::string& viewId,
                 const std::string& textureId,
@@ -158,8 +160,26 @@ namespace Vertix {
 
             // Build the declared texture view
             std::unordered_map<std::string, std::string> &viewIdToTextureId = renderPipeline->viewIdToTextureId;
-            renderPipeline->viewAllocator = std::make_unique<RenderTextureViewAllocator>(graphicsDevice);
+            renderPipeline->viewAllocator = std::make_unique<RenderResourceViewAllocator>(graphicsDevice);
             {
+                auto viewAccessorValidator = [&](
+                    const std::string& viewId,
+                    const std::string& textureId,
+                    const RenderResourceAccessor requiredAccessor)
+                {
+                    const auto it = Textures.entries.find(textureId);
+                    if (it == Textures.entries.end())
+                        throw std::runtime_error("View '" + viewId + "' references undeclared texture '" + textureId + "'");
+
+                    if ((it->second.accessor & requiredAccessor) == 0)
+                        throw std::runtime_error(
+                            "View '" + viewId + "' requires accessor 0x" +
+                            std::to_string(requiredAccessor) +
+                            " but texture '" + textureId +
+                            "' was declared with accessor 0x" +
+                            std::to_string(it->second.accessor));
+                };
+
                 auto &viewAllocator = renderPipeline->viewAllocator;
                 viewAllocator->InitRenderTargetDescriptorHeap(
                     static_cast<UINT>(Views.rtvDecls.size()) + Descriptor.reservedRTVDescriptorCount + swapChain->GetFrameCount() );
@@ -169,32 +189,36 @@ namespace Vertix {
                     static_cast<UINT>(Views.srvDecls.size()) + static_cast<UINT>(Views.uavDecls.size()) + Descriptor.reservedSharedDescriptorCount);
 
                 for (const auto &[viewId, viewDecl] : Views.rtvDecls) {
+                    viewAccessorValidator(viewId, viewDecl.textureId, RenderTarget);
                     const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
                     const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->rtvViews.emplace(viewId, viewAllocator->CreateRenderTargetView(texture, desc));
+                    renderPipeline->rtvViews.emplace(viewId, viewAllocator->template CreateViewForTexture<RenderTarget>(texture, desc));
                     viewIdToTextureId.emplace(viewId, viewDecl.textureId);
                 }
                 for (const auto &[viewId, viewDecl] : Views.dsvDecls) {
+                    viewAccessorValidator(viewId, viewDecl.textureId, DepthStencil);
                     const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
                     const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->dsvViews.emplace(viewId, viewAllocator->CreateDepthStencilView(texture, desc));
+                    renderPipeline->dsvViews.emplace(viewId, viewAllocator->template CreateViewForTexture<DepthStencil>(texture, desc));
                     viewIdToTextureId.emplace(viewId, viewDecl.textureId);
                 }
                 for (const auto &[viewId, viewDecl] : Views.uavDecls) {
+                    viewAccessorValidator(viewId, viewDecl.textureId, UnorderedAccess);
                     const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
                     const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->uavViews.emplace(viewId, viewAllocator->CreateUnorderedAccessView(texture, desc, viewDecl.counterResource));
+                    renderPipeline->uavViews.emplace(viewId, viewAllocator->CreateUAVViewForTexture(texture, desc, viewDecl.counterResource));
                     viewIdToTextureId.emplace(viewId, viewDecl.textureId);
                 }
                 for (const auto &[viewId, viewDecl] : Views.srvDecls) {
+                    viewAccessorValidator(viewId, viewDecl.textureId, ShaderResource);
                     const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
                     const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->srvViews.emplace(viewId, viewAllocator->CreateShaderResourceView(texture, desc));
+                    renderPipeline->srvViews.emplace(viewId, viewAllocator->template CreateViewForTexture<ShaderResource>(texture, desc));
                     viewIdToTextureId.emplace(viewId, viewDecl.textureId);
                 }
 
                 for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-                    renderPipeline->frameRTVs.emplace_back(viewAllocator->CreateRenderTargetView(swapChain->GetRenderTarget(i), frameRTVDesc));
+                    renderPipeline->frameRTVs.emplace_back(viewAllocator->CreateViewForSwapChainBuffer(swapChain->GetBuffer(i), frameRTVDesc));
                 }
                 renderPipeline->currentFrameRTV = &renderPipeline->frameRTVs[swapChain->GetCurrentFrameIndex()];
             }
@@ -208,19 +232,27 @@ namespace Vertix {
                 for (const auto &view : requirement.viewRequirements) {
                     switch (view.viewAccessor) {
                         case RenderTarget:
-                            if (!renderPipeline->rtvViews.contains(view.viewId)) break;
+                            if (!renderPipeline->rtvViews.contains(view.viewId))
+                                throw std::runtime_error(
+                                    "Pass requires RTV '" + view.viewId + "' which was not declared in Views");
                             initializationContext.rtvViews.emplace(view.viewId, &renderPipeline->rtvViews.at(view.viewId));
                             break;
                         case DepthStencil:
-                            if (!renderPipeline->dsvViews.contains(view.viewId)) break;
+                            if (!renderPipeline->dsvViews.contains(view.viewId))
+                                throw std::runtime_error(
+                                    "Pass requires DSV '" + view.viewId + "' which was not declared in Views");
                             initializationContext.dsvViews.emplace(view.viewId, &renderPipeline->dsvViews.at(view.viewId));
                             break;
                         case UnorderedAccess:
-                            if (!renderPipeline->uavViews.contains(view.viewId)) break;
+                            if (!renderPipeline->uavViews.contains(view.viewId))
+                                throw std::runtime_error(
+                                    "Pass requires UAV '" + view.viewId + "' which was not declared in Views");
                             initializationContext.uavViews.emplace(view.viewId, &renderPipeline->uavViews.at(view.viewId));
                             break;
                         case ShaderResource:
-                            if (!renderPipeline->srvViews.contains(view.viewId)) break;
+                            if (!renderPipeline->srvViews.contains(view.viewId))
+                                throw std::runtime_error(
+                                    "Pass requires SRV '" + view.viewId + "' which was not declared in Views");
                             initializationContext.srvViews.emplace(view.viewId, &renderPipeline->srvViews.at(view.viewId));
                             break;
                         default:

@@ -19,9 +19,9 @@ public:
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
 private:
-    const Vertix::RenderTextureView<Vertix::RenderTarget>* gPositionDepthRTV = nullptr;
-    const Vertix::RenderTextureView<Vertix::RenderTarget>* gNormalRoughnessRTV = nullptr;
-    const Vertix::RenderTextureView<Vertix::DepthStencil>* gDepthDSV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderTarget>* gPositionDepthRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderTarget>* gNormalRoughnessRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::DepthStencil>* gDepthDSV = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

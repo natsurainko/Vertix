@@ -11,7 +11,7 @@
 
 class LightingPass : public Vertix::RenderPass<RenderContext> {
 public:
-    explicit LightingPass(Vertix::SwapChain *swapChain) : swapChain(swapChain) {}
+    explicit LightingPass(Vertix::SwapChain* swapChain) : swapChain(swapChain) {}
 
     void Initialize(
         const Vertix::GraphicsDevice* device,
@@ -24,8 +24,8 @@ private:
     Vertix::SwapChain*    swapChain = nullptr;
     ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
-    const Vertix::RenderTextureView<Vertix::ShaderResource>* shadowMaskSRV = nullptr;
-    const Vertix::RenderTextureView<Vertix::RenderTarget>** currentFrameRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::ShaderResource>* shadowMaskSRV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderTarget>** currentFrameRTV = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

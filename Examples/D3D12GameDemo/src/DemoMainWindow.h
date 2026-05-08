@@ -16,7 +16,7 @@
 #include "Vertix.Engine/Input/GeneralMouseDevice.hpp"
 #include "Vertix/Primitive/Model.h"
 #include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderTextureViewAllocator.hpp"
+#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
 #include "Vertix/Windowing/GameWindow.h"
 
 using Microsoft::WRL::ComPtr;
@@ -54,9 +54,9 @@ private:
 
     std::unique_ptr<Vertix::ConstantBuffer<RootConstants>> constantBuffer;
     std::unique_ptr<Vertix::RenderTexture<Vertix::DepthStencil>> depthStencilTexture;
-    std::unique_ptr<Vertix::RenderTextureViewAllocator> renderTextureViewAllocator;
-    Vertix::RenderTextureView<Vertix::DepthStencil> depthStencilView{};
-    Vertix::RenderTextureView<Vertix::RenderTarget> renderTargetViews[2] = {};
+    std::unique_ptr<Vertix::RenderResourceViewAllocator> resViewAllocator;
+    Vertix::RenderResourceView<Vertix::DepthStencil> depthStencilView{};
+    Vertix::RenderResourceView<Vertix::RenderTarget> renderTargetViews[2] = {};
 
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;

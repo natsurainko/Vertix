@@ -21,9 +21,9 @@ public:
 private:
     ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
-    const Vertix::RenderTextureView<Vertix::ShaderResource>* gPositionDepthSRV = nullptr;
-    const Vertix::RenderTextureView<Vertix::ShaderResource>* gNormalRoughnessSRV= nullptr;
-    const Vertix::RenderTextureView<Vertix::UnorderedAccess>* shadowMaskUAV = nullptr;
+    const Vertix::RenderResourceView<Vertix::ShaderResource>* gPositionDepthSRV = nullptr;
+    const Vertix::RenderResourceView<Vertix::ShaderResource>* gNormalRoughnessSRV= nullptr;
+    const Vertix::RenderResourceView<Vertix::UnorderedAccess>* shadowMaskUAV = nullptr;
 
     uint32_t shaderTableEntrySize = 0;
 
