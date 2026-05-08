@@ -16,7 +16,7 @@ void LightingPass::Initialize(
     RenderContext* context)
 {
     renderContext   = context;
-    shadowMaskSRV   = passContext.GetTextureView<Vertix::ShaderResource>("RT.ShadowMask.SRV");
+    shadowMaskSRV   = passContext.GetView<Vertix::ShaderResource>("RT.ShadowMask");
     currentFrameRTV = passContext.GetCurrentFrameRTV();
     descriptorHeap  = passContext.GetShaderDescriptorHeap();
 

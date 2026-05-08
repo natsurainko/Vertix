@@ -36,29 +36,20 @@ void MainWindow::BuildRenderPipeline() {
     renderPipelineBuilder.Textures.Add<Vertix::UnorderedAccessSampleAccessor>("RT.ShadowMask", CD3DX12_RESOURCE_DESC::Tex2D(
         DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
 
-    renderPipelineBuilder.Views.Add<Vertix::RenderTarget>("GBuffer.PositionDepth.RTV", "GBuffer.PositionDepth");
-    renderPipelineBuilder.Views.Add<Vertix::RenderTarget>("GBuffer.NormalRoughness.RTV", "GBuffer.NormalRoughness");
-    renderPipelineBuilder.Views.Add<Vertix::DepthStencil>("GBuffer.Depth.DSV", "GBuffer.Depth");
-    renderPipelineBuilder.Views.Add<Vertix::ShaderResource>("GBuffer.PositionDepth.SRV", "GBuffer.PositionDepth");
-    renderPipelineBuilder.Views.Add<Vertix::ShaderResource>("GBuffer.NormalRoughness.SRV", "GBuffer.NormalRoughness");
-
-    renderPipelineBuilder.Views.Add<Vertix::UnorderedAccess>("RT.ShadowMask.UAV", "RT.ShadowMask");
-    renderPipelineBuilder.Views.Add<Vertix::ShaderResource>("RT.ShadowMask.SRV", "RT.ShadowMask");
-
-    renderPipelineBuilder.Passes.Add<GeometryPass>([](Vertix::PassRequirementBuilder &builder) {
-        builder.RequireView<Vertix::RenderTarget>("GBuffer.PositionDepth.RTV");
-        builder.RequireView<Vertix::RenderTarget>("GBuffer.NormalRoughness.RTV");
-        builder.RequireView<Vertix::DepthStencil>("GBuffer.Depth.DSV");
+    renderPipelineBuilder.Passes.Add<GeometryPass>([](Vertix::PassDeclarationBuilder &builder) {
+        builder.DeclareWrite<Vertix::RenderTarget>("GBuffer.PositionDepth")
+               .DeclareWrite<Vertix::RenderTarget>("GBuffer.NormalRoughness")
+               .DeclareWrite<Vertix::DepthStencil>("GBuffer.Depth");
     });
 
-    renderPipelineBuilder.Passes.Add<RayTracingShadowPass>([](Vertix::PassRequirementBuilder &builder) {
-        builder.RequireView<Vertix::ShaderResource>("GBuffer.PositionDepth.SRV");
-        builder.RequireView<Vertix::ShaderResource>("GBuffer.NormalRoughness.SRV");
-        builder.RequireView<Vertix::UnorderedAccess>("RT.ShadowMask.UAV");
+    renderPipelineBuilder.Passes.Add<RayTracingShadowPass>([](Vertix::PassDeclarationBuilder &builder) {
+        builder.DeclareRead<Vertix::ShaderResource>("GBuffer.PositionDepth")
+               .DeclareRead<Vertix::ShaderResource>("GBuffer.NormalRoughness")
+               .DeclareWrite<Vertix::UnorderedAccess>("RT.ShadowMask");
     });
 
-    renderPipelineBuilder.Passes.Add<LightingPass>([](Vertix::PassRequirementBuilder &builder) {
-        builder.RequireView<Vertix::ShaderResource>("RT.ShadowMask.SRV");
+    renderPipelineBuilder.Passes.Add<LightingPass>([](Vertix::PassDeclarationBuilder &builder) {
+        builder.DeclareRead<Vertix::ShaderResource>("RT.ShadowMask");
     }, swapChain);
 
     renderPipelineBuilder.Passes.Add<ImGuiPass>([](auto &) {}, this);

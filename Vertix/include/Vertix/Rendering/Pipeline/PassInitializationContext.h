@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "PassDeclarationBuilder.h"
 #include "Vertix/Rendering/RenderResourceView.h"
 #include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
 
@@ -16,16 +17,21 @@ namespace Vertix {
     class PassInitializationContext {
     public:
         template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
+        const RenderResourceView<Accessor>* GetView(const std::string& textureId) const {
+            return GetExplicitView<Accessor>(PassDeclarationBuilder::ImplicitViewId(textureId, Accessor));
+        }
+
+        template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
         [[nodiscard]]
-        const RenderResourceView<Accessor>* GetTextureView(const std::string& id) const {
+        const RenderResourceView<Accessor>* GetExplicitView(const std::string& viewId) const {
             if constexpr (Accessor == RenderTarget) {
-                return rtvViews.at(id);
+                return rtvViews.at(viewId);
             } else if constexpr (Accessor == DepthStencil) {
-                return dsvViews.at(id);
+                return dsvViews.at(viewId);
             } else if constexpr (Accessor == UnorderedAccess) {
-                return uavViews.at(id);
+                return uavViews.at(viewId);
             } else if constexpr (Accessor == ShaderResource) {
-                return srvViews.at(id);
+                return srvViews.at(viewId);
             }
 
             assert(false && "The specified texture does not exist or has not been declared.");

@@ -17,9 +17,9 @@ void RayTracingShadowPass::Initialize(
     RenderContext* context)
 {
     renderContext       = context;
-    shadowMaskUAV       = passContext.GetTextureView<Vertix::UnorderedAccess>("RT.ShadowMask.UAV");
-    gPositionDepthSRV   = passContext.GetTextureView<Vertix::ShaderResource>("GBuffer.PositionDepth.SRV");
-    gNormalRoughnessSRV = passContext.GetTextureView<Vertix::ShaderResource>("GBuffer.NormalRoughness.SRV");
+    shadowMaskUAV       = passContext.GetView<Vertix::UnorderedAccess>("RT.ShadowMask");
+    gPositionDepthSRV   = passContext.GetView<Vertix::ShaderResource>("GBuffer.PositionDepth");
+    gNormalRoughnessSRV = passContext.GetView<Vertix::ShaderResource>("GBuffer.NormalRoughness");
     descriptorHeap      = passContext.GetShaderDescriptorHeap();
 
     const auto &d3d12Device = device->GetD3D12Device();

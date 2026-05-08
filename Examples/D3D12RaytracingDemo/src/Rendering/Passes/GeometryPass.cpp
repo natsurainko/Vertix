@@ -18,9 +18,9 @@ void GeometryPass::Initialize(
     RenderContext* context)
 {
     renderContext       = context;
-    gPositionDepthRTV   = views.GetTextureView<Vertix::RenderTarget>("GBuffer.PositionDepth.RTV");
-    gNormalRoughnessRTV = views.GetTextureView<Vertix::RenderTarget>("GBuffer.NormalRoughness.RTV");
-    gDepthDSV           = views.GetTextureView<Vertix::DepthStencil>("GBuffer.Depth.DSV");
+    gPositionDepthRTV   = views.GetView<Vertix::RenderTarget>("GBuffer.PositionDepth");
+    gNormalRoughnessRTV = views.GetView<Vertix::RenderTarget>("GBuffer.NormalRoughness");
+    gDepthDSV           = views.GetView<Vertix::DepthStencil>("GBuffer.Depth");
 
     const auto &d3d12Device = device->GetD3D12Device();
     {

@@ -9,7 +9,7 @@
 #include <memory>
 #include <unordered_set>
 
-#include "PassRequirementBuilder.h"
+#include "PassDeclarationBuilder.h"
 #include "RenderPipeline.h"
 #include "Vertix/Rendering/RenderResourceViewDesc.h"
 
@@ -22,22 +22,22 @@ namespace Vertix {
             template<RenderResourceAccessor Accessor>
             void Add(
                 const std::string &id,
-                const D3D12_RESOURCE_DESC &desc,
+                const D3D12_RESOURCE_DESC &resDesc,
                 const bool resizedWithSwapChain = true,
                 const D3D12_CLEAR_VALUE* clearValue = nullptr)
             {
                 entries.emplace(id, PipelineTextureDeclaration {
                     .accessor = Accessor,
                     .clearValue = clearValue ? std::optional(*clearValue) : std::nullopt,
-                    .resourceDesc = desc,
+                    .resourceDesc = resDesc,
                     .resizedWithSwapChain = resizedWithSwapChain,
-                    .factory = [
-                        capturedDesc = desc,
-                        capturedClear = clearValue ? std::optional(*clearValue) : std::nullopt
-                    ](const Microsoft::WRL::ComPtr<ID3D12Device> &d3d12Device) -> std::unique_ptr<RenderTextureBase> {
-                        return capturedClear.has_value()
-                            ? RenderTextureBase::Create<Accessor>(d3d12Device, capturedDesc, capturedClear)
-                            : RenderTextureBase::Create<Accessor>(d3d12Device, capturedDesc);
+                    .factory = [](const D3D12_RESOURCE_DESC& desc,
+                                  const std::optional<D3D12_CLEAR_VALUE>& clear,
+                                  const Microsoft::WRL::ComPtr<ID3D12Device>& device) -> std::unique_ptr<RenderTextureBase>
+                    {
+                        return clear.has_value()
+                            ? RenderTextureBase::Create<Accessor>(device, desc, clear)
+                            : RenderTextureBase::Create<Accessor>(device, desc);
                     }
                 });
             }
@@ -49,7 +49,11 @@ namespace Vertix {
                 D3D12_RESOURCE_DESC resourceDesc{};
                 bool resizedWithSwapChain{};
 
-                std::function<std::unique_ptr<RenderTextureBase>(const Microsoft::WRL::ComPtr<ID3D12Device>&)> factory;
+                std::function<std::unique_ptr<RenderTextureBase>(
+                    const D3D12_RESOURCE_DESC&,
+                    const std::optional<D3D12_CLEAR_VALUE>&,
+                    const Microsoft::WRL::ComPtr<ID3D12Device>&
+                )> factory;
             };
 
             std::unordered_map<std::string, PipelineTextureDeclaration> entries;
@@ -57,7 +61,7 @@ namespace Vertix {
         class PipelineViewDeclarationCollection {
         public:
             template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
-            void Add(
+            void AddExplicit(
                 const std::string& viewId,
                 const std::string& textureId,
                 const ViewDescType<Accessor>* desc = nullptr,
@@ -89,14 +93,14 @@ namespace Vertix {
         public:
             template<RenderPassType<TContext> TRenderPass, typename... CtorArgs>
             void Add(
-                const std::function<void(PassRequirementBuilder&)> &declareFunc,
+                const std::function<void(PassDeclarationBuilder&)> &declareFunc,
                 CtorArgs&&... ctorArgs)
             {
-                PassRequirementBuilder requirementBuilder;
-                declareFunc(requirementBuilder);
+                PassDeclarationBuilder declarationBuilder;
+                declareFunc(declarationBuilder);
 
                 entries.push_back(PipelinePassDeclaration {
-                    .requirement = requirementBuilder.Build(),
+                    .declaration = declarationBuilder.Build(),
                     .factory     = [args = std::make_tuple(std::forward<CtorArgs>(ctorArgs)...)]() mutable {
                         return std::apply([](auto&&... a) {
                             return std::make_unique<TRenderPass>(std::forward<decltype(a)>(a)...);
@@ -107,7 +111,7 @@ namespace Vertix {
         private:
             friend class RenderPipelineBuilder;
             struct PipelinePassDeclaration {
-                PassRequirementBuilder::PassRequirement requirement;
+                PassDeclarationBuilder::PassDeclaration declaration;
                 std::function<std::unique_ptr<RenderPass<TContext>>()> factory;
             };
 
@@ -150,7 +154,7 @@ namespace Vertix {
             std::unordered_set<std::string> &resizableTextureIds = renderPipeline->resizableTextureIds;
             std::unordered_map<std::string, D3D12_RESOURCE_STATES> baselineTextureStates;
             for (const auto &[textureId, textureDecl] : Textures.entries) {
-                auto texture = textureDecl.factory(d3d12Device);
+                auto texture = textureDecl.factory(textureDecl.resourceDesc, textureDecl.clearValue, d3d12Device);
                 baselineTextureStates.emplace(textureId, texture->GetCurrentState());
                 renderPipeline->textures.emplace(textureId, std::move(texture));
                 if (textureDecl.resizedWithSwapChain) {
@@ -158,28 +162,83 @@ namespace Vertix {
                 }
             }
 
-            // Build the declared texture view
             std::unordered_map<std::string, std::string> &viewIdToTextureId = renderPipeline->viewIdToTextureId;
-            renderPipeline->viewAllocator = std::make_unique<RenderResourceViewAllocator>(graphicsDevice);
+            std::unordered_map<std::string, RenderResourceAccessor> explicitViewIdToAccessor;
+
+            // 1. Collect viewId of explict texture view
+            // 2. Validate explict views
             {
                 auto viewAccessorValidator = [&](
-                    const std::string& viewId,
                     const std::string& textureId,
                     const RenderResourceAccessor requiredAccessor)
                 {
                     const auto it = Textures.entries.find(textureId);
                     if (it == Textures.entries.end())
-                        throw std::runtime_error("View '" + viewId + "' references undeclared texture '" + textureId + "'");
-
+                        throw std::runtime_error("The TextureId specified in the explicit view does not exist.");
                     if ((it->second.accessor & requiredAccessor) == 0)
-                        throw std::runtime_error(
-                            "View '" + viewId + "' requires accessor 0x" +
-                            std::to_string(requiredAccessor) +
-                            " but texture '" + textureId +
-                            "' was declared with accessor 0x" +
-                            std::to_string(it->second.accessor));
+                        throw std::runtime_error("The specified texture does not conform to the accessor of the explicit view.");
                 };
 
+                auto collectExplicitViews = [&](auto& declMap, RenderResourceAccessor accessor) {
+                    for (const auto& [viewId, viewDecl] : declMap) {
+                        viewAccessorValidator(viewDecl.textureId, accessor);
+                        if (!viewIdToTextureId.emplace(viewId, viewDecl.textureId).second)
+                            throw std::runtime_error("The viewId specified existed.");
+                        explicitViewIdToAccessor.emplace(viewId, accessor);
+                    }
+                };
+
+                collectExplicitViews(Views.rtvDecls, RenderTarget);
+                collectExplicitViews(Views.dsvDecls, DepthStencil);
+                collectExplicitViews(Views.uavDecls, UnorderedAccess);
+                collectExplicitViews(Views.srvDecls, ShaderResource);
+            }
+
+            // 1. Collect view of implicit texture view
+            // 2. Validate PassDataflow declarations
+            for (const auto &[passDecl, factory] : Passes.entries) {
+                std::unordered_set<std::string> seenTextureIds;
+                for (const auto &dataflow : passDecl.dataflows) {
+                    if (auto* implicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
+                        if (!renderPipeline->textures.contains(implicitDecl->textureId))
+                            throw std::runtime_error("The TextureId specified in the implicit declaration does not exist.");
+                        if (auto result = seenTextureIds.insert(implicitDecl->textureId); !result.second)
+                            throw std::runtime_error("Only one dataflow can be declared within the same pass for the same texture.");
+
+                        std::string implicitViewId = PassDeclarationBuilder::ImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
+                        switch (implicitDecl->accessor) {
+                            case RenderTarget:
+                                Views.rtvDecls.emplace(implicitViewId, typename PipelineViewDeclarationCollection::RtvDecl(implicitDecl->textureId, std::nullopt));
+                                break;
+                            case DepthStencil:
+                                Views.dsvDecls.emplace(implicitViewId, typename PipelineViewDeclarationCollection::DsvDecl(implicitDecl->textureId, std::nullopt));
+                                break;
+                            case UnorderedAccess:
+                                Views.uavDecls.emplace(implicitViewId, typename PipelineViewDeclarationCollection::UavDecl(implicitDecl->textureId, std::nullopt, nullptr));
+                                break;
+                            case ShaderResource:
+                                Views.srvDecls.emplace(implicitViewId, typename PipelineViewDeclarationCollection::SrvDecl(implicitDecl->textureId, std::nullopt));
+                                break;
+                            default:
+                                throw std::runtime_error("Not supported accessor");
+                                break;
+                        }
+
+                        if (auto result = viewIdToTextureId.emplace(implicitViewId, implicitDecl->textureId); !result.second)
+                            throw std::runtime_error("The viewId specified existed.");
+                    }
+                    else if (auto* explicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
+                        if (!viewIdToTextureId.contains(explicitDecl->viewId))
+                            throw std::runtime_error("The ViewId specified in the explicit declaration does not exist.");
+                        if (auto result = seenTextureIds.insert(viewIdToTextureId.at(explicitDecl->viewId)); !result.second)
+                            throw std::runtime_error("Only one dataflow can be declared within the same pass for the same texture.");
+                    }
+                }
+            }
+
+            // Build the declared texture views
+            renderPipeline->viewAllocator = std::make_unique<RenderResourceViewAllocator>(graphicsDevice);
+            {
                 auto &viewAllocator = renderPipeline->viewAllocator;
                 viewAllocator->InitRenderTargetDescriptorHeap(
                     static_cast<UINT>(Views.rtvDecls.size()) + Descriptor.reservedRTVDescriptorCount + swapChain->GetFrameCount() );
@@ -188,33 +247,22 @@ namespace Vertix {
                 viewAllocator->InitSharedDescriptorHeap(
                     static_cast<UINT>(Views.srvDecls.size()) + static_cast<UINT>(Views.uavDecls.size()) + Descriptor.reservedSharedDescriptorCount);
 
-                for (const auto &[viewId, viewDecl] : Views.rtvDecls) {
-                    viewAccessorValidator(viewId, viewDecl.textureId, RenderTarget);
-                    const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
-                    const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->rtvViews.emplace(viewId, viewAllocator->template CreateViewForTexture<RenderTarget>(texture, desc));
-                    viewIdToTextureId.emplace(viewId, viewDecl.textureId);
-                }
-                for (const auto &[viewId, viewDecl] : Views.dsvDecls) {
-                    viewAccessorValidator(viewId, viewDecl.textureId, DepthStencil);
-                    const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
-                    const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->dsvViews.emplace(viewId, viewAllocator->template CreateViewForTexture<DepthStencil>(texture, desc));
-                    viewIdToTextureId.emplace(viewId, viewDecl.textureId);
-                }
-                for (const auto &[viewId, viewDecl] : Views.uavDecls) {
-                    viewAccessorValidator(viewId, viewDecl.textureId, UnorderedAccess);
-                    const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
-                    const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
+                auto buildViews = [&]<RenderResourceAccessor A>(auto& declMap, auto& viewMap) {
+                    for (const auto& [viewId, viewDecl] : declMap) {
+                        const auto* texture = renderPipeline->textures.at(viewDecl.textureId).get();
+                        const auto* desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
+                        viewMap.emplace(viewId, viewAllocator->template CreateViewForTexture<A>(texture, desc));
+                    }
+                };
+
+                buildViews.template operator()<RenderTarget>   (Views.rtvDecls, renderPipeline->rtvViews);
+                buildViews.template operator()<DepthStencil>   (Views.dsvDecls, renderPipeline->dsvViews);
+                buildViews.template operator()<ShaderResource> (Views.srvDecls, renderPipeline->srvViews);
+
+                for (const auto& [viewId, viewDecl] : Views.uavDecls) {
+                    const auto* texture = renderPipeline->textures.at(viewDecl.textureId).get();
+                    const auto* desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
                     renderPipeline->uavViews.emplace(viewId, viewAllocator->CreateUAVViewForTexture(texture, desc, viewDecl.counterResource));
-                    viewIdToTextureId.emplace(viewId, viewDecl.textureId);
-                }
-                for (const auto &[viewId, viewDecl] : Views.srvDecls) {
-                    viewAccessorValidator(viewId, viewDecl.textureId, ShaderResource);
-                    const auto texture = renderPipeline->textures.at(viewDecl.textureId).get();
-                    const auto desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->srvViews.emplace(viewId, viewAllocator->template CreateViewForTexture<ShaderResource>(texture, desc));
-                    viewIdToTextureId.emplace(viewId, viewDecl.textureId);
                 }
 
                 for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
@@ -224,36 +272,34 @@ namespace Vertix {
             }
 
             // Build the declared render pass
-            for (const auto &[requirement, factory] : Passes.entries) {
+            for (const auto &[passDecl, factory] : Passes.entries) {
                 PassInitializationContext initializationContext;
                 initializationContext.currentFrameRTV = &renderPipeline->currentFrameRTV;
                 initializationContext.viewAllocator = renderPipeline->viewAllocator.get();
 
-                for (const auto &view : requirement.viewRequirements) {
-                    switch (view.viewAccessor) {
+                for (auto& dataflow : passDecl.dataflows) {
+                    std::string viewId;
+                    RenderResourceAccessor accessor;
+                    if (auto* implicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
+                        accessor = implicitDecl->accessor;
+                        viewId = PassDeclarationBuilder::ImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
+                    } else if (auto* explicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
+                        accessor = explicitViewIdToAccessor.at(explicitDecl->viewId);
+                        viewId = explicitDecl->viewId;
+                    }
+
+                    switch (accessor) {
                         case RenderTarget:
-                            if (!renderPipeline->rtvViews.contains(view.viewId))
-                                throw std::runtime_error(
-                                    "Pass requires RTV '" + view.viewId + "' which was not declared in Views");
-                            initializationContext.rtvViews.emplace(view.viewId, &renderPipeline->rtvViews.at(view.viewId));
+                            initializationContext.rtvViews.emplace(viewId, &renderPipeline->rtvViews.at(viewId));
                             break;
                         case DepthStencil:
-                            if (!renderPipeline->dsvViews.contains(view.viewId))
-                                throw std::runtime_error(
-                                    "Pass requires DSV '" + view.viewId + "' which was not declared in Views");
-                            initializationContext.dsvViews.emplace(view.viewId, &renderPipeline->dsvViews.at(view.viewId));
+                            initializationContext.dsvViews.emplace(viewId, &renderPipeline->dsvViews.at(viewId));
                             break;
                         case UnorderedAccess:
-                            if (!renderPipeline->uavViews.contains(view.viewId))
-                                throw std::runtime_error(
-                                    "Pass requires UAV '" + view.viewId + "' which was not declared in Views");
-                            initializationContext.uavViews.emplace(view.viewId, &renderPipeline->uavViews.at(view.viewId));
+                            initializationContext.uavViews.emplace(viewId, &renderPipeline->uavViews.at(viewId));
                             break;
                         case ShaderResource:
-                            if (!renderPipeline->srvViews.contains(view.viewId))
-                                throw std::runtime_error(
-                                    "Pass requires SRV '" + view.viewId + "' which was not declared in Views");
-                            initializationContext.srvViews.emplace(view.viewId, &renderPipeline->srvViews.at(view.viewId));
+                            initializationContext.srvViews.emplace(viewId, &renderPipeline->srvViews.at(viewId));
                             break;
                         default:
                             assert(false && "Not supported accessor");
@@ -275,17 +321,23 @@ namespace Vertix {
                     auto& barriers = renderPipeline->prePassBarriers[i];
                     auto& barrierRecipes = renderPipeline->prePassBarrierRecipes[i];
 
-                    std::unordered_set<std::string> seenTextures;
-                    for (auto& req : Passes.entries[i].requirement.viewRequirements) {
-                        const auto& texId = viewIdToTextureId.at(req.viewId);
-                        assert(seenTextures.insert(texId).second && "Same texture required in two different states within one pass");
-                        auto& currentState = simulatedTextureStates.at(texId);
+                    for (auto& dataflow : Passes.entries[i].declaration.dataflows) {
+                        std::string textureId;
+                        D3D12_RESOURCE_STATES targetState;
 
-                        if (currentState != req.requiredState) {
-                            auto* resource = renderPipeline->textures.at(texId)->GetResource();
-                            barriers.emplace_back(CD3DX12_RESOURCE_BARRIER::Transition(resource, currentState, req.requiredState));
-                            barrierRecipes.emplace_back(texId, currentState, req.requiredState);
-                            currentState = req.requiredState;
+                        if (auto* implicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
+                            textureId = implicitDecl->textureId;
+                            targetState = implicitDecl->DerivativeState(dataflow.direction);
+                        } else if (auto* explicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
+                            textureId = viewIdToTextureId.at(explicitDecl->viewId);
+                            targetState = explicitDecl->explicitState;
+                        } else continue;
+
+                        if (auto& currentState = simulatedTextureStates.at(textureId); currentState != targetState) {
+                            auto* resource = renderPipeline->textures.at(textureId)->GetResource();
+                            barriers.emplace_back(CD3DX12_RESOURCE_BARRIER::Transition(resource, currentState, targetState));
+                            barrierRecipes.emplace_back(textureId, currentState, targetState);
+                            currentState = targetState;
                         }
                     }
                 }

@@ -13,10 +13,7 @@ namespace Vertix {
         ShaderResource  = 0x8,
 
         ConstantBufferAccessor = 0x10,
-        VertexBufferAccessor   = 0x20,
-        IndexBufferAccessor    = 0x40,
-
-        AccelerationStructure = 0x80,
+        AccelerationStructure = 0x20,
 
         DrawColorSampleAccessor         = RenderTarget    | ShaderResource,
         DrawDepthSampleAccessor         = DepthStencil    | ShaderResource,

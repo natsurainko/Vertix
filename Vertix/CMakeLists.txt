@@ -67,7 +67,7 @@ target_sources(Vertix
             include/Vertix/Rendering/Pipeline/RenderPipeline.h
             include/Vertix/Rendering/Pipeline/RenderPipelineBuilder.h
             include/Vertix/Rendering/Pipeline/PassInitializationContext.h
-            include/Vertix/Rendering/Pipeline/PassRequirementBuilder.h
+            include/Vertix/Rendering/Pipeline/PassDeclarationBuilder.h
             include/Vertix/Windowing/GameWindow.h
 )
 
