@@ -111,6 +111,8 @@ namespace Vertix {
 
         [[nodiscard]] TContext*                    GetRenderContext() noexcept { return renderContext; }
         [[nodiscard]] RenderResourceViewAllocator* GetViewAllocator() const noexcept { return viewAllocator.get(); }
+        [[nodiscard]] const D3D12_VIEWPORT*        GetD3D12Viewport() const noexcept { return &viewport; }
+        [[nodiscard]] const D3D12_RECT*            GetD3D12ScissorRect() const noexcept { return &scissorRect; }
 
     private:
         explicit RenderPipeline(

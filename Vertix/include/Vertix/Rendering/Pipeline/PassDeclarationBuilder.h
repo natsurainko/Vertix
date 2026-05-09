@@ -147,15 +147,14 @@ namespace Vertix {
 
         template<RenderResourceAccessor A, typename TMember> requires SingleAccessor<A> && (AccessorOf<TMember> == A)
         PassDeclarationBuilder& DeclareReadExplicit(
-            const std::string& textureId,
+            const std::string& viewId,
             const D3D12_RESOURCE_STATES explicitState,
             TMember TPass::* field)
         {
             declaration.dataflows.emplace_back(Read,
                 std::make_unique<PassBinding<TMember>>(field),
-                PassDataflowImplicitDeclaration {
-                    .textureId     = textureId,
-                    .accessor      = A,
+                PassDataflowExplicitDeclaration {
+                    .viewId        = viewId,
                     .explicitState = explicitState
                 });
 
@@ -164,15 +163,14 @@ namespace Vertix {
 
         template<RenderResourceAccessor A, typename TMember> requires SingleAccessor<A> && (AccessorOf<TMember> == A)
         PassDeclarationBuilder& DeclareWriteExplicit(
-            const std::string& textureId,
+            const std::string& viewId,
             const D3D12_RESOURCE_STATES explicitState,
             TMember TPass::* field)
         {
             declaration.dataflows.emplace_back(Write,
                 std::make_unique<PassBinding<TMember>>(field),
-                PassDataflowImplicitDeclaration {
-                    .textureId     = textureId,
-                    .accessor      = A,
+                PassDataflowExplicitDeclaration {
+                    .viewId        = viewId,
                     .explicitState = explicitState
                 });
 

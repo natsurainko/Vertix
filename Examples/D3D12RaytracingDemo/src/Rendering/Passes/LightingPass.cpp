@@ -8,8 +8,6 @@
 #include <LightingPass_VS.h>
 #include <d3d12/d3dx12_root_signature.h>
 
-Vertix::DescriptorHeap* imguiSrvDescriptorHeap = nullptr;
-
 void LightingPass::Initialize(ID3D12Device10* device) {
     {
         CD3DX12_DESCRIPTOR_RANGE srvRanges[1];

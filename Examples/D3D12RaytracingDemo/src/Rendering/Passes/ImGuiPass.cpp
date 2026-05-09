@@ -10,6 +10,8 @@
 #include "Vertix/Graphics/DescriptorHeap.h"
 #include "Vertix/Graphics/SwapChain.h"
 
+Vertix::DescriptorHeap* imguiSrvDescriptorHeap = nullptr;
+
 void ImGuiPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();

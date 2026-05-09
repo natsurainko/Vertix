@@ -6,6 +6,7 @@
 #define VERTIX_RENDERPIPELINEBUILDER_H
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <unordered_set>
 #include <variant>
@@ -27,7 +28,7 @@ namespace Vertix {
                 const bool resizedWithSwapChain = true,
                 const D3D12_CLEAR_VALUE* clearValue = nullptr)
             {
-                entries.emplace(id, PipelineTextureDeclaration {
+                const auto result = entries.emplace(id, PipelineTextureDeclaration {
                     .accessor = Accessor,
                     .clearValue = clearValue ? std::optional(*clearValue) : std::nullopt,
                     .resourceDesc = resDesc,
@@ -41,6 +42,8 @@ namespace Vertix {
                             : RenderTextureBase::Create<Accessor>(device, desc);
                     }
                 });
+
+                if (result.second) entriesOrder.emplace_back(id);
             }
         private:
             friend class RenderPipelineBuilder;
@@ -57,7 +60,8 @@ namespace Vertix {
                 )> factory;
             };
 
-            std::unordered_map<std::string, PipelineTextureDeclaration> entries;
+            std::map<std::string, PipelineTextureDeclaration> entries;
+            std::vector<std::string> entriesOrder;
         };
         class PipelineViewDeclarationCollection {
         public:
@@ -76,6 +80,24 @@ namespace Vertix {
                     uavDecls.emplace(viewId, UavDecl { textureId, desc ? std::optional{*desc} : std::nullopt, counterResource });
                 } else if constexpr (Accessor == ShaderResource) {
                     srvDecls.emplace(viewId, SrvDecl { textureId, desc ? std::optional{*desc} : std::nullopt });
+                } else { assert(false && "Not supported accessor"); }
+            }
+
+            template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
+            void AddExplicit(
+                const std::string& viewId,
+                const std::string& textureId,
+                const ViewDescType<Accessor> desc,
+                ID3D12Resource* counterResource = nullptr)
+            {
+                if constexpr (Accessor == RenderTarget) {
+                    rtvDecls.emplace(viewId, RtvDecl { textureId, std::optional{desc} });
+                } else if constexpr (Accessor == DepthStencil) {
+                    dsvDecls.emplace(viewId, DsvDecl { textureId, std::optional{desc} });
+                } else if constexpr (Accessor == UnorderedAccess) {
+                    uavDecls.emplace(viewId, UavDecl { textureId, std::optional{desc}, counterResource });
+                } else if constexpr (Accessor == ShaderResource) {
+                    srvDecls.emplace(viewId, SrvDecl { textureId, std::optional{desc} });
                 } else { assert(false && "Not supported accessor"); }
             }
         private:
@@ -208,6 +230,8 @@ namespace Vertix {
                             throw std::runtime_error("Only one dataflow can be declared within the same pass for the same texture.");
 
                         std::string implicitViewId = PassImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
+                        if (viewIdToTextureId.contains(implicitViewId)) continue;
+
                         switch (implicitDecl->accessor) {
                             case RenderTarget:
                                 Views.rtvDecls.emplace(implicitViewId, typename PipelineViewDeclarationCollection::RtvDecl(implicitDecl->textureId, std::nullopt));
@@ -226,8 +250,8 @@ namespace Vertix {
                                 break;
                         }
 
-                        if (auto result = viewIdToTextureId.emplace(implicitViewId, implicitDecl->textureId); !result.second)
-                            throw std::runtime_error("The viewId specified existed.");
+                        /*if (auto result = viewIdToTextureId.emplace(implicitViewId, implicitDecl->textureId); !result.second)
+                            throw std::runtime_error("The viewId specified existed.");*/
                     }
                     else if (auto* explicitDecl = std::get_if<PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
                         if (!viewIdToTextureId.contains(explicitDecl->viewId))
@@ -257,14 +281,48 @@ namespace Vertix {
                     }
                 };
 
-                buildViews.template operator()<RenderTarget>   (Views.rtvDecls, renderPipeline->rtvViews);
-                buildViews.template operator()<DepthStencil>   (Views.dsvDecls, renderPipeline->dsvViews);
-                buildViews.template operator()<ShaderResource> (Views.srvDecls, renderPipeline->srvViews);
+                buildViews.template operator()<RenderTarget>(Views.rtvDecls, renderPipeline->rtvViews);
+                buildViews.template operator()<DepthStencil>(Views.dsvDecls, renderPipeline->dsvViews);
 
-                for (const auto& [viewId, viewDecl] : Views.uavDecls) {
+                // Build a rank table from Textures.entries
+                std::unordered_map<std::string, std::size_t> textureRank;
+                {
+                    textureRank.reserve(Textures.entriesOrder.size());
+                    std::size_t rank = 0;
+                    for (const auto& texId : Textures.entriesOrder)
+                        textureRank.emplace(texId, rank++);
+                }
+
+                auto makeSortedPtrs = [&]<typename TDecl>(const std::unordered_map<std::string, TDecl>& declMap) {
+                    using Entry = std::pair<const std::string, TDecl>;
+                    std::vector<const Entry*> ptrs;
+                    ptrs.reserve(declMap.size());
+                    for (const auto& e : declMap)
+                        ptrs.push_back(&e);
+                    std::sort(ptrs.begin(), ptrs.end(), [&](const Entry* a, const Entry* b) {
+                        const auto kMax = (std::numeric_limits<std::size_t>::max)();
+                        const auto ra = textureRank.contains(a->second.textureId) ? textureRank.at(a->second.textureId) : kMax;
+                        const auto rb = textureRank.contains(b->second.textureId) ? textureRank.at(b->second.textureId) : kMax;
+                        if (ra != rb) return ra < rb;
+                        return a->first < b->first;
+                    });
+                    return ptrs;
+                };
+
+                for (const auto* ptr : makeSortedPtrs(Views.srvDecls)) {
+                    const auto& [viewId, viewDecl] = *ptr;
                     const auto* texture = renderPipeline->textures.at(viewDecl.textureId).get();
                     const auto* desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
-                    renderPipeline->uavViews.emplace(viewId, viewAllocator->CreateUAVViewForTexture(texture, desc, viewDecl.counterResource));
+                    renderPipeline->srvViews.emplace(viewId,
+                        viewAllocator->template CreateViewForTexture<ShaderResource>(texture, desc));
+                }
+
+                for (const auto* ptr : makeSortedPtrs(Views.uavDecls)) {
+                    const auto& [viewId, viewDecl] = *ptr;
+                    const auto* texture = renderPipeline->textures.at(viewDecl.textureId).get();
+                    const auto* desc    = viewDecl.desc.has_value() ? &viewDecl.desc.value() : nullptr;
+                    renderPipeline->uavViews.emplace(viewId,
+                        viewAllocator->CreateUAVViewForTexture(texture, desc, viewDecl.counterResource));
                 }
 
                 for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {

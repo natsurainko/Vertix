@@ -67,7 +67,7 @@ namespace Vertix {
                 resourceStateOptional = std::optional(resourceState);
             }
 
-            if (clearValueOptional.has_value()) {
+            if (clearValueOptional.has_value() && clearValueOptional.value().Format == DXGI_FORMAT_UNKNOWN) {
                 clearValueOptional.value().Format = resourceDesc.Format;
             }
 
