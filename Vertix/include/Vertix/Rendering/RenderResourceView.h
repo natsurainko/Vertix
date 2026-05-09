@@ -82,6 +82,17 @@ namespace Vertix {
     template<RenderResourceAccessor Accessor> requires SingleAccessor<Accessor>
     struct RenderResourceView {};
 
+    template<typename T>
+    struct AccessorTraits;
+
+    template<RenderResourceAccessor A>
+    struct AccessorTraits<const RenderResourceView<A>*> {
+        static constexpr RenderResourceAccessor value = A;
+    };
+
+    template<typename T>
+    inline constexpr RenderResourceAccessor AccessorOf = AccessorTraits<T>::value;
+
     template<>
     struct RenderResourceView<DepthStencil> : detail::RenderResourceViewBase_Cpu {
         friend class RenderResourceViewAllocator;

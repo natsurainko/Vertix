@@ -14,48 +14,51 @@
 #include "Rendering/Passes/RayTracingShadowPass.h"
 
 void MainWindow::BuildRenderPipeline() {
+    const auto windowSize = GetWindowSize();
+
     renderContext = std::make_unique<RenderContext>(graphicsDevice, frameCommandList);
-    renderContext->SetWindowSize(GetWindowSize());
-    Vertix::RenderPipelineBuilder renderPipelineBuilder {graphicsDevice, frameCommandList, renderContext.get()};
+    renderContext->SetWindowSize(windowSize);
 
-    // Configure SwapChain
-    renderPipelineBuilder.SwapChain.swapChainPtr = swapChain;
-    renderPipelineBuilder.SwapChain.frameRTVDesc = D3D12_RENDER_TARGET_VIEW_DESC {
-        .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-        .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
-    };
+    Vertix::RenderPipelineBuilder renderPipelineBuilder { graphicsDevice, frameCommandList, renderContext.get() };
+    {
+        // Configure SwapChain
+        renderPipelineBuilder.SwapChain.swapChainPtr = swapChain;
+        renderPipelineBuilder.SwapChain.frameRTVDesc = D3D12_RENDER_TARGET_VIEW_DESC {
+            .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+            .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+        };
 
-    renderPipelineBuilder.Descriptor.reservedSharedDescriptorCount = 1;
+        renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.PositionDepth", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
+        renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.NormalRoughness", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
+        renderPipelineBuilder.Textures.Add<Vertix::DrawDepthSampleAccessor>("GBuffer.Depth", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_D32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
+        renderPipelineBuilder.Textures.Add<Vertix::UnorderedAccessSampleAccessor>("RT.ShadowMask", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
 
-    renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.PositionDepth", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
-    renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.NormalRoughness", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
-    renderPipelineBuilder.Textures.Add<Vertix::DrawDepthSampleAccessor>("GBuffer.Depth", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_D32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
-    renderPipelineBuilder.Textures.Add<Vertix::UnorderedAccessSampleAccessor>("RT.ShadowMask", CD3DX12_RESOURCE_DESC::Tex2D(
-        DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(renderContext->windowSize)), true);
+        renderPipelineBuilder.Passes.Add<GeometryPass>([](auto &builder) { builder
+            .DeclareWrite("GBuffer.PositionDepth", &GeometryPass::gPositionDepthRTV)
+            .DeclareWrite("GBuffer.NormalRoughness", &GeometryPass::gNormalRoughnessRTV)
+            .DeclareWrite("GBuffer.Depth", &GeometryPass::gDepthDSV);
+        });
 
-    renderPipelineBuilder.Passes.Add<GeometryPass>([](Vertix::PassDeclarationBuilder &builder) {
-        builder.DeclareWrite<Vertix::RenderTarget>("GBuffer.PositionDepth")
-               .DeclareWrite<Vertix::RenderTarget>("GBuffer.NormalRoughness")
-               .DeclareWrite<Vertix::DepthStencil>("GBuffer.Depth");
-    });
+        renderPipelineBuilder.Passes.Add<RayTracingShadowPass>([](auto &builder) { builder
+            .DeclareRead("GBuffer.PositionDepth", &RayTracingShadowPass::gPositionDepthSRV)
+            .DeclareRead("GBuffer.NormalRoughness", &RayTracingShadowPass::gNormalRoughnessSRV)
+            .DeclareWrite("RT.ShadowMask", &RayTracingShadowPass::shadowMaskUAV);
+        });
 
-    renderPipelineBuilder.Passes.Add<RayTracingShadowPass>([](Vertix::PassDeclarationBuilder &builder) {
-        builder.DeclareRead<Vertix::ShaderResource>("GBuffer.PositionDepth")
-               .DeclareRead<Vertix::ShaderResource>("GBuffer.NormalRoughness")
-               .DeclareWrite<Vertix::UnorderedAccess>("RT.ShadowMask");
-    });
+        renderPipelineBuilder.Passes.Add<LightingPass>([](auto &builder) { builder
+            .DeclareRead("RT.ShadowMask", &LightingPass::shadowMaskSRV)
+            .DeclareSwapChainWrite(&LightingPass::currentFrameRTV);
+        }, swapChain);
 
-    renderPipelineBuilder.Passes.Add<LightingPass>([](Vertix::PassDeclarationBuilder &builder) {
-        builder.DeclareRead<Vertix::ShaderResource>("RT.ShadowMask");
-    }, swapChain);
-
-    renderPipelineBuilder.Passes.Add<ImGuiPass>([](auto &) {}, this);
-
+        renderPipelineBuilder.Passes.Add<ImGuiPass>([](auto &builder) { builder
+            .DeclareSwapChainWrite(&ImGuiPass::currentFrameRTV);
+        }, this);
+    }
     renderPipeline = renderPipelineBuilder.Build();
-    renderContext->viewAllocator = renderPipeline->GetViewAllocator();
 }
 
 void MainWindow::OnInitialize() {
@@ -68,14 +71,8 @@ void MainWindow::OnInitialize() {
     defaultPositionController.Speed *= 3.0;
     defaultRotationController.Sensitivity *= 1.5;
 
-    graphicsDevice->CreateCommandQueue(copyCommandQueue, {
-        .Type = D3D12_COMMAND_LIST_TYPE_COPY,
-        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE
-    });
-    graphicsDevice->CreateCommandQueue(computeCommandQueue, {
-        .Type = D3D12_COMMAND_LIST_TYPE_COMPUTE,
-        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE
-    });
+    graphicsDevice->CreateCommandQueue(copyCommandQueue, { .Type = D3D12_COMMAND_LIST_TYPE_COPY, .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE });
+    graphicsDevice->CreateCommandQueue(computeCommandQueue, { .Type = D3D12_COMMAND_LIST_TYPE_COMPUTE, .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE });
 
     Vertix::Engine::ModelAsyncLoader modelAsyncLoader {&renderContext->modelPool, graphicsDevice, copyCommandQueue, computeCommandQueue, nullptr, true};
     modelAsyncLoader.LoadModelAsync("assets/block.fbx", {}, [

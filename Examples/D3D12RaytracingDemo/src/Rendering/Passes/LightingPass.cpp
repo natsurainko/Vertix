@@ -8,19 +8,9 @@
 #include <LightingPass_VS.h>
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "Vertix/Graphics/SwapChain.h"
+Vertix::DescriptorHeap* imguiSrvDescriptorHeap = nullptr;
 
-void LightingPass::Initialize(
-    const Vertix::GraphicsDevice* device,
-    const Vertix::PassInitializationContext &passContext,
-    RenderContext* context)
-{
-    renderContext   = context;
-    shadowMaskSRV   = passContext.GetView<Vertix::ShaderResource>("RT.ShadowMask");
-    currentFrameRTV = passContext.GetCurrentFrameRTV();
-    descriptorHeap  = passContext.GetShaderDescriptorHeap();
-
-    const auto &d3d12Device = device->GetD3D12Device();
+void LightingPass::Initialize(ID3D12Device10* device) {
     {
         CD3DX12_DESCRIPTOR_RANGE srvRanges[1];
         srvRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -41,7 +31,7 @@ void LightingPass::Initialize(
         Microsoft::WRL::ComPtr<ID3DBlob> error;
 
         ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(d3d12Device->CreateRootSignature(0,
+        ThrowIfFailed(device->CreateRootSignature(0,
             signature->GetBufferPointer(),
             signature->GetBufferSize(),
             IID_PPV_ARGS(&rootSignature)));
@@ -68,8 +58,10 @@ void LightingPass::Initialize(
         psoDesc.NumRenderTargets = 1;
         psoDesc.SampleDesc.Count = 1;
         psoDesc.SampleMask = UINT_MAX;
-        ThrowIfFailed(d3d12Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
+        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
+
+    descriptorHeap = shadowMaskSRV->GetHeap()->GetDescriptorHeap().Get();
 }
 
 void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {

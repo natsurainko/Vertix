@@ -11,19 +11,15 @@
 
 class RayTracingShadowPass : public Vertix::RenderPass<RenderContext> {
 public:
-    void Initialize(
-        const Vertix::GraphicsDevice* device,
-        const Vertix::PassInitializationContext &passContext,
-        RenderContext* context) override;
-
+    void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
-
-private:
-    ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
     const Vertix::RenderResourceView<Vertix::ShaderResource>* gPositionDepthSRV = nullptr;
     const Vertix::RenderResourceView<Vertix::ShaderResource>* gNormalRoughnessSRV= nullptr;
     const Vertix::RenderResourceView<Vertix::UnorderedAccess>* shadowMaskUAV = nullptr;
+
+private:
+    ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
     uint32_t shaderTableEntrySize = 0;
 

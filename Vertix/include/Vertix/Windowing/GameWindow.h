@@ -94,6 +94,16 @@ namespace Vertix {
             return swapChain;
         }
 
+        [[nodiscard]]
+        FrameCommandList* GetFrameCommandList() const noexcept {
+            return frameCommandList;
+        }
+
+        [[nodiscard]]
+        GraphicsDevice* GetGraphicsDevice() const noexcept {
+            return graphicsDevice;
+        }
+
         void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const noexcept {
             viewport.Width = static_cast<float>(windowSize.X);
             viewport.Height = static_cast<float>(windowSize.Y);

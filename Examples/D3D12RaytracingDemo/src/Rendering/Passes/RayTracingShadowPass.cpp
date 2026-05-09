@@ -11,18 +11,7 @@
 
 #define align_to(_alignment, _val) (((_val + _alignment - 1) / _alignment) * _alignment)
 
-void RayTracingShadowPass::Initialize(
-    const Vertix::GraphicsDevice* device,
-    const Vertix::PassInitializationContext &passContext,
-    RenderContext* context)
-{
-    renderContext       = context;
-    shadowMaskUAV       = passContext.GetView<Vertix::UnorderedAccess>("RT.ShadowMask");
-    gPositionDepthSRV   = passContext.GetView<Vertix::ShaderResource>("GBuffer.PositionDepth");
-    gNormalRoughnessSRV = passContext.GetView<Vertix::ShaderResource>("GBuffer.NormalRoughness");
-    descriptorHeap      = passContext.GetShaderDescriptorHeap();
-
-    const auto &d3d12Device = device->GetD3D12Device();
+void RayTracingShadowPass::Initialize(ID3D12Device10* device) {
     {
         CD3DX12_DESCRIPTOR_RANGE ranges[4];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -37,7 +26,8 @@ void RayTracingShadowPass::Initialize(
         pointSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
         CD3DX12_ROOT_PARAMETER rootParams[5];
-        rootParams[0].InitAsDescriptorTable(1, &ranges[0]);
+        rootParams[0].InitAsShaderResourceView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        //rootParams[0].InitAsDescriptorTable(1, &ranges[0]);
         rootParams[1].InitAsDescriptorTable(1, &ranges[1]);
         rootParams[2].InitAsDescriptorTable(1, &ranges[2]);
         rootParams[3].InitAsDescriptorTable(1, &ranges[3]);
@@ -53,7 +43,7 @@ void RayTracingShadowPass::Initialize(
         Microsoft::WRL::ComPtr<ID3DBlob> error;
 
         ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(d3d12Device->CreateRootSignature(0,
+        ThrowIfFailed(device->CreateRootSignature(0,
             signature->GetBufferPointer(),
             signature->GetBufferSize(),
             IID_PPV_ARGS(&globalRootSig)));
@@ -71,7 +61,7 @@ void RayTracingShadowPass::Initialize(
         Microsoft::WRL::ComPtr<ID3DBlob> error;
 
         ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(d3d12Device->CreateRootSignature(0,
+        ThrowIfFailed(device->CreateRootSignature(0,
             signature->GetBufferPointer(),
             signature->GetBufferSize(),
             IID_PPV_ARGS(&localRootSig)));
@@ -135,7 +125,7 @@ void RayTracingShadowPass::Initialize(
         desc.NumSubobjects = 7;
         desc.pSubobjects = subobjects.data();
 
-        ThrowIfFailed(d3d12Device->CreateStateObject(&desc, IID_PPV_ARGS(&rtStateObject)));
+        ThrowIfFailed(device->CreateStateObject(&desc, IID_PPV_ARGS(&rtStateObject)));
     }
 
     {
@@ -148,7 +138,7 @@ void RayTracingShadowPass::Initialize(
         uint32_t shaderTableSize = shaderTableEntrySize * 3;
         const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(shaderTableSize);
 
-        ThrowIfFailed(d3d12Device->CreateCommittedResource(
+        ThrowIfFailed(device->CreateCommittedResource(
             &uploadHeapProps,
             D3D12_HEAP_FLAG_NONE,
             &bufferDesc,
@@ -174,10 +164,13 @@ void RayTracingShadowPass::Initialize(
         }
         stbResource->Unmap(0, nullptr);
     }
+
+    descriptorHeap = shadowMaskUAV->GetHeap()->GetDescriptorHeap().Get();
 }
 
 void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
-    if (!renderContext->TLAS.load(std::memory_order_acquire)) return;
+    const auto topLevelAS = renderContext->TLAS.load(std::memory_order_acquire);
+    if (!topLevelAS) return;
 
     D3D12_DISPATCH_RAYS_DESC raytraceDesc = {};
     raytraceDesc.Width = renderContext->windowSize.X;
@@ -199,7 +192,8 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 
     commandList->SetDescriptorHeaps(1, &descriptorHeap);
     commandList->SetComputeRootSignature(globalRootSig.Get());
-    renderContext->tlasSRV.SetComputeRootDescriptorTable(commandList, 0);
+
+    commandList->SetComputeRootShaderResourceView(0, topLevelAS->TLASResource->GetGPUVirtualAddress());
     commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->GetGpuHandle());
     commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->GetGpuHandle());
     commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->GetGpuHandle());

@@ -30,6 +30,11 @@ namespace Vertix {
             return graphicsCommandList;
         }
 
+        [[nodiscard]]
+        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetD3D12CommandQueue() const noexcept {
+            return commandQueue;
+        }
+
     protected:
         Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue;

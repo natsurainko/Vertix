@@ -5,9 +5,8 @@
 #ifndef VERTIX_RENDERPASS_H
 #define VERTIX_RENDERPASS_H
 
+#include <concepts>
 #include <d3d12/d3d12.h>
-
-#include "PassInitializationContext.h"
 
 namespace Vertix {
     class GraphicsDevice;
@@ -16,16 +15,15 @@ namespace Vertix {
     class RenderPass {
     public:
         virtual ~RenderPass() = default;
-
-        virtual void Initialize(
-            const GraphicsDevice* device,
-            const PassInitializationContext& passContext,
-            TContext* context) = 0;
-
+        virtual void Initialize(ID3D12Device10* device) = 0;
         virtual void Execute(ID3D12GraphicsCommandList5* commandList) = 0;
 
     protected:
         TContext* renderContext  = nullptr;
+
+    private:
+        template<typename>
+        friend class RenderPipelineBuilder;
     };
 
     template <typename TRenderPass, typename TContext>

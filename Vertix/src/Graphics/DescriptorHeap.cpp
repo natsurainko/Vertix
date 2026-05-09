@@ -11,12 +11,17 @@
 #include "Vertix/Exceptions/HResultException.h"
 
 Vertix::DescriptorHeap::DescriptorHeap(
-    const GraphicsDevice *graphicsDevice,
+    const GraphicsDevice* graphicsDevice,
+    const D3D12_DESCRIPTOR_HEAP_TYPE heapType,
+    const UINT maxDescriptors,
+    const bool shaderVisible) : DescriptorHeap(graphicsDevice->GetD3D12Device().Get(), heapType, maxDescriptors, shaderVisible) {}
+
+Vertix::DescriptorHeap::DescriptorHeap(
+    ID3D12Device* d3d12Device,
     const D3D12_DESCRIPTOR_HEAP_TYPE heapType,
     const UINT maxDescriptors,
     const bool shaderVisible) : maxDescriptors(maxDescriptors), shaderVisible(shaderVisible)
 {
-    const auto &d3d12Device = graphicsDevice->GetD3D12Device();
     auto heapDesc = D3D12_DESCRIPTOR_HEAP_DESC { .Type = heapType, .NumDescriptors = maxDescriptors };
     if (shaderVisible) heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 

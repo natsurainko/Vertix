@@ -19,6 +19,12 @@ namespace Vertix {
             UINT maxDescriptors = 16,
             bool shaderVisible = false);
 
+        VERTIX_API explicit DescriptorHeap(
+            ID3D12Device* d3d12Device,
+            D3D12_DESCRIPTOR_HEAP_TYPE heapType,
+            UINT maxDescriptors = 16,
+            bool shaderVisible = false);
+
         VERTIX_API void AllocDescriptorHandle(
             D3D12_CPU_DESCRIPTOR_HANDLE &handle,
             UINT* indexPtr = nullptr);

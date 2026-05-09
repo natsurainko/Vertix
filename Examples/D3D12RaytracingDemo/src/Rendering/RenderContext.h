@@ -8,17 +8,16 @@
 #include <structures.h>
 #include <thread>
 
-#include "Vertix.Engine/Camera/PerspectiveCamera.h"
 #include "Vertix/Graphics/Buffers/ConstantBuffer.hpp"
 #include "Vertix/Graphics/Buffers/ConstantBufferPageArray.hpp"
 #include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
+#include "Vertix.Engine/Camera/PerspectiveCamera.h"
 #include "Vertix.Engine/Helpers/MathHelper.h"
 #include "Vertix.Engine/Helpers/VectorHelper.h"
 #include "Vertix.Engine/Scene/SceneObject3D.hpp"
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
-#include "Vertix/Rendering/RenderResourceView.h"
 #include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
@@ -41,21 +40,17 @@ public:
         perspectiveCamera.Move({-2.5, 0.5, 0.0});
     }
 
-    std::vector<std::shared_ptr<Vertix::Engine::SceneObject3D>> sceneObjects;
-
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
     std::unique_ptr<Vertix::VertexBuffer> fullScreenVertex;
+    std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
 
     Vertix::ConstantBuffer<FrameConstants> frameConstantsBuffer;
     Vertix::ConstantBuffer<LightConstants> lightConstantsBuffer;
     Vertix::ConstantBufferPageArray<ObjectConstants> objectConstantsBuffer;
 
-    Vertix::RenderResourceViewAllocator* viewAllocator = nullptr;
-    Vertix::RenderResourceView<Vertix::ShaderResource> tlasSRV;
-    std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
-
     Vertix::ModelPool modelPool;
+    std::vector<std::shared_ptr<Vertix::Engine::SceneObject3D>> sceneObjects;
 
     Vertix::Vector2D<UINT> windowSize;
 
@@ -64,9 +59,7 @@ public:
             d3d12Device  = graphicsDevice->GetD3D12Device(),
             computeQueue = computeCommandQueue,
             sceneObjects = sceneObjects,
-            tlasSRV      = &tlasSRV,
-            tlasOut      = &TLAS,
-            allocator    = viewAllocator
+            tlasOut      = &TLAS
         ]() -> void {
             Vertix::GraphicsCommandList graphicsCommandList { d3d12Device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE };
             const auto& commandList = graphicsCommandList.GetD3D12GraphicsCommandList();
@@ -91,14 +84,9 @@ public:
                     }
                 }
 
-                auto tlas = Vertix::TopLevelAccelerationStructure::Create(d3d12Device, commandList, instanceDescs);
-                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
-                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                srvDesc.RaytracingAccelerationStructure.Location = tlas->TLASResource->GetGPUVirtualAddress();
-                *tlasSRV = allocator->CreateView<Vertix::ShaderResource>(nullptr, &srvDesc);
-
-                tlasOut->store(std::shared_ptr<Vertix::TopLevelAccelerationStructure>(tlas), std::memory_order_release);
+                tlasOut->store(std::shared_ptr<Vertix::TopLevelAccelerationStructure>(
+                    Vertix::TopLevelAccelerationStructure::Create(d3d12Device, commandList, instanceDescs)
+                ), std::memory_order_release);
             }
             graphicsCommandList.EndCommand();
             graphicsCommandList.WaitForCommand();

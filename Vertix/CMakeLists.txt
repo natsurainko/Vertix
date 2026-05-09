@@ -45,6 +45,7 @@ target_sources(Vertix
             include/Vertix/Math/Vector2D.hpp
             include/Vertix/Mixin/IFillConstants.h
             include/Vertix/Mixin/IResourceUploading.h
+            include/Vertix/Mixin/IPassBinding.h
             include/Vertix/Pool/ResourceHandle.h
             include/Vertix/Pool/ResourcePool.hpp
             include/Vertix/Pool/DynamicResourcePool.hpp
@@ -66,7 +67,6 @@ target_sources(Vertix
             include/Vertix/Rendering/Pipeline/RenderPass.h
             include/Vertix/Rendering/Pipeline/RenderPipeline.h
             include/Vertix/Rendering/Pipeline/RenderPipelineBuilder.h
-            include/Vertix/Rendering/Pipeline/PassInitializationContext.h
             include/Vertix/Rendering/Pipeline/PassDeclarationBuilder.h
             include/Vertix/Windowing/GameWindow.h
 )

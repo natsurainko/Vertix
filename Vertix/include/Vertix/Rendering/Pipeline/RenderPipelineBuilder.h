@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_set>
+#include <variant>
 
 #include "PassDeclarationBuilder.h"
 #include "RenderPipeline.h"
@@ -91,12 +92,13 @@ namespace Vertix {
         };
         class PipelinePassDeclarationCollection {
         public:
-            template<RenderPassType<TContext> TRenderPass, typename... CtorArgs>
+            template<RenderPassType<TContext> TRenderPass, typename TDeclareFunc, typename... CtorArgs>
+                requires std::invocable<TDeclareFunc, PassDeclarationBuilder<TRenderPass>&>
             void Add(
-                const std::function<void(PassDeclarationBuilder&)> &declareFunc,
+                TDeclareFunc&& declareFunc,
                 CtorArgs&&... ctorArgs)
             {
-                PassDeclarationBuilder declarationBuilder;
+                PassDeclarationBuilder<TRenderPass> declarationBuilder;
                 declareFunc(declarationBuilder);
 
                 entries.push_back(PipelinePassDeclaration {
@@ -111,7 +113,7 @@ namespace Vertix {
         private:
             friend class RenderPipelineBuilder;
             struct PipelinePassDeclaration {
-                PassDeclarationBuilder::PassDeclaration declaration;
+                PassDeclaration declaration;
                 std::function<std::unique_ptr<RenderPass<TContext>>()> factory;
             };
 
@@ -199,13 +201,13 @@ namespace Vertix {
             for (const auto &[passDecl, factory] : Passes.entries) {
                 std::unordered_set<std::string> seenTextureIds;
                 for (const auto &dataflow : passDecl.dataflows) {
-                    if (auto* implicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
+                    if (auto* implicitDecl = std::get_if<PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
                         if (!renderPipeline->textures.contains(implicitDecl->textureId))
                             throw std::runtime_error("The TextureId specified in the implicit declaration does not exist.");
                         if (auto result = seenTextureIds.insert(implicitDecl->textureId); !result.second)
                             throw std::runtime_error("Only one dataflow can be declared within the same pass for the same texture.");
 
-                        std::string implicitViewId = PassDeclarationBuilder::ImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
+                        std::string implicitViewId = PassImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
                         switch (implicitDecl->accessor) {
                             case RenderTarget:
                                 Views.rtvDecls.emplace(implicitViewId, typename PipelineViewDeclarationCollection::RtvDecl(implicitDecl->textureId, std::nullopt));
@@ -227,7 +229,7 @@ namespace Vertix {
                         if (auto result = viewIdToTextureId.emplace(implicitViewId, implicitDecl->textureId); !result.second)
                             throw std::runtime_error("The viewId specified existed.");
                     }
-                    else if (auto* explicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
+                    else if (auto* explicitDecl = std::get_if<PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
                         if (!viewIdToTextureId.contains(explicitDecl->viewId))
                             throw std::runtime_error("The ViewId specified in the explicit declaration does not exist.");
                         if (auto result = seenTextureIds.insert(viewIdToTextureId.at(explicitDecl->viewId)); !result.second)
@@ -273,33 +275,38 @@ namespace Vertix {
 
             // Build the declared render pass
             for (const auto &[passDecl, factory] : Passes.entries) {
-                PassInitializationContext initializationContext;
-                initializationContext.currentFrameRTV = &renderPipeline->currentFrameRTV;
-                initializationContext.viewAllocator = renderPipeline->viewAllocator.get();
+                renderPipeline->passes.emplace_back(factory());
+                auto* renderPass = renderPipeline->passes.back().get();
 
                 for (auto& dataflow : passDecl.dataflows) {
+                    if (auto* swapChainDecl = std::get_if<PassDataflowSwapChainDeclaration>(&dataflow.declaration)) {
+                        dataflow.dataflowBinding->Inject(renderPass, &renderPipeline->currentFrameRTV);
+                        continue;
+                    }
+
                     std::string viewId;
                     RenderResourceAccessor accessor;
-                    if (auto* implicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
+
+                    if (auto* implicitDecl = std::get_if<PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
                         accessor = implicitDecl->accessor;
-                        viewId = PassDeclarationBuilder::ImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
-                    } else if (auto* explicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
+                        viewId = PassImplicitViewId(implicitDecl->textureId, implicitDecl->accessor);
+                    } else if (auto* explicitDecl = std::get_if<PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
                         accessor = explicitViewIdToAccessor.at(explicitDecl->viewId);
                         viewId = explicitDecl->viewId;
                     }
 
                     switch (accessor) {
                         case RenderTarget:
-                            initializationContext.rtvViews.emplace(viewId, &renderPipeline->rtvViews.at(viewId));
+                            dataflow.dataflowBinding->Inject(renderPass, &renderPipeline->rtvViews.at(viewId));
                             break;
                         case DepthStencil:
-                            initializationContext.dsvViews.emplace(viewId, &renderPipeline->dsvViews.at(viewId));
+                            dataflow.dataflowBinding->Inject(renderPass, &renderPipeline->dsvViews.at(viewId));
                             break;
                         case UnorderedAccess:
-                            initializationContext.uavViews.emplace(viewId, &renderPipeline->uavViews.at(viewId));
+                            dataflow.dataflowBinding->Inject(renderPass, &renderPipeline->uavViews.at(viewId));
                             break;
                         case ShaderResource:
-                            initializationContext.srvViews.emplace(viewId, &renderPipeline->srvViews.at(viewId));
+                            dataflow.dataflowBinding->Inject(renderPass, &renderPipeline->srvViews.at(viewId));
                             break;
                         default:
                             assert(false && "Not supported accessor");
@@ -307,9 +314,8 @@ namespace Vertix {
                     }
                 }
 
-                renderPipeline->passes.emplace_back(factory());
-                auto* renderPass = renderPipeline->passes.back().get();
-                renderPass->Initialize(graphicsDevice, initializationContext, context);
+                renderPass->renderContext = context;
+                renderPass->Initialize(d3d12Device.Get());
             }
 
             // Compile the barriers
@@ -325,10 +331,10 @@ namespace Vertix {
                         std::string textureId;
                         D3D12_RESOURCE_STATES targetState;
 
-                        if (auto* implicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
+                        if (auto* implicitDecl = std::get_if<PassDataflowImplicitDeclaration>(&dataflow.declaration)) {
                             textureId = implicitDecl->textureId;
                             targetState = implicitDecl->DerivativeState(dataflow.direction);
-                        } else if (auto* explicitDecl = std::get_if<PassDeclarationBuilder::PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
+                        } else if (auto* explicitDecl = std::get_if<PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
                             textureId = viewIdToTextureId.at(explicitDecl->viewId);
                             targetState = explicitDecl->explicitState;
                         } else continue;

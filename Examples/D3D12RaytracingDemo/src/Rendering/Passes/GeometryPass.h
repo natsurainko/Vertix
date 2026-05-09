@@ -11,18 +11,14 @@
 
 class GeometryPass : public Vertix::RenderPass<RenderContext> {
 public:
-    void Initialize(
-        const Vertix::GraphicsDevice* device,
-        const Vertix::PassInitializationContext &views,
-        RenderContext* context) override;
-
+    void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-private:
     const Vertix::RenderResourceView<Vertix::RenderTarget>* gPositionDepthRTV = nullptr;
     const Vertix::RenderResourceView<Vertix::RenderTarget>* gNormalRoughnessRTV = nullptr;
     const Vertix::RenderResourceView<Vertix::DepthStencil>* gDepthDSV = nullptr;
 
+private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 };

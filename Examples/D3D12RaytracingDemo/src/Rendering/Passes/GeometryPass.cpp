@@ -12,17 +12,7 @@
 #include "Vertix/Exceptions/HResultException.h"
 #include "Vertix/Graphics/GraphicsDevice.h"
 
-void GeometryPass::Initialize(
-    const Vertix::GraphicsDevice* device,
-    const Vertix::PassInitializationContext &views,
-    RenderContext* context)
-{
-    renderContext       = context;
-    gPositionDepthRTV   = views.GetView<Vertix::RenderTarget>("GBuffer.PositionDepth");
-    gNormalRoughnessRTV = views.GetView<Vertix::RenderTarget>("GBuffer.NormalRoughness");
-    gDepthDSV           = views.GetView<Vertix::DepthStencil>("GBuffer.Depth");
-
-    const auto &d3d12Device = device->GetD3D12Device();
+void GeometryPass::Initialize(ID3D12Device10* device) {
     {
         CD3DX12_ROOT_PARAMETER rootParameters[2];
         rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
@@ -39,7 +29,7 @@ void GeometryPass::Initialize(
         Microsoft::WRL::ComPtr<ID3DBlob> error;
 
         ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(d3d12Device->CreateRootSignature(0,
+        ThrowIfFailed(device->CreateRootSignature(0,
             signature->GetBufferPointer(),
             signature->GetBufferSize(),
             IID_PPV_ARGS(&rootSignature)));
@@ -68,7 +58,7 @@ void GeometryPass::Initialize(
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         psoDesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-        ThrowIfFailed(d3d12Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
+        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
 }
 
