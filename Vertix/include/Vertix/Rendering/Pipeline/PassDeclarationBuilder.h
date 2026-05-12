@@ -145,11 +145,11 @@ namespace Vertix {
             return *this;
         }
 
-        template<RenderResourceAccessor A, typename TMember> requires SingleAccessor<A> && (AccessorOf<TMember> == A)
+        template<typename TMember> requires SingleAccessor<AccessorOf<TMember>>
         PassDeclarationBuilder& DeclareReadExplicit(
             const std::string& viewId,
-            const D3D12_RESOURCE_STATES explicitState,
-            TMember TPass::* field)
+            TMember TPass::* field,
+            const D3D12_RESOURCE_STATES explicitState)
         {
             declaration.dataflows.emplace_back(Read,
                 std::make_unique<PassBinding<TMember>>(field),
@@ -161,11 +161,11 @@ namespace Vertix {
             return *this;
         }
 
-        template<RenderResourceAccessor A, typename TMember> requires SingleAccessor<A> && (AccessorOf<TMember> == A)
+        template<typename TMember> requires SingleAccessor<AccessorOf<TMember>>
         PassDeclarationBuilder& DeclareWriteExplicit(
             const std::string& viewId,
-            const D3D12_RESOURCE_STATES explicitState,
-            TMember TPass::* field)
+            TMember TPass::* field,
+            const D3D12_RESOURCE_STATES explicitState)
         {
             declaration.dataflows.emplace_back(Write,
                 std::make_unique<PassBinding<TMember>>(field),

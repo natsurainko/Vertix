@@ -82,7 +82,7 @@ namespace Vertix {
                 IID_PPV_ARGS(&d3d12Resource)
             ));
 
-            return std::make_unique<RenderTexture<Accessor>>(d3d12Resource, resourceDesc, clearValue, resourceStateOptional);
+            return std::make_unique<RenderTexture<Accessor>>(d3d12Resource, resourceDesc, clearValueOptional, resourceStateOptional);
         }
 
         template <RenderResourceAccessor Accessor>

@@ -250,8 +250,7 @@ namespace Vertix {
                                 break;
                         }
 
-                        /*if (auto result = viewIdToTextureId.emplace(implicitViewId, implicitDecl->textureId); !result.second)
-                            throw std::runtime_error("The viewId specified existed.");*/
+                        auto _ = viewIdToTextureId.emplace(implicitViewId, implicitDecl->textureId);
                     }
                     else if (auto* explicitDecl = std::get_if<PassDataflowExplicitDeclaration>(&dataflow.declaration)) {
                         if (!viewIdToTextureId.contains(explicitDecl->viewId))
