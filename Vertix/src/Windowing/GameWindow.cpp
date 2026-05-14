@@ -55,6 +55,21 @@ void Vertix::GameWindow::NativeInitialize(const HINSTANCE &hInstance) {
         hInstance,
         this);
 
+    if (windowOptions.startupLocation == CenterScreen) {
+        RECT workArea{};
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+
+        RECT rc{};
+        GetWindowRect(m_hwnd, &rc);
+        const int width  = rc.right  - rc.left;
+        const int height = rc.bottom - rc.top;
+
+        const int x = workArea.left + (workArea.right  - workArea.left - width) / 2;
+        const int y = workArea.top  + (workArea.bottom - workArea.top  - height) / 2;
+
+        SetWindowPos(m_hwnd, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
     ApplySystemThemeMode(m_hwnd);
 
     InitializeSwapChain();

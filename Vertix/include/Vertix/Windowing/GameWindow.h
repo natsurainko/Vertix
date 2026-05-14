@@ -18,19 +18,27 @@
 #include "Vertix/Math/Vector2D.hpp"
 
 namespace Vertix {
-    struct WindowOptions {
-        UINT swapChainFrameCount = 2;
-        DXGI_FORMAT swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-        Vector2D<UINT> windowSize { 800, 600 };
-        std::wstring windowTitle = L"Vertix.GameWindow";
-        std::wstring windowClassName = L"Vertix_GameWindow";
-        bool enableVSync = true;
-    };
-
     enum WindowState {
         Normal,
         Minimized,
         Maximized,
+    };
+
+    enum WindowStartupLocation {
+        Manual,
+        CenterScreen
+    };
+
+    struct WindowOptions {
+        UINT swapChainFrameCount = 2;
+        DXGI_FORMAT swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+        Vector2D<UINT> windowSize { 800, 600 };
+        WindowStartupLocation startupLocation = CenterScreen;
+        std::wstring windowTitle = L"Vertix.GameWindow";
+        std::wstring windowClassName = L"Vertix_GameWindow";
+
+        bool enableVSync = true;
     };
 
     struct KeyboardEventArgs;
