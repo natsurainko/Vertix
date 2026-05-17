@@ -9,18 +9,20 @@
 
 #include "../RenderContext.h"
 
-class LightingPass : public Vertix::RenderPass<RenderContext> {
+class LightingPass : public Vertix::RenderPass {
 public:
-    explicit LightingPass(Vertix::SwapChain* swapChain) : swapChain(swapChain) {}
+    explicit LightingPass(Vertix::SwapChain* swapChain, RenderContext* renderContext)
+    : swapChain(swapChain), renderContext(renderContext) {}
 
     void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-    const Vertix::RenderResourceView<Vertix::ShaderResource>* shadowMaskSRV = nullptr;
-    const Vertix::RenderResourceView<Vertix::RenderTarget>** currentFrameRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::ShaderResource>* shadowMaskSRV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget>* currentFrameRTV = nullptr;
 
 private:
-    Vertix::SwapChain*    swapChain = nullptr;
+    Vertix::SwapChain*    swapChain;
+    RenderContext*        renderContext;
     ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;

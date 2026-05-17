@@ -4,6 +4,7 @@ target_compile_definitions(Vertix PRIVATE Vertix_EXPORTS UNICODE _UNICODE)
 target_sources(Vertix
     PRIVATE
         src/Graphics/DescriptorHeap.cpp
+        src/Graphics/DescriptorRange.cpp
         src/Graphics/FrameCommandList.cpp
         src/Graphics/GraphicsCommandList.cpp
         src/Graphics/GraphicsDevice.cpp
@@ -17,6 +18,11 @@ target_sources(Vertix
         src/Primitive/Model.cpp
         src/Rendering/HlslShader.cpp
         src/Rendering/RenderResource.cpp
+        src/Rendering/RenderTexture.cpp
+        src/Rendering/RenderResourceView.cpp
+        src/Rendering/RenderResourceViewAllocator.cpp
+        src/Rendering/Pipeline/RenderPipeline.cpp
+        src/Rendering/Pipeline/RenderPipelineBuilder.cpp
         src/Windowing/GameWindow.cpp
     PUBLIC
         FILE_SET HEADERS
@@ -58,16 +64,16 @@ target_sources(Vertix
             include/Vertix/Primitive/Material.h
             include/Vertix/Primitive/Texture.h
             include/Vertix/Rendering/HlslShader.h
-            include/Vertix/Rendering/RenderTexture.hpp
+            include/Vertix/Rendering/RenderTexture.h
+            include/Vertix/Rendering/RenderBuffer.h
             include/Vertix/Rendering/RenderResource.h
-            include/Vertix/Rendering/RenderResourceAccessor.h
             include/Vertix/Rendering/RenderResourceView.h
-            include/Vertix/Rendering/RenderResourceViewAllocator.hpp
-            include/Vertix/Rendering/RenderResourceViewDesc.h
+            include/Vertix/Rendering/RenderResourceViewAllocator.h
+            include/Vertix/Rendering/Pipeline/RenderGraph.h
             include/Vertix/Rendering/Pipeline/RenderPass.h
             include/Vertix/Rendering/Pipeline/RenderPipeline.h
             include/Vertix/Rendering/Pipeline/RenderPipelineBuilder.h
-            include/Vertix/Rendering/Pipeline/PassDeclarationBuilder.h
+            include/Vertix/Rendering/Pipeline/PassDeclaration.h
             include/Vertix/Windowing/GameWindow.h
 )
 

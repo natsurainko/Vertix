@@ -10,6 +10,7 @@
 #include <d3d12/d3dx12_root_signature.h>
 #include <Vertix/Exceptions/HResultException.h>
 #include <Vertix/Graphics/DescriptorHeap.h>
+#include <Vertix/Graphics/DescriptorHeapHandle.h>
 #include <Vertix/Graphics/GraphicsDevice.h>
 #include <Vertix/Graphics/ResourceUploadHeap.hpp>
 #include <Vertix/Helpers/FormatsHelper.h>
@@ -205,9 +206,7 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
     const D3D12_RESOURCE_DESC resourceDesc = uavResource->GetDesc();
 
     auto descriptorHeap = std::make_unique<DescriptorHeap>(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, resourceDesc.MipLevels, true);
-    CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle{};
-    CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
-    descriptorHeap->AllocDescriptorHandle(cpuHandle, gpuHandle);
+    DescriptorHeapHandle handle = descriptorHeap->AllocDescriptorHandle();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = uavResourceViewFormat;
@@ -215,7 +214,7 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = resourceDesc.MipLevels;
-    d3d12Device->CreateShaderResourceView(uavResourcePtr, &srvDesc, cpuHandle);
+    d3d12Device->CreateShaderResourceView(uavResourcePtr, &srvDesc, handle.cpuHandle);
 
     for (UINT16 i = 1; i < resourceDesc.MipLevels; ++i) {
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
@@ -223,13 +222,13 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         uavDesc.Texture2D.MipSlice = i;
 
-        descriptorHeap->AllocDescriptorHandle(cpuHandle, gpuHandle);
-        d3d12Device->CreateUnorderedAccessView(uavResourcePtr, nullptr, &uavDesc, cpuHandle);
+        handle = descriptorHeap->AllocDescriptorHandle();
+        d3d12Device->CreateUnorderedAccessView(uavResourcePtr, nullptr, &uavDesc, handle.cpuHandle);
     }
 
     computeCommandList->SetComputeRootSignature(computeRootSignature.Get());
     computeCommandList->SetPipelineState(computePipelineState.Get());
-    computeCommandList->SetDescriptorHeaps(1, descriptorHeap->GetDescriptorHeap().GetAddressOf());
+    computeCommandList->SetDescriptorHeaps(1, descriptorHeap->GetDescriptorHeapAddress());
     computeCommandList->SetComputeRootDescriptorTable(1, descriptorHeap->GetGpuDescriptorHandleForHeapStart());
 
     const UINT descriptorLength = descriptorHeap->GetDescriptorLength();

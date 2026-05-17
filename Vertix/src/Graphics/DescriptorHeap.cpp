@@ -5,21 +5,23 @@
 #include "Vertix/Graphics/DescriptorHeap.h"
 
 #include <cassert>
-#include <exception>
+#include <memory>
+#include <optional>
 #include <d3d12/d3dx12_root_signature.h>
 
 #include "Vertix/Exceptions/HResultException.h"
+#include "Vertix/Graphics/DescriptorRange.h"
 
 Vertix::DescriptorHeap::DescriptorHeap(
     const GraphicsDevice* graphicsDevice,
     const D3D12_DESCRIPTOR_HEAP_TYPE heapType,
-    const UINT maxDescriptors,
+    const uint32_t maxDescriptors,
     const bool shaderVisible) : DescriptorHeap(graphicsDevice->GetD3D12Device().Get(), heapType, maxDescriptors, shaderVisible) {}
 
 Vertix::DescriptorHeap::DescriptorHeap(
     ID3D12Device* d3d12Device,
     const D3D12_DESCRIPTOR_HEAP_TYPE heapType,
-    const UINT maxDescriptors,
+    const uint32_t maxDescriptors,
     const bool shaderVisible) : maxDescriptors(maxDescriptors), shaderVisible(shaderVisible)
 {
     auto heapDesc = D3D12_DESCRIPTOR_HEAP_DESC { .Type = heapType, .NumDescriptors = maxDescriptors };
@@ -32,108 +34,89 @@ Vertix::DescriptorHeap::DescriptorHeap(
         heapStartGpuHandle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     }
 
-    for (UINT i = 0; i < maxDescriptors; ++i) {
-        freeIndices.insert(i);
+    for (uint32_t i = 0; i < maxDescriptors; ++i) {
+        freeSlots.insert(i);
     }
 }
 
-void Vertix::DescriptorHeap::AllocDescriptorHandle(
-    D3D12_CPU_DESCRIPTOR_HANDLE &handle,
-    UINT* indexPtr)
-{
+Vertix::DescriptorHeapHandle Vertix::DescriptorHeap::AllocDescriptorHandle() {
     assert(!IsFull() && "The descriptor heap is full.");
-    assert(!shaderVisible && "This is a GPU-visible descriptor heap; both CPU and GPU handles must be allocated simultaneously.");
 
-    const auto it = freeIndices.begin();
-    const UINT index = *it;
-    freeIndices.erase(it);
+    const auto it = freeSlots.begin();
+    const uint32_t slot = *it;
+    freeSlots.erase(it);
 
-    handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
-    if (indexPtr) {
-        *indexPtr = index;
+    DescriptorHeapHandle handle {
+        .slot      = slot,
+        .cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, static_cast<INT>(slot), descriptorLength),
+        .heap      = descriptorHeap.Get()
+    };
+
+    if (shaderVisible) handle.gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(heapStartGpuHandle, static_cast<INT>(slot), descriptorLength);
+
+    return handle;
+}
+
+void Vertix::DescriptorHeap::AllocDescriptorHandles(const uint32_t count, DescriptorHeapHandle* handles) {
+    assert(!IsFull() && "The descriptor heap is full.");
+    assert(freeSlots.size() >= count && "Not enough free descriptors in heap.");
+
+    for (uint32_t i = 0; i < count; ++i) {
+        const auto it = freeSlots.begin();
+        const uint32_t slot = *it;
+        freeSlots.erase(it);
+
+        handles[i] = DescriptorHeapHandle {
+            .slot      = slot,
+            .cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, static_cast<INT>(slot), descriptorLength),
+            .heap      = descriptorHeap.Get()
+        };
+
+        if (shaderVisible) handles[i].gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(heapStartGpuHandle, static_cast<INT>(slot), descriptorLength);
     }
 }
 
-void Vertix::DescriptorHeap::AllocDescriptorHandle(
-    D3D12_CPU_DESCRIPTOR_HANDLE &cpuHandle,
-    D3D12_GPU_DESCRIPTOR_HANDLE &gpuHandle,
-    UINT* indexPtr)
-{
-    assert(!IsFull() && "The descriptor heap is full.");
-    assert(shaderVisible && "This is a GPU-invisible descriptor heap, which can only allocate CPU handles.");
+std::unique_ptr<Vertix::DescriptorRange> Vertix::DescriptorHeap::AllocateRange(const uint32_t count) {
+    assert(freeSlots.size() >= count && "Not enough free descriptors.");
 
-    const auto it = freeIndices.begin();
-    const UINT index = *it;
-    freeIndices.erase(it);
-
-    cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
-    gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(heapStartGpuHandle, index, descriptorLength);
-
-    if (indexPtr) {
-        *indexPtr = index;
+    uint32_t startSlot = 0, slotCount = 0;
+    std::optional<UINT> prev;
+    for (const uint32_t slot : freeSlots) {
+        if (prev.has_value() && slot == *prev + 1) ++slotCount;
+        else { startSlot = slot; slotCount = 1; }
+        if (slotCount == count) break;
+        prev = slot;
     }
+
+    assert(slotCount == count && "No contiguous block of sufficient size.");
+
+    for (uint32_t i = startSlot; i < startSlot + count; ++i)
+        freeSlots.erase(i);
+
+    return std::unique_ptr<DescriptorRange>(new DescriptorRange(this, startSlot, slotCount));
 }
 
-void Vertix::DescriptorHeap::AllocDescriptorHandle(
-    D3D12_CPU_DESCRIPTOR_HANDLE* handles,
-    const UINT numHandles,
-    UINT* indicesPtr)
-{
-    assert(!IsFull() && "The descriptor heap is full.");
-    assert(!shaderVisible && "This is a GPU-visible descriptor heap; both CPU and GPU handles must be allocated simultaneously.");
-    assert(freeIndices.size() >= numHandles && "Not enough free descriptors in heap.");
+void Vertix::DescriptorHeap::FreeRange(DescriptorRange* range) {
+    assert(range->parentHeap == this);
 
-    if (indicesPtr) {
-        for (UINT i = 0; i < numHandles; i++) {
-            const auto it = freeIndices.begin();
-            const UINT index = *it;
-            freeIndices.erase(it);
-
-            handles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
-            indicesPtr[i] = index;
-        }
-        return;
+    for (const auto slot : range->freeSlots) {
+        freeSlots.insert(slot);
     }
 
-    for (UINT i = 0; i < numHandles; i++) {
-        const auto it = freeIndices.begin();
-        const UINT index = *it;
-        freeIndices.erase(it);
-
-        handles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
-    }
+    range->parentHeap = nullptr;
 }
 
-void Vertix::DescriptorHeap::AllocDescriptorHandle(
-    D3D12_CPU_DESCRIPTOR_HANDLE* cpuHandles,
-    D3D12_GPU_DESCRIPTOR_HANDLE* gpuHandles,
-    const UINT numHandles,
-    UINT* indicesPtr)
-{
-    assert(!IsFull() && "The descriptor heap is full.");
-    assert(shaderVisible && "This is a GPU-invisible descriptor heap, which can only allocate CPU handles.");
-    assert(freeIndices.size() >= numHandles && "Not enough free descriptors in heap.");
+void Vertix::DescriptorHeap::FreeDescriptorHandle(const DescriptorHeapHandle &handle) {
+    freeSlots.insert(handle.slot);
+}
 
-    if (indicesPtr) {
-        for (UINT i = 0; i < numHandles; i++) {
-            const auto it = freeIndices.begin();
-            const UINT index = *it;
-            freeIndices.erase(it);
+void Vertix::DescriptorHeap::FreeDescriptorHandle(const D3D12_CPU_DESCRIPTOR_HANDLE handle) {
+    freeSlots.insert(GetIndexOfDescriptorHandle(handle));
+}
 
-            cpuHandles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
-            gpuHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(heapStartGpuHandle, index, descriptorLength);
-            indicesPtr[i] = index;
-        }
-        return;
-    }
-
-    for (UINT i = 0; i < numHandles; i++) {
-        const auto it = freeIndices.begin();
-        const UINT index = *it;
-        freeIndices.erase(it);
-
-        cpuHandles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, index, descriptorLength);
-        gpuHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(heapStartGpuHandle, index, descriptorLength);
+void Vertix::DescriptorHeap::FreeDescriptorHandles(const uint32_t count, const DescriptorHeapHandle* handles) {
+    for (uint32_t i = 0; i < count; ++i) {
+        freeSlots.insert(handles[i].slot);
     }
 }
 
@@ -143,8 +126,4 @@ UINT Vertix::DescriptorHeap::GetIndexOfDescriptorHandle(const D3D12_CPU_DESCRIPT
     const UINT index = static_cast<UINT>(offset / descriptorLength);
     assert(index < maxDescriptors && "The descriptor handle does not belong to this heap.");
     return index;
-}
-
-void Vertix::DescriptorHeap::FreeDescriptorHandle(const D3D12_CPU_DESCRIPTOR_HANDLE handle) {
-    freeIndices.insert(GetIndexOfDescriptorHandle(handle));
 }

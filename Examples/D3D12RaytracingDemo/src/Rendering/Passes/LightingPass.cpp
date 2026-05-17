@@ -52,14 +52,14 @@ void LightingPass::Initialize(ID3D12Device10* device) {
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC2(D3D12_DEFAULT);
         psoDesc.DepthStencilState.DepthEnable = FALSE;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.NumRenderTargets = 1;
         psoDesc.SampleDesc.Count = 1;
         psoDesc.SampleMask = UINT_MAX;
         ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
 
-    descriptorHeap = shadowMaskSRV->GetHeap()->GetDescriptorHeap().Get();
+    descriptorHeap = shadowMaskSRV->heap;
 }
 
 void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
@@ -67,10 +67,10 @@ void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 
     commandList->SetDescriptorHeaps(1, &descriptorHeap);
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->GetGpuHandle());
+    commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->gpuHandle);
 
-    (*currentFrameRTV)->SetRenderTarget(commandList);
-    (*currentFrameRTV)->Clear(commandList, clearColor);
+    currentFrameRTV->SetRenderTarget(commandList);
+    currentFrameRTV->Clear(commandList, clearColor);
 
     commandList->SetPipelineState(pipelineState.Get());
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

@@ -13,11 +13,15 @@
 namespace Vertix {
     // We agree that all ResourcePool or DynamicResourcePool and their derived types are not thread-safe.
     // Therefore, the best practice in multithreading is to call their functions on the main thread via DispatcherQueue::Enqueue.
-    template<typename TResource, typename THandle, std::uint32_t Capacity>
+    template<typename TResource, typename THandle>
     class ResourcePool {
     public:
-        ResourcePool() noexcept {
-            for (uint32_t i = Capacity; i-- > 0; )
+        explicit ResourcePool(const std::uint32_t capacity) noexcept : capacity(capacity) {
+            slots          = std::make_unique<std::unique_ptr<TResource>[]>(capacity);
+            freeSlots      = std::make_unique<uint32_t[]>(capacity);
+            readyCallbacks = std::make_unique<std::vector<std::function<void(const THandle&)>>[]>(capacity);
+
+            for (uint32_t i = capacity; i-- > 0; )
                 freeSlots[freeTop++] = i;
         }
 
@@ -39,10 +43,10 @@ namespace Vertix {
         }
 
         virtual void Fulfill(
-            const THandle handle,
+            const THandle &handle,
             std::unique_ptr<TResource> resource) noexcept
         {
-            const uint32_t index = handle.slot - 1;
+            const uint32_t index = HandleToIndex(handle);
             assert(handle);
             assert(!slots[index] && "Already fulfilled");
             assert(resource);
@@ -50,16 +54,16 @@ namespace Vertix {
             NotifyReady(handle);
         }
 
-        virtual void Free(const THandle handle) noexcept {
-            const uint32_t index = handle.slot - 1;
+        virtual void Free(const THandle &handle) noexcept {
+            const uint32_t index = HandleToIndex(handle);
             assert(handle);
             assert(slots[index] && "Double free detected");
             slots[index].reset();
             freeSlots[freeTop++] = index;
         }
 
-        void NotifyReady(const THandle handle) noexcept {
-            auto &callbacks = readyCallbacks[handle.slot - 1];
+        void NotifyReady(const THandle &handle) noexcept {
+            auto &callbacks = readyCallbacks[HandleToIndex(handle)];
             for (auto& callback : callbacks) {
                 if (callback) {
                     callback(handle);
@@ -68,61 +72,46 @@ namespace Vertix {
             callbacks.clear();
         }
 
-        void OnReady(const THandle handle, std::function<void(THandle)> textureLoadedCallback) noexcept {
+        void OnReady(const THandle &handle, std::function<void(const THandle&)> textureLoadedCallback) noexcept {
             if (IsReady(handle)) {
                 textureLoadedCallback(handle);
                 return;
             }
-            readyCallbacks[handle.slot - 1].emplace_back(std::move(textureLoadedCallback));
+            readyCallbacks[HandleToIndex(handle)].emplace_back(std::move(textureLoadedCallback));
         }
 
         [[nodiscard]]
-        bool IsReady(const THandle handle) const noexcept {
-            return handle && slots[handle.slot - 1];
-        }
-
-        [[nodiscard]]
-        TResource* Get(const THandle handle) noexcept {
+        TResource* Get(const THandle &handle) const noexcept {
             if (!handle) return nullptr;
-            return slots[handle.slot - 1].get();
+            return slots[HandleToIndex(handle)].get();
         }
 
         template<class T>
-        T* GetAs(const THandle handle) noexcept {
+        T* GetAs(const THandle &handle) const noexcept {
             return static_cast<T*>(Get(handle));
         }
 
-        [[nodiscard]]
-        uint32_t GetCount() const noexcept {
-            return Capacity - freeTop;
-        }
-
-        [[nodiscard]]
-        uint32_t GetFree() const noexcept {
-            return freeTop;
-        }
-
-        [[nodiscard]]
-        static constexpr uint32_t GetCapacity() noexcept {
-            return Capacity;
-        }
-
-        [[nodiscard]]
-        bool IsFull() const noexcept {
-            return !freeTop;
-        }
-
-        [[nodiscard]]
-        bool IsEmpty() const noexcept {
-            return freeTop == Capacity;
-        }
+        [[nodiscard]] virtual uint32_t GetCount() const noexcept { return capacity - freeTop; }
+        [[nodiscard]] virtual uint32_t GetFree() const noexcept { return freeTop; }
+        [[nodiscard]] virtual uint32_t GetCapacity() const noexcept { return capacity; }
+        [[nodiscard]] virtual bool IsFull() const noexcept { return !freeTop; }
+        [[nodiscard]] virtual bool IsEmpty() const noexcept { return freeTop == capacity; }
+        [[nodiscard]] bool IsReady(const THandle &handle) const noexcept { return handle && slots[HandleToIndex(handle)]; }
 
     protected:
+        ResourcePool() noexcept = default;
+
+        uint32_t capacity;
         uint32_t freeTop = 0;
 
-        std::array<std::unique_ptr<TResource>, Capacity> slots {nullptr};
-        std::array<uint32_t, Capacity> freeSlots{};
-        std::array<std::vector<std::function<void(THandle)>>, Capacity> readyCallbacks{};
+        std::unique_ptr<std::unique_ptr<TResource>[]> slots;
+        std::unique_ptr<uint32_t[]>                   freeSlots;
+
+        std::unique_ptr<std::vector<std::function<void(const THandle&)>>[]> readyCallbacks;
+
+        virtual uint32_t HandleToIndex(const THandle& handle) const noexcept {
+            return handle.slot - 1;
+        }
     };
 }
 

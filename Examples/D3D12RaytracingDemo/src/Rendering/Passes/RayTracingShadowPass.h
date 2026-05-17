@@ -9,16 +9,19 @@
 
 #include "../RenderContext.h"
 
-class RayTracingShadowPass : public Vertix::RenderPass<RenderContext> {
+class RayTracingShadowPass : public Vertix::RenderPass {
 public:
+    explicit RayTracingShadowPass(RenderContext* renderContext) : renderContext(renderContext) {}
+
     void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-    const Vertix::RenderResourceView<Vertix::ShaderResource>* gPositionDepthSRV = nullptr;
-    const Vertix::RenderResourceView<Vertix::ShaderResource>* gNormalRoughnessSRV= nullptr;
-    const Vertix::RenderResourceView<Vertix::UnorderedAccess>* shadowMaskUAV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::ShaderResource>* gPositionDepthSRV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::ShaderResource>* gNormalRoughnessSRV= nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::UnorderedAccess>* shadowMaskUAV = nullptr;
 
 private:
+    RenderContext*        renderContext;
     ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
     uint32_t shaderTableEntrySize = 0;

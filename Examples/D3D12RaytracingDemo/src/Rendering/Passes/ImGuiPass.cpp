@@ -48,7 +48,7 @@ void ImGuiPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     }
     ImGui::Render();
 
-    (*currentFrameRTV)->SetRenderTarget(commandList);
-    commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
+    currentFrameRTV->SetRenderTarget(commandList);
+    commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeapAddress());
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }

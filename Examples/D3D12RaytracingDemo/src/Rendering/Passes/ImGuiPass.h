@@ -16,9 +16,13 @@
 
 extern Vertix::DescriptorHeap* imguiSrvDescriptorHeap;
 
-class ImGuiPass : public Vertix::RenderPass<RenderContext> {
+class ImGuiPass : public Vertix::RenderPass {
 public:
-    explicit ImGuiPass(const Vertix::GameWindow* window) : swapChain(window->GetSwapChain()) {
+    explicit ImGuiPass(
+        const Vertix::GameWindow* window,
+        RenderContext* renderContext)
+    : swapChain(window->GetSwapChain()), renderContext(renderContext)
+    {
         if (ImGui::GetCurrentContext() != nullptr) {
             io = &ImGui::GetIO();
             return;
@@ -49,12 +53,18 @@ public:
         init_info.Device = device;
         init_info.CommandQueue = commandQueue;
         init_info.NumFramesInFlight = 2;
-        init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+        init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
         init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
 
-        init_info.SrvDescriptorHeap = imguiSrvDescriptorHeap->GetDescriptorHeap().Get();
-        init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return imguiSrvDescriptorHeap->AllocDescriptorHandle(*out_cpu_handle, *out_gpu_handle); };
-        init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, const D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE) { return imguiSrvDescriptorHeap->FreeDescriptorHandle(cpu_handle); };
+        init_info.SrvDescriptorHeap = imguiSrvDescriptorHeap->GetDescriptorHeap();
+        init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) {
+            const auto handle = imguiSrvDescriptorHeap->AllocDescriptorHandle();
+            *out_cpu_handle = handle.cpuHandle;
+            *out_gpu_handle = handle.gpuHandle;
+        };
+        init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE) {
+            return imguiSrvDescriptorHeap->FreeDescriptorHandle(cpu_handle);
+        };
         ImGui_ImplDX12_Init(&init_info);
     }
 
@@ -71,10 +81,11 @@ public:
     void Initialize(ID3D12Device10* device) override {}
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-    const Vertix::RenderResourceView<Vertix::RenderTarget>** currentFrameRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget>* currentFrameRTV = nullptr;
 
 private:
     Vertix::SwapChain* swapChain;
+    RenderContext* renderContext;
     ImGuiIO* io;
 };
 

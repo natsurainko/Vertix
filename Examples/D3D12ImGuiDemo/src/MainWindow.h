@@ -8,9 +8,9 @@
 #include <imgui/imgui.h>
 
 #include "Vertix/Graphics/DescriptorHeap.h"
-#include "Vertix/Rendering/RenderTexture.hpp"
+#include "Vertix/Rendering/RenderTexture.h"
 #include "Vertix/Rendering/RenderResourceView.h"
-#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
+#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 #include "Vertix/Windowing/GameWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -36,7 +36,7 @@ private:
     ImGuiIO* io = nullptr;
 
     std::unique_ptr<Vertix::RenderResourceViewAllocator> renderTextureViewAllocator;
-    Vertix::RenderResourceView<Vertix::RenderTarget> renderTargetViews[2] = {};
+    Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget> renderTargetViews[2] = {};
 
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> commandList;
 };

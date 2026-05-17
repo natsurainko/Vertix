@@ -18,7 +18,7 @@
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
-#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
+#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 

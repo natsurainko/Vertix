@@ -214,7 +214,7 @@ Vertix::TextureHandle Vertix::Engine::TextureAsyncLoader::LoadTextureAsync(
     const std::wstring &filePath,
     const std::wstring* resourceName,
     DirectX::WIC_LOADER_FLAGS wicLoaderFlags,
-    std::function<void(TextureHandle)> textureLoadedCallback)
+    std::function<void(const TextureHandle&)> textureLoadedCallback)
 {
     const std::wstring &handleName = resourceName ? *resourceName : filePath;
     const bool loaded = texturePool->ContainsNamedResource(handleName);
@@ -310,9 +310,8 @@ void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatche
             for (const auto &[handle, texture] : textureFulfills) {
                 const auto d3d12Resource = texture->GetResource();
                 const auto srvDesc = CreateShaderResourceViewDesc(d3d12Resource);
-                const auto descriptorHandle = pool->GetDescriptorHandle(handle);
 
-                d3d12Device->CreateShaderResourceView(d3d12Resource.Get(), &srvDesc, descriptorHandle);
+                d3d12Device->CreateShaderResourceView(d3d12Resource.Get(), &srvDesc, handle.cpuHandle);
                 pool->Fulfill(handle, std::unique_ptr<Texture>(texture));
             }
         });

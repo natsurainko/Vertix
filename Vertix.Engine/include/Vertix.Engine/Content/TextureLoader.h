@@ -58,7 +58,7 @@ namespace Vertix::Engine {
 
     public:
         TextureAsyncLoader(
-            TexturePool<>* texturePool,
+            TexturePool* texturePool,
             GraphicsDevice* graphicsDevice,
             const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &copyCommandQueue,
             const Microsoft::WRL::ComPtr<ID3D12CommandQueue> &computeCommandQueue = nullptr,
@@ -73,12 +73,12 @@ namespace Vertix::Engine {
             const std::wstring &filePath,
             const std::wstring* resourceName = nullptr,
             DirectX::WIC_LOADER_FLAGS wicLoaderFlags = DirectX::WIC_LOADER_DEFAULT,
-            std::function<void(TextureHandle)> textureLoadedCallback = nullptr);
+            std::function<void(const TextureHandle&)> textureLoadedCallback = nullptr);
 
         VERTIX_ENGINE_API void ExecuteAsync(DispatcherQueue* dispatcherQueue);
 
     private:
-        TexturePool<>* texturePool;
+        TexturePool* texturePool;
         GraphicsDevice* graphicsDevice;
 
         std::vector<TextureLoadRequest> textureLoadRequests;

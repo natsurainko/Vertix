@@ -15,8 +15,8 @@
 #include "Vertix.Engine/Input/GeneralKeyboardDevice.hpp"
 #include "Vertix.Engine/Input/GeneralMouseDevice.hpp"
 #include "Vertix/Primitive/Model.h"
-#include "Vertix/Rendering/RenderTexture.hpp"
-#include "Vertix/Rendering/RenderResourceViewAllocator.hpp"
+#include "Vertix/Rendering/RenderTexture.h"
+#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 #include "Vertix/Windowing/GameWindow.h"
 
 using Microsoft::WRL::ComPtr;
@@ -53,10 +53,13 @@ private:
     Vertix::Engine::PerspectiveCamera perspectiveCamera;
 
     std::unique_ptr<Vertix::ConstantBuffer<RootConstants>> constantBuffer;
-    std::unique_ptr<Vertix::RenderTexture<Vertix::DepthStencil>> depthStencilTexture;
+    std::unique_ptr<Vertix::RenderTexture2D> depthStencilTexture;
     std::unique_ptr<Vertix::RenderResourceViewAllocator> resViewAllocator;
-    Vertix::RenderResourceView<Vertix::DepthStencil> depthStencilView{};
-    Vertix::RenderResourceView<Vertix::RenderTarget> renderTargetViews[2] = {};
+    Vertix::RenderResourceView<Vertix::RenderResourceViewType::DepthStencil> depthStencilView{};
+    Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget> renderTargetViews[2] = {};
+
+    Vertix::RenderResourceViewDesc rtvDesc = { .type = Vertix::RenderResourceViewType::RenderTarget };
+    Vertix::RenderResourceViewDesc dsvDesc = { .type = Vertix::RenderResourceViewType::DepthStencil };
 
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;

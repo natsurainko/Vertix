@@ -17,7 +17,8 @@
 namespace Vertix {
     class SwapChainBuffer : public RenderResource {
         friend class SwapChain;
-        explicit SwapChainBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource) : RenderResource(d3d12Resource, D3D12_RESOURCE_STATE_PRESENT) {}
+        explicit SwapChainBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource> &d3d12Resource)
+        : RenderResource(RenderResourceKind::Buffer, d3d12Resource, D3D12_RESOURCE_STATE_PRESENT) {}
 
         void Replace(const Microsoft::WRL::ComPtr<ID3D12Resource>& newResource) {
             d3d12Resource        = newResource;

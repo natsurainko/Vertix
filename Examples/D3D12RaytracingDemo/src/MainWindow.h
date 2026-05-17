@@ -36,7 +36,7 @@ private:
     void BuildRenderPipeline();
 
     ImGuiIO* imGuiIO = nullptr;
-    std::unique_ptr<Vertix::RenderPipeline<RenderContext>> renderPipeline;
+    std::unique_ptr<Vertix::RenderPipeline> renderPipeline;
     std::unique_ptr<RenderContext> renderContext;
 
     KeyboardControllerInput keyboardControllerInput {};

@@ -10,10 +10,12 @@
 #include "Vertix.Engine/Primitive/DefaultPBRMaterial.h"
 
 namespace Vertix::Engine {
-    template<uint32_t Capacity = 1024>
-    class DefaultMaterialPool : public MaterialPool<DefaultMaterialConstants, Capacity> {
+    class DefaultMaterialPool : public MaterialPool<DefaultMaterialConstants> {
     public:
-        explicit DefaultMaterialPool(const GraphicsDevice* graphicsDevice) : MaterialPool<DefaultMaterialConstants, Capacity>(graphicsDevice) {}
+        explicit DefaultMaterialPool(
+            const GraphicsDevice* graphicsDevice,
+            const uint32_t capacity)
+        : MaterialPool(graphicsDevice, capacity) {}
     };
 }
 

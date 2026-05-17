@@ -64,11 +64,11 @@ void GeometryPass::Initialize(ID3D12Device10* device) {
 
 void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV->GetHandle(), gNormalRoughnessRTV->GetHandle() };
+    const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV->cpuHandle, gNormalRoughnessRTV->cpuHandle };
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
     commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer.GetGpuVirtualAddress());
-    commandList->OMSetRenderTargets(2, renderTargets, FALSE, gDepthDSV->GetHandleAddress());
+    commandList->OMSetRenderTargets(2, renderTargets, FALSE, &gDepthDSV->cpuHandle);
 
     gPositionDepthRTV->Clear(commandList, clearColor);
     gNormalRoughnessRTV->Clear(commandList, clearColor);

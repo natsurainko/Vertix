@@ -19,44 +19,43 @@ void MainWindow::BuildRenderPipeline() {
     renderContext = std::make_unique<RenderContext>(graphicsDevice, frameCommandList);
     renderContext->SetWindowSize(windowSize);
 
-    Vertix::RenderPipelineBuilder renderPipelineBuilder { graphicsDevice, frameCommandList, renderContext.get() };
+    Vertix::RenderPipelineBuilder renderPipelineBuilder { graphicsDevice, frameCommandList};
     {
         // Configure SwapChain
-        renderPipelineBuilder.SwapChain.swapChainPtr = swapChain;
-        renderPipelineBuilder.SwapChain.frameRTVDesc = D3D12_RENDER_TARGET_VIEW_DESC {
-            .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-            .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
-        };
+        renderPipelineBuilder.SwapChain.ptr = swapChain;
+        renderPipelineBuilder.SwapChain.resourceName = "SwapChainBackBuffer";
 
-        renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.PositionDepth", CD3DX12_RESOURCE_DESC::Tex2D(
-            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
-        renderPipelineBuilder.Textures.Add<Vertix::DrawColorSampleAccessor>("GBuffer.NormalRoughness", CD3DX12_RESOURCE_DESC::Tex2D(
-            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
-        renderPipelineBuilder.Textures.Add<Vertix::DrawDepthSampleAccessor>("GBuffer.Depth", CD3DX12_RESOURCE_DESC::Tex2D(
-            DXGI_FORMAT_D32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
-        renderPipelineBuilder.Textures.Add<Vertix::UnorderedAccessSampleAccessor>("RT.ShadowMask", CD3DX12_RESOURCE_DESC::Tex2D(
-            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), true);
+        renderPipelineBuilder.Textures.Add("GBuffer.PositionDepth", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), D3D12_CLEAR_VALUE{ .Format = DXGI_FORMAT_R32G32B32A32_FLOAT, .Color = { 0.0f, 0.0f, 0.0f, 0.0f }});
+        renderPipelineBuilder.Textures.Add("GBuffer.NormalRoughness", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), D3D12_CLEAR_VALUE{ .Format = DXGI_FORMAT_R32G32B32A32_FLOAT, .Color = { 0.0f, 0.0f, 0.0f, 0.0f }});
+        renderPipelineBuilder.Textures.Add("GBuffer.Depth", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_D32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)), D3D12_CLEAR_VALUE{ .Format = DXGI_FORMAT_D32_FLOAT, .DepthStencil = { 1.0f, 0 }});
+        renderPipelineBuilder.Textures.Add("RT.ShadowMask", CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R32G32B32A32_FLOAT, VERTIX_VECTOR2D_EXPAND(windowSize)));
 
         renderPipelineBuilder.Passes.Add<GeometryPass>([](auto &builder) { builder
-            .DeclareWrite("GBuffer.PositionDepth", &GeometryPass::gPositionDepthRTV)
-            .DeclareWrite("GBuffer.NormalRoughness", &GeometryPass::gNormalRoughnessRTV)
-            .DeclareWrite("GBuffer.Depth", &GeometryPass::gDepthDSV);
-        });
+            .Write("GBuffer.PositionDepth", &GeometryPass::gPositionDepthRTV)
+            .Write("GBuffer.NormalRoughness", &GeometryPass::gNormalRoughnessRTV)
+            .Write("GBuffer.Depth", &GeometryPass::gDepthDSV)
+            .SideEffect();
+        }, renderContext.get());
 
         renderPipelineBuilder.Passes.Add<RayTracingShadowPass>([](auto &builder) { builder
-            .DeclareRead("GBuffer.PositionDepth", &RayTracingShadowPass::gPositionDepthSRV)
-            .DeclareRead("GBuffer.NormalRoughness", &RayTracingShadowPass::gNormalRoughnessSRV)
-            .DeclareWrite("RT.ShadowMask", &RayTracingShadowPass::shadowMaskUAV);
-        });
+            .Read("GBuffer.PositionDepth", &RayTracingShadowPass::gPositionDepthSRV)
+            .Read("GBuffer.NormalRoughness", &RayTracingShadowPass::gNormalRoughnessSRV)
+            .Write("RT.ShadowMask", &RayTracingShadowPass::shadowMaskUAV);
+        }, renderContext.get());
 
         renderPipelineBuilder.Passes.Add<LightingPass>([](auto &builder) { builder
-            .DeclareRead("RT.ShadowMask", &LightingPass::shadowMaskSRV)
-            .DeclareSwapChainWrite(&LightingPass::currentFrameRTV);
-        }, swapChain);
+            .Read("RT.ShadowMask", &LightingPass::shadowMaskSRV)
+            .Write("SwapChainBackBuffer", &LightingPass::currentFrameRTV);
+        }, swapChain, renderContext.get());
 
         renderPipelineBuilder.Passes.Add<ImGuiPass>([](auto &builder) { builder
-            .DeclareSwapChainWrite(&ImGuiPass::currentFrameRTV);
-        }, this);
+            .Write("SwapChainBackBuffer", &ImGuiPass::currentFrameRTV)
+            .template DependsAfter<LightingPass>();
+        }, this, renderContext.get());
     }
     renderPipeline = renderPipelineBuilder.Build();
 }

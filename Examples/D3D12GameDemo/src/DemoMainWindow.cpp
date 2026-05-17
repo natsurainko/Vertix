@@ -57,13 +57,26 @@ void DemoMainWindow::OnInitialize() {
         resViewAllocator->InitRenderTargetDescriptorHeap(2);
         resViewAllocator->InitDepthStencilDescriptorHeap(1);
 
-        const auto dsvResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, windowSize.X, windowSize.Y);
+        auto dsvResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, windowSize.X, windowSize.Y);
+        dsvResDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         constexpr auto clearValue = D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_D24_UNORM_S8_UINT, .DepthStencil = { .Depth = 1.0 } };
-        depthStencilTexture = Vertix::RenderTextureBase::Create<Vertix::DepthStencil>(device, dsvResDesc, clearValue);
-        depthStencilView = resViewAllocator->CreateViewForTexture<Vertix::DepthStencil>(depthStencilTexture.get());
+
+        ComPtr<ID3D12Resource> d3d12Resource;
+        const CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(device->CreateCommittedResource(
+            &defaultHeapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &dsvResDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &clearValue,
+            IID_PPV_ARGS(&d3d12Resource)
+        ));
+
+        depthStencilTexture = std::make_unique<Vertix::RenderTexture2D>(d3d12Resource, dsvResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, clearValue);
+        depthStencilView = resViewAllocator->CreateView(depthStencilTexture.get(), dsvDesc);
 
         for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-            renderTargetViews[i] = resViewAllocator->CreateViewForSwapChainBuffer(swapChain->GetBuffer(i));
+            renderTargetViews[i] = resViewAllocator->CreateView(swapChain->GetBuffer(i), rtvDesc);
         }
     }
 
@@ -157,7 +170,8 @@ void DemoMainWindow::OnRender(const double deltaTime) {
 
     const auto commandListPtr = commandList.Get();
     const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
-    const auto scopedTransition = swapChain->GetCurrentBuffer()->TransitionScoped(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    swapChain->GetCurrentBuffer()->Transition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         commandList->RSSetViewports(1, &viewport);
         commandList->RSSetScissorRects(1, &scissorRect);
@@ -170,6 +184,7 @@ void DemoMainWindow::OnRender(const double deltaTime) {
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cubeModel.Draw(commandList);
     }
+    swapChain->GetCurrentBuffer()->Transition(commandListPtr, D3D12_RESOURCE_STATE_PRESENT);
 }
 
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
@@ -179,11 +194,11 @@ void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
     frameCommandList->WaitForCommand();
 
     depthStencilTexture->Resize(d3d12Device, size);
-    depthStencilView.Reuse(d3d12Device, depthStencilTexture->GetResource());
+    depthStencilView.RecreateView(d3d12Device, depthStencilTexture.get(), dsvDesc);
 
     swapChain->Resize(size);
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i].Reuse(d3d12Device, swapChain->GetBuffer(i)->GetResource());
+        renderTargetViews[i].RecreateView(d3d12Device, swapChain->GetBuffer(i), rtvDesc);
     }
 
     perspectiveCamera.SetAspect(static_cast<float>(size.X) / static_cast<float>(size.Y));

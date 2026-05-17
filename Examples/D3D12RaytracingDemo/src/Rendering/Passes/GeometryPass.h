@@ -9,16 +9,20 @@
 
 #include "../RenderContext.h"
 
-class GeometryPass : public Vertix::RenderPass<RenderContext> {
+class GeometryPass : public Vertix::RenderPass {
 public:
+    explicit GeometryPass(RenderContext* renderContext) : renderContext(renderContext) {}
+
     void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-    const Vertix::RenderResourceView<Vertix::RenderTarget>* gPositionDepthRTV = nullptr;
-    const Vertix::RenderResourceView<Vertix::RenderTarget>* gNormalRoughnessRTV = nullptr;
-    const Vertix::RenderResourceView<Vertix::DepthStencil>* gDepthDSV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget>* gPositionDepthRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget>* gNormalRoughnessRTV = nullptr;
+    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::DepthStencil>* gDepthDSV = nullptr;
 
 private:
+    RenderContext* renderContext;
+
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 };

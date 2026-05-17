@@ -8,11 +8,10 @@
 #include <wrl/client.h>
 #include <d3d12/d3d12.h>
 
-#include "Vertix/Pool/ResourceHandle.h"
+#include "Vertix/Graphics/DescriptorHeapHandle.h"
 
 namespace Vertix {
-    struct TextureTag {};
-    using TextureHandle = ResourceHandle<TextureTag>;
+    using TextureHandle = DescriptorHeapHandle;
 
     class Texture {
     public:

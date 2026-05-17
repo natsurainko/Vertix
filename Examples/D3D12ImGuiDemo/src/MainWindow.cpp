@@ -10,6 +10,10 @@
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Graphics/SwapChain.h"
 
+constexpr Vertix::RenderResourceViewDesc bufferViewDesc = {
+    .type = Vertix::RenderResourceViewType::RenderTarget
+};
+
 void MainWindow::OnInitialize() {
     imguiSrvDescriptorHeap = new Vertix::DescriptorHeap(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 64, true);
     commandList = frameCommandList->GetD3D12GraphicsCommandList();
@@ -18,7 +22,7 @@ void MainWindow::OnInitialize() {
     renderTextureViewAllocator->InitRenderTargetDescriptorHeap(2);
 
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i] = renderTextureViewAllocator->CreateViewForSwapChainBuffer(swapChain->GetBuffer(i));
+        renderTargetViews[i] = renderTextureViewAllocator->CreateView(swapChain->GetBuffer(i), bufferViewDesc);
     }
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -50,9 +54,15 @@ void MainWindow::OnInitialize() {
     init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
     // Allocating SRV descriptors (for textures) is up to the application, so we provide callbacks.
     // (current version of the backend will only allocate one descriptor, future versions will need to allocate more)
-    init_info.SrvDescriptorHeap = imguiSrvDescriptorHeap->GetDescriptorHeap().Get();
-    init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return imguiSrvDescriptorHeap->AllocDescriptorHandle(*out_cpu_handle, *out_gpu_handle); };
-    init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE) { return imguiSrvDescriptorHeap->FreeDescriptorHandle(cpu_handle); };
+    init_info.SrvDescriptorHeap = imguiSrvDescriptorHeap->GetDescriptorHeap();
+    init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) {
+        const auto handle = imguiSrvDescriptorHeap->AllocDescriptorHandle();
+        *out_cpu_handle = handle.cpuHandle;
+        *out_gpu_handle = handle.gpuHandle;
+    };
+    init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE) {
+        return imguiSrvDescriptorHeap->FreeDescriptorHandle(cpu_handle);
+    };
     ImGui_ImplDX12_Init(&init_info);
 
     // Load Fonts
@@ -89,10 +99,9 @@ void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
     const auto d3d12Device = graphicsDevice->GetD3D12Device();
 
     frameCommandList->WaitForCommand();
-
     swapChain->Resize(size);
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i].Reuse(d3d12Device.Get(), swapChain->GetBuffer(i)->GetResource());
+        renderTargetViews[i].RecreateView(d3d12Device.Get(), swapChain->GetBuffer(i), bufferViewDesc);
     }
 }
 
@@ -150,11 +159,13 @@ void MainWindow::OnRender(double deltaTime) {
 
     const auto commandListPtr = commandList.Get();
     const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
-    const auto scopedTransition = swapChain->GetCurrentBuffer()->TransitionScoped(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    swapChain->GetCurrentBuffer()->Transition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
         renderTarget.SetRenderTarget(commandListPtr);
         renderTarget.Clear(commandListPtr, clearColor);
-        commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeap().GetAddressOf());
+        commandList->SetDescriptorHeaps(1, imguiSrvDescriptorHeap->GetDescriptorHeapAddress());
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandListPtr); // Render Dear ImGui graphics
     }
+    swapChain->GetCurrentBuffer()->Transition(commandListPtr, D3D12_RESOURCE_STATE_PRESENT);
 }

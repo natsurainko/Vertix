@@ -27,7 +27,6 @@ void RayTracingShadowPass::Initialize(ID3D12Device10* device) {
 
         CD3DX12_ROOT_PARAMETER rootParams[5];
         rootParams[0].InitAsShaderResourceView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
-        //rootParams[0].InitAsDescriptorTable(1, &ranges[0]);
         rootParams[1].InitAsDescriptorTable(1, &ranges[1]);
         rootParams[2].InitAsDescriptorTable(1, &ranges[2]);
         rootParams[3].InitAsDescriptorTable(1, &ranges[3]);
@@ -165,7 +164,7 @@ void RayTracingShadowPass::Initialize(ID3D12Device10* device) {
         stbResource->Unmap(0, nullptr);
     }
 
-    descriptorHeap = shadowMaskUAV->GetHeap()->GetDescriptorHeap().Get();
+    descriptorHeap = shadowMaskUAV->heap;
 }
 
 void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
@@ -194,9 +193,9 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     commandList->SetComputeRootSignature(globalRootSig.Get());
 
     commandList->SetComputeRootShaderResourceView(0, topLevelAS->TLASResource->GetGPUVirtualAddress());
-    commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->GetGpuHandle());
-    commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->GetGpuHandle());
-    commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->GetGpuHandle());
+    commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->gpuHandle);
+    commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->gpuHandle);
+    commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->gpuHandle);
     commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
 
     commandList->SetPipelineState1(rtStateObject.Get());
