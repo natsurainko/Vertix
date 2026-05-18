@@ -29,10 +29,12 @@ namespace Vertix {
         VERTIX_API void Transition(ID3D12GraphicsCommandList* cmd, D3D12_RESOURCE_STATES newState) noexcept;
         void Reset() noexcept { d3d12Resource.Reset(); }
 
-        [[nodiscard]] ID3D12Resource*       GetResource()     const noexcept { return d3d12Resource.Get(); }
-        [[nodiscard]] D3D12_RESOURCE_DESC   GetDesc()         const noexcept { return d3d12Resource->GetDesc(); }
-        [[nodiscard]] RenderResourceKind    GetResourceKind() const noexcept { return kind; }
-        [[nodiscard]] D3D12_RESOURCE_STATES GetCurrentState() const noexcept { return currentResourceState; }
+        [[nodiscard]] ID3D12Resource*           GetResource()     const noexcept { return d3d12Resource.Get(); }
+        [[nodiscard]] D3D12_RESOURCE_DESC       GetDesc()         const noexcept { return d3d12Resource->GetDesc(); }
+        [[nodiscard]] RenderResourceKind        GetResourceKind() const noexcept { return kind; }
+        [[nodiscard]] D3D12_RESOURCE_STATES     GetCurrentState() const noexcept { return currentResourceState; }
+        [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const noexcept { return d3d12Resource->GetGPUVirtualAddress(); }
+        
     protected:
         RenderResourceKind kind;
         Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;

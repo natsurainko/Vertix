@@ -8,7 +8,7 @@
 #include <structures.h>
 #include <thread>
 
-#include "Vertix/Graphics/Buffers/ConstantBuffer.hpp"
+#include "Vertix/Rendering/Buffers/ConstantBuffer.hpp"
 #include "Vertix/Graphics/Buffers/ConstantBufferPageArray.hpp"
 #include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
 #include "Vertix.Engine/Camera/PerspectiveCamera.h"
@@ -18,7 +18,6 @@
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
-#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 
 #define SHADER_BYTECODE(T) CD3DX12_SHADER_BYTECODE(T, sizeof(T))
 
@@ -27,9 +26,12 @@ public:
     explicit RenderContext(
         const Vertix::GraphicsDevice* graphicsDevice,
         Vertix::FrameCommandList* frameCommandList)
-    : frameConstantsBuffer(graphicsDevice), lightConstantsBuffer(graphicsDevice), objectConstantsBuffer(graphicsDevice, 512),
-      graphicsDevice(graphicsDevice)
+    : graphicsDevice(graphicsDevice)
     {
+        frameConstantsBuffer = Vertix::ConstantBuffer<FrameConstants>::Create(graphicsDevice);
+        lightConstantsBuffer = Vertix::ConstantBuffer<LightConstants>::Create(graphicsDevice);
+        objectConstantsBuffer = std::make_unique<Vertix::ConstantBufferPageArray<ObjectConstants>>(graphicsDevice, 512);
+
         Vertix::ResourceUploadHeap resourceUploadHeap {};
         frameCommandList->BeginCommand(nullptr);
         fullScreenVertex = std::unique_ptr<Vertix::VertexBuffer>(Vertix::VertexBuffer::CreateFullScreenRect(graphicsDevice, frameCommandList, resourceUploadHeap));
@@ -45,9 +47,9 @@ public:
     std::unique_ptr<Vertix::VertexBuffer> fullScreenVertex;
     std::atomic<std::shared_ptr<Vertix::TopLevelAccelerationStructure>> TLAS;
 
-    Vertix::ConstantBuffer<FrameConstants> frameConstantsBuffer;
-    Vertix::ConstantBuffer<LightConstants> lightConstantsBuffer;
-    Vertix::ConstantBufferPageArray<ObjectConstants> objectConstantsBuffer;
+    std::unique_ptr<Vertix::ConstantBuffer<FrameConstants>> frameConstantsBuffer;
+    std::unique_ptr<Vertix::ConstantBuffer<LightConstants>> lightConstantsBuffer;
+    std::unique_ptr<Vertix::ConstantBufferPageArray<ObjectConstants>> objectConstantsBuffer;
 
     Vertix::ModelPool modelPool;
     std::vector<std::shared_ptr<Vertix::Engine::SceneObject3D>> sceneObjects;
@@ -98,12 +100,12 @@ public:
         frameConstants.ViewProjection = frameConstants.View * frameConstants.Projection;
         frameConstants.ViewProjection.Invert(frameConstants.InvViewProjection);
         Vertix::Engine::FillVector4(frameConstants.CameraPosition, perspectiveCamera.GetPosition());
-        frameConstantsBuffer.Fill(frameConstants);
+        frameConstantsBuffer->Fill(frameConstants);
     }
 
     void UpdateLightConstants() {
-        LightConstants.LightDirection.Normalize(LightConstants.LightDirection);
-        lightConstantsBuffer.Fill(LightConstants);
+        lightConstants.LightDirection.Normalize(lightConstants.LightDirection);
+        lightConstantsBuffer->Fill(lightConstants);
     }
 
     void UpdateObjectConstants() {
@@ -111,7 +113,7 @@ public:
             const auto &sceneObject = sceneObjects[i];
             objectConstants.World = sceneObject->GetWorldMatrix();
             objectConstants.WorldInverseTranspose = sceneObject->GetWorldInverseTranspose();
-            objectConstantsBuffer.FillAt(i, objectConstants);
+            objectConstantsBuffer->FillAt(i, objectConstants);
         }
     }
 
@@ -121,7 +123,7 @@ public:
         perspectiveCamera.GetProjectionMatrix(frameConstants.Projection);
     }
 
-    LightConstants LightConstants {
+    LightConstants lightConstants {
         .LightDirection = float3 { 0.3f, -0.925f, -0.225f },
         .AmbientIntensity = 0.1f,
         .LightColor = float3 { 1.0f, 1.0f, 1.0f },

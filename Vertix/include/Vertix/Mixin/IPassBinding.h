@@ -9,6 +9,7 @@ namespace Vertix {
     struct IPassBinding {
         virtual void Target(void* pass) = 0;
         virtual void Inject(const void* resource) = 0;
+        virtual void InjectValue(const void* resource) = 0;
         virtual ~IPassBinding() = default;
     };
 }

@@ -33,6 +33,8 @@ target_sources(Vertix
             include/Vertix/Dispatching/DispatcherQueue.hpp
             include/Vertix/Exceptions/HResultException.h
             include/Vertix/Graphics/DescriptorHeap.h
+            include/Vertix/Graphics/DescriptorHeapHandle.h
+            include/Vertix/Graphics/DescriptorRange.h
             include/Vertix/Graphics/FrameCommandList.h
             include/Vertix/Graphics/GraphicsCommandList.h
             include/Vertix/Graphics/GraphicsDevice.h
@@ -40,9 +42,7 @@ target_sources(Vertix
             include/Vertix/Graphics/SwapChain.h
             include/Vertix/Graphics/Buffers/VertexBuffer.h
             include/Vertix/Graphics/Buffers/IndexBuffer.h
-            include/Vertix/Graphics/Buffers/ConstantBuffer.hpp
             include/Vertix/Graphics/Buffers/ConstantBufferPageArray.hpp
-            include/Vertix/Graphics/Buffers/StructuredBuffer.hpp
             include/Vertix/Graphics/Raytracing/BottomLevelAccelerationStructure.h
             include/Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h
             include/Vertix/Helpers/FormatsHelper.h
@@ -69,6 +69,8 @@ target_sources(Vertix
             include/Vertix/Rendering/RenderResource.h
             include/Vertix/Rendering/RenderResourceView.h
             include/Vertix/Rendering/RenderResourceViewAllocator.h
+            include/Vertix/Rendering/Buffers/ConstantBuffer.hpp
+            include/Vertix/Rendering/Buffers/StructuredBuffer.hpp
             include/Vertix/Rendering/Pipeline/RenderGraph.h
             include/Vertix/Rendering/Pipeline/RenderPass.h
             include/Vertix/Rendering/Pipeline/RenderPipeline.h

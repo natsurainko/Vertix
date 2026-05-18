@@ -20,6 +20,7 @@ void Vertix::RenderPipeline::Execute() {
         frameInjector->Inject(frameRTV);
     }
 
+    d3d12CommandList->SetDescriptorHeaps(1, heaps);
     d3d12CommandList->RSSetViewports(1, &viewport);
     d3d12CommandList->RSSetScissorRects(1, &scissorRect);
     d3d12CommandList->ResourceBarrier(1, &barrierToRT);

@@ -117,7 +117,7 @@ void DemoMainWindow::OnInitialize() {
         perspectiveCamera.GetProjectionMatrix(projectionMatrix);
         perspectiveCamera.GetViewMatrix(viewMatrix);
 
-        constantBuffer = std::make_unique<Vertix::ConstantBuffer<RootConstants>>(graphicsDevice);
+        constantBuffer = Vertix::ConstantBuffer<RootConstants>::Create(graphicsDevice);
         FillConstantBuffer();
     }
 }
@@ -176,7 +176,7 @@ void DemoMainWindow::OnRender(const double deltaTime) {
         commandList->RSSetViewports(1, &viewport);
         commandList->RSSetScissorRects(1, &scissorRect);
         commandList->SetGraphicsRootSignature(rootSignature.Get());
-        commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetD3D12Resource()->GetGPUVirtualAddress());
+        commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
         renderTarget.SetRenderTarget(commandListPtr, &depthStencilView);
         renderTarget.Clear(commandListPtr, clearColor);
         depthStencilView.ClearDepth(commandListPtr);

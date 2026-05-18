@@ -67,7 +67,7 @@ void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV->cpuHandle, gNormalRoughnessRTV->cpuHandle };
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer.GetGpuVirtualAddress());
+    commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer->GetGPUVirtualAddress());
     commandList->OMSetRenderTargets(2, renderTargets, FALSE, &gDepthDSV->cpuHandle);
 
     gPositionDepthRTV->Clear(commandList, clearColor);
@@ -79,7 +79,7 @@ void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 
     for (UINT i = 0; i < renderContext->sceneObjects.size(); ++i) {
         const auto &sceneObject = renderContext->sceneObjects[i];
-        commandList->SetGraphicsRootConstantBufferView(1, renderContext->objectConstantsBuffer.GetGpuVirtualAddressAt(i));
+        commandList->SetGraphicsRootConstantBufferView(1, renderContext->objectConstantsBuffer->GetGpuVirtualAddressAt(i));
 
         for (const auto &mesh : sceneObject->SceneModel->Meshes) {
             commandList->IASetVertexBuffers(0, 1, &mesh.VertexBuffer->d3d12VertexBufferView);

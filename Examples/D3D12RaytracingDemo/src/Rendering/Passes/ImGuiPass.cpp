@@ -34,10 +34,10 @@ void ImGuiPass::Execute(ID3D12GraphicsCommandList5* commandList) {
             ImGui::InputFloat4("Orientation", const_cast<float*>(reinterpret_cast<const float*>(&renderContext->perspectiveCamera.GetOrientation())), "%.3f", ImGuiInputTextFlags_ReadOnly);
 
             ImGui::SeparatorText("Directional Light");
-            ImGui::SliderFloat3("Direction", reinterpret_cast<float*>(&renderContext->LightConstants.LightDirection), 1.0f, -1.0f, "%.3f");
-            ImGui::ColorEdit3("Light Color", reinterpret_cast<float*>(&renderContext->LightConstants.LightColor));
-            ImGui::SliderFloat("Light Intensity", &renderContext->LightConstants.LightIntensity, 0.0f, 10.0f, "%.3f");
-            ImGui::SliderFloat("Ambient Intensity", &renderContext->LightConstants.AmbientIntensity, 0.0f, 1.0f, "%.3f");
+            ImGui::SliderFloat3("Direction", reinterpret_cast<float*>(&renderContext->lightConstants.LightDirection), 1.0f, -1.0f, "%.3f");
+            ImGui::ColorEdit3("Light Color", reinterpret_cast<float*>(&renderContext->lightConstants.LightColor));
+            ImGui::SliderFloat("Light Intensity", &renderContext->lightConstants.LightIntensity, 0.0f, 10.0f, "%.3f");
+            ImGui::SliderFloat("Ambient Intensity", &renderContext->lightConstants.AmbientIntensity, 0.0f, 1.0f, "%.3f");
         }
         ImGui::End();
 

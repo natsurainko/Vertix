@@ -12,19 +12,27 @@
 
 #include "RenderGraph.h"
 #include "RenderPipeline.h"
+#include "Vertix/Rendering/RenderBuffer.h"
 #include "Vertix/Rendering/RenderResource.h"
+#include "Vertix/Rendering/Buffers/ConstantBuffer.hpp"
+#include "Vertix/Rendering/Buffers/StructuredBuffer.hpp"
 
 namespace Vertix {
     class RenderPipelineBuilder {
         using Op = PassResourceDeclaration::PassResourceOperation;
+        using Md = PassResourceDeclaration::PassResourceUsingMethod;
 
         struct ResourceDeclaration {
-            RenderResourceKind  resourceKind;
-            D3D12_RESOURCE_DESC resourceDesc;
-            D3D12_CLEAR_VALUE   clearValue;
+            RenderResourceKind    resourceKind = RenderResourceKind::None;
+            D3D12_RESOURCE_DESC   resourceDesc;
+            D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+            D3D12_CLEAR_VALUE     clearValue;
 
             bool resizable     = true;
             bool optimizeClear = true;
+
+            RenderBufferUsage bufferUsage = RenderBufferUsage::None;
+            size_t            bufferTDataSize = 0;
         };
     public:
         VERTIX_API explicit RenderPipelineBuilder(
@@ -35,8 +43,39 @@ namespace Vertix {
         public:
             VERTIX_API void Add(
                 const std::string &resourceName,
-                const D3D12_RESOURCE_DESC &resourceDesc,
-                bool resizable = true) const;
+                const D3D12_RESOURCE_DESC &resourceDesc) const;
+
+            template<typename T>
+            void ConstantBuffer(
+                const std::string &resourceName,
+                const D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)) const
+            {
+                func(resourceName, ResourceDeclaration {
+                    .resourceKind    = RenderResourceKind::Buffer,
+                    .resourceDesc    = Vertix::ConstantBuffer<T>::DESC(),
+                    .heapProps       = heapProps,
+                    .resizable       = false,
+                    .optimizeClear   = false,
+                    .bufferUsage     = RenderBufferUsage::ConstantBuffer,
+                    .bufferTDataSize = sizeof(T)
+                });
+            }
+
+            template<typename T>
+            void StructuredBuffer(
+                const std::string &resourceName,
+                const D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)) const
+            {
+                func(resourceName, ResourceDeclaration {
+                    .resourceKind    = RenderResourceKind::Buffer,
+                    .resourceDesc    = Vertix::StructuredBuffer<T>::DESC(),
+                    .heapProps       = heapProps,
+                    .resizable       = false,
+                    .optimizeClear   = false,
+                    .bufferUsage     = RenderBufferUsage::StructuredBuffer,
+                    .bufferTDataSize = sizeof(T)
+                });
+            }
 
         private:
             friend class RenderPipelineBuilder;
@@ -121,13 +160,13 @@ namespace Vertix {
         VERTIX_API void InitializePipelineResourceViews(RenderPipeline* renderPipeline) const;
         VERTIX_API void InitializePipelinePasses(RenderPipeline* renderPipeline) const;
 
-        VERTIX_API static D3D12_RESOURCE_STATES GetWriterState(const RenderResourceViewDesc &viewDesc);
-        VERTIX_API static D3D12_RESOURCE_STATES GetReaderState(const RenderResourceViewDesc &viewDesc);
+        VERTIX_API static D3D12_RESOURCE_STATES GetWriterState(const PassResourceDeclaration &declaration);
+        VERTIX_API static D3D12_RESOURCE_STATES GetReaderState(const PassResourceDeclaration &declaration);
 
-        VERTIX_API static void GetResourceStateFlags(
+        VERTIX_API static void GetResourceFlags(
             const RenderPipeline* renderPipeline,
             const std::string &resourceName,
-            D3D12_RESOURCE_FLAGS &flags);
+            ResourceDeclaration &declaration);
     };
 }
 

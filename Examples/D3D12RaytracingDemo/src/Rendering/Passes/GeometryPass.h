@@ -5,6 +5,7 @@
 #ifndef VERTIX_GEOMETRYPASS_H
 #define VERTIX_GEOMETRYPASS_H
 
+#include <Vertix/Rendering/RenderResourceView.h>
 #include <Vertix/Rendering/Pipeline/RenderPass.h>
 
 #include "../RenderContext.h"

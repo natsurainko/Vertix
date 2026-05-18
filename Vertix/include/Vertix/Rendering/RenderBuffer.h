@@ -8,6 +8,16 @@
 #include "RenderResource.h"
 
 namespace Vertix {
+    enum class RenderBufferUsage {
+        None,
+
+        ConstantBuffer,
+        StructuredBuffer,
+        CounterBuffer,
+
+        AccelerationStructure
+    };
+
     class RenderBuffer : public RenderResource {
     public:
         RenderBuffer(

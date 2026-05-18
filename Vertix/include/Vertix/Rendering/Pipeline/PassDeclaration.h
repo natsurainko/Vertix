@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <typeindex>
 
@@ -21,8 +22,15 @@ namespace Vertix {
             WRITE
         } operation;
 
+        enum class PassResourceUsingMethod {
+            Resource,
+            View,
+            GPUAddress
+        } method;
+
         std::string resourceName;
         std::shared_ptr<IPassBinding> resourceBinding;
+        std::optional<D3D12_RESOURCE_STATES> resourceState;
         RenderResourceViewDesc viewDesc;
     };
 
@@ -43,6 +51,22 @@ namespace Vertix {
             return *this;
         }
 
+        PassDeclarationBuilder& Write(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
+            D3D12_RESOURCE_STATES resourceState)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .operation = PassResourceDeclaration::PassResourceOperation::WRITE,
+                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                .resourceName = resourceName,
+                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field),
+                .resourceState = resourceState
+            });
+
+            return *this;
+        }
+
         template<RenderResourceViewType VType>
         PassDeclarationBuilder& Write(
             const std::string& resourceName,
@@ -53,9 +77,10 @@ namespace Vertix {
 
             passDeclaration.Resources.emplace_back(PassResourceDeclaration {
                 .operation = PassResourceDeclaration::PassResourceOperation::WRITE,
+                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
                 .resourceName = resourceName,
                 .resourceBinding = std::make_unique<PassBinding<const RenderResourceView<VType>*>>(field),
-                .viewDesc = viewDesc
+                .viewDesc = viewDesc,
             });
 
             return *this;
@@ -72,9 +97,26 @@ namespace Vertix {
 
             passDeclaration.Resources.emplace_back(PassResourceDeclaration {
                 .operation = PassResourceDeclaration::PassResourceOperation::WRITE,
+                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
                 .resourceName = resourceName,
                 .resourceBinding = std::make_unique<PassBinding<const RenderResourceView<VType>*>>(field),
                 .viewDesc = viewDesc
+            });
+
+            return *this;
+        }
+
+        PassDeclarationBuilder& Read(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
+            D3D12_RESOURCE_STATES resourceState)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .operation = PassResourceDeclaration::PassResourceOperation::READ,
+                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                .resourceName = resourceName,
+                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field),
+                .resourceState = resourceState
             });
 
             return *this;
@@ -90,6 +132,7 @@ namespace Vertix {
 
             passDeclaration.Resources.emplace_back(PassResourceDeclaration {
                 .operation = PassResourceDeclaration::PassResourceOperation::READ,
+                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
                 .resourceName = resourceName,
                 .resourceBinding = std::make_shared<PassBinding<const RenderResourceView<VType>*>>(field),
                 .viewDesc = viewDesc
@@ -109,6 +152,7 @@ namespace Vertix {
 
             passDeclaration.Resources.emplace_back(PassResourceDeclaration {
                 .operation = PassResourceDeclaration::PassResourceOperation::READ,
+                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
                 .resourceName = resourceName,
                 .resourceBinding = std::make_shared<PassBinding<const RenderResourceView<VType>*>>(field),
                 .viewDesc = viewDesc
@@ -147,10 +191,11 @@ namespace Vertix {
         struct PassBinding : IPassBinding {
             explicit PassBinding(TMember TRenderPass::* member) :member(member) {}
             TMember TRenderPass::* member;
-            TRenderPass* instance;
+            TRenderPass* instance = nullptr;
 
             void Target(void *pass) override { instance = static_cast<TRenderPass*>(pass); }
-            void Inject(const void* resource) override { instance->*member = static_cast<TMember>(resource); }
+            void Inject(const void* resource) override { instance->*member = reinterpret_cast<TMember>(resource); }
+            void InjectValue(const void* resource) override { instance->*member = *reinterpret_cast<const TMember*>(resource); }
         };
     };
 }

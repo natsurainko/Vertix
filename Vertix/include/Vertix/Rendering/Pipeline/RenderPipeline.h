@@ -28,6 +28,7 @@ namespace Vertix {
         VERTIX_API void Execute();
         VERTIX_API void Resize(const Vector2D<UINT>& size);
 
+        [[nodiscard]] RenderResource*              GetResource(const std::string &resourceName) const { return resources.at(resourceName).get(); }
         [[nodiscard]] RenderResourceViewAllocator* GetViewAllocator() const noexcept { return viewAllocator.get(); }
         [[nodiscard]] const D3D12_VIEWPORT*        GetD3D12Viewport() const noexcept { return &viewport; }
         [[nodiscard]] const D3D12_RECT*            GetD3D12ScissorRect() const noexcept { return &scissorRect; }
@@ -54,12 +55,6 @@ namespace Vertix {
             const RenderTexture* resource,
             const RenderResourceViewDesc* viewDesc,
             const DescriptorHeapHandle &handle) const;
-
-        struct BarrierRecipe {
-            std::string           textureId;
-            D3D12_RESOURCE_STATES beforeState;
-            D3D12_RESOURCE_STATES afterState;
-        };
 
         friend class RenderPipelineBuilder;
 
@@ -96,6 +91,7 @@ namespace Vertix {
         CD3DX12_RECT     scissorRect{};
 
         ID3D12Device10* d3d12Device = nullptr;
+        ID3D12DescriptorHeap* heaps[1] = {};
         ID3D12GraphicsCommandList5* d3d12CommandList = nullptr;
     };
 }

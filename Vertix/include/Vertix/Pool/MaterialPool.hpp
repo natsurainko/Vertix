@@ -8,7 +8,7 @@
 #include <cassert>
 #include <memory>
 
-#include "Vertix/Graphics/Buffers/StructuredBuffer.hpp"
+#include "../Rendering/Buffers/StructuredBuffer.hpp"
 #include "Vertix/Mixin/IFillConstants.h"
 #include "Vertix/Pool/ResourcePool.hpp"
 #include "Vertix/Primitive/Material.h"
@@ -20,10 +20,11 @@ namespace Vertix {
         explicit MaterialPool(
             const GraphicsDevice* graphicsDevice,
             uint32_t capacity)
-        : ResourcePool(capacity), capacity(capacity), constantBuffer(graphicsDevice, capacity)
+        : ResourcePool(capacity), capacity(capacity)
         {
             dirtySlots = std::make_unique<bool[]>(capacity);
             nullHandle = MaterialPool::Allocate();
+            structuredBuffer = StructuredBuffer<TConstants>::Create(graphicsDevice, capacity);
         }
 
         ~MaterialPool() override = default;
@@ -70,13 +71,13 @@ namespace Vertix {
                 if (this->slots[i]) {
                     FillConstants(*this->slots[i], constants);
                 }
-                constantBuffer.FillAt(i, constants);
+                structuredBuffer->Fill(i, constants);
                 dirtySlots[i] = false;
             }
         }
 
         [[nodiscard]]
-        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const noexcept { return constantBuffer.GetGpuVirtualAddress(); }
+        D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const noexcept { return structuredBuffer->GetGPUVirtualAddress(); }
 
     protected:
         virtual void FillConstants(
@@ -97,7 +98,7 @@ namespace Vertix {
 
         std::unique_ptr<bool[]> dirtySlots;
 
-        StructuredBuffer<TConstants> constantBuffer;
+        std::unique_ptr<StructuredBuffer<TConstants>> structuredBuffer;
     };
 }
 

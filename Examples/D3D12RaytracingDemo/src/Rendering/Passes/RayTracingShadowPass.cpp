@@ -196,7 +196,7 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->gpuHandle);
     commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->gpuHandle);
     commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->gpuHandle);
-    commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer.GetGpuVirtualAddress());
+    commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer->GetGPUVirtualAddress());
 
     commandList->SetPipelineState1(rtStateObject.Get());
     commandList->DispatchRays(&raytraceDesc);

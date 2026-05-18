@@ -28,13 +28,12 @@ Vertix::RenderPipelineBuilder::RenderPipelineBuilder(
 
 void Vertix::RenderPipelineBuilder::BufferCollection::Add(
     const std::string &resourceName,
-    const D3D12_RESOURCE_DESC &resourceDesc,
-    const bool resizable) const
+    const D3D12_RESOURCE_DESC &resourceDesc) const
 {
     func(resourceName, ResourceDeclaration {
         .resourceKind  = RenderResourceKind::Buffer,
         .resourceDesc  = resourceDesc,
-        .resizable     = resizable,
+        .resizable     = false,
         .optimizeClear = false,
     });
 }
@@ -234,10 +233,12 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResourceStates(
             auto it = declMap.find(edge->resourceName);
             if (it == declMap.end()) throw std::runtime_error("Writer node missing declaration for: " + edge->resourceName);
 
-            edge->writerState = GetWriterState(it->second->viewDesc);
+            edge->writerState = GetWriterState(*it->second);
             usedResources.insert(edge->resourceName);
             outInitialStates.emplace(edge->resourceName, edge->writerState);
-            collectViewDesc(edge->resourceName, it->second->viewDesc);
+
+            if (it->second->method == Md::View)
+                collectViewDesc(edge->resourceName, it->second->viewDesc);
         }
 
         // current node is reader node
@@ -247,22 +248,28 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResourceStates(
             auto it = declMap.find(edge->resourceName);
             if (it == declMap.end()) throw std::runtime_error("Reader node missing declaration for: " + edge->resourceName);
 
-            edge->readerState = GetReaderState(it->second->viewDesc);
-            usedResources.insert(edge->resourceName);
-            outInitialStates.emplace(edge->resourceName, edge->readerState);
-            collectViewDesc(edge->resourceName, it->second->viewDesc);
+            edge->readerState = GetReaderState(*it->second);
+        }
+
+        for (auto& passRes : node->passDeclaration.Resources) {
+            if (passRes.operation != Op::READ) continue;
+            if (passRes.resourceName.empty() || passRes.resourceName == SwapChain.resourceName) continue;
+            if (!resourceDeclarations.contains(passRes.resourceName)) continue;
+
+            usedResources.insert(passRes.resourceName);
+            outInitialStates.emplace(passRes.resourceName, GetReaderState(passRes));
+            if (passRes.method == Md::View) collectViewDesc(passRes.resourceName, passRes.viewDesc);
         }
 
         if (node->passDeclaration.hasSideEffect) {
             for (auto& passRes : node->passDeclaration.Resources) {
-                if (passRes.operation != Op::WRITE) continue;
                 if (passRes.resourceName.empty() || passRes.resourceName == SwapChain.resourceName) continue;
-
+                if (passRes.operation != Op::WRITE) continue;
                 if (std::ranges::any_of(node->outEdges, [&](const auto& e) { return e->resourceName == passRes.resourceName; })) continue;
 
                 usedResources.insert(passRes.resourceName);
-                outInitialStates.emplace(passRes.resourceName, GetWriterState(passRes.viewDesc));
-                collectViewDesc(passRes.resourceName, passRes.viewDesc);
+                outInitialStates.emplace(passRes.resourceName, GetWriterState(passRes));
+                if (passRes.method == Md::View) collectViewDesc(passRes.resourceName, passRes.viewDesc);
             }
         }
     }
@@ -279,13 +286,12 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResources(
 
     for (const auto &resourceName : usedResources) {
         auto &resDecl = resourceDeclarations.at(resourceName);
-        GetResourceStateFlags(renderPipeline, resourceName, resDecl.resourceDesc.Flags);
+        GetResourceFlags(renderPipeline, resourceName, resDecl);
 
         Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
         const D3D12_RESOURCE_STATES initState = inInitialStates.at(resourceName);
-        const CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
         ThrowIfFailed(device->CreateCommittedResource(
-            &defaultHeapProps,
+            &resDecl.heapProps,
             D3D12_HEAP_FLAG_NONE,
             &resDecl.resourceDesc,
             initState,
@@ -294,7 +300,11 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResources(
         ));
 
         if (resDecl.resourceKind == RenderResourceKind::Buffer) {
-            resources.emplace(resourceName, std::make_unique<RenderBuffer>(d3d12Resource, initState));
+            switch (resDecl.bufferUsage) {
+                case RenderBufferUsage::ConstantBuffer: resources.emplace(resourceName, std::make_unique<ConstantBufferBase>(d3d12Resource, initState, resDecl.bufferTDataSize)); break;
+                case RenderBufferUsage::StructuredBuffer: resources.emplace(resourceName, std::make_unique<StructuredBufferBase>(d3d12Resource, initState, static_cast<UINT>(resDecl.resourceDesc.Width / resDecl.bufferTDataSize), resDecl.bufferTDataSize)); break;
+                default: resources.emplace(resourceName, std::make_unique<RenderBuffer>(d3d12Resource, initState)); break;
+            }
         } else if (resDecl.resourceKind == RenderResourceKind::Texture) {
             const D3D12_RESOURCE_DESC &desc = resDecl.resourceDesc;
             const std::optional<D3D12_CLEAR_VALUE> &clearValue = resDecl.optimizeClear ? std::optional(resDecl.clearValue) : std::nullopt;
@@ -303,8 +313,7 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResources(
                 case D3D12_RESOURCE_DIMENSION_TEXTURE1D: resources.emplace(resourceName, std::make_unique<RenderTexture1D>(d3d12Resource, desc, initState, clearValue)); break;
                 case D3D12_RESOURCE_DIMENSION_TEXTURE2D: resources.emplace(resourceName, std::make_unique<RenderTexture2D>(d3d12Resource, desc, initState, clearValue)); break;
                 case D3D12_RESOURCE_DIMENSION_TEXTURE3D: resources.emplace(resourceName, std::make_unique<RenderTexture3D>(d3d12Resource, desc, initState, clearValue)); break;
-                default:
-                    throw std::runtime_error("Not support this resource dimension");
+                default: throw std::runtime_error("Not support this resource dimension");
             }
 
             if (resDecl.resizable) resizableTextures.emplace(resourceName, static_cast<RenderTexture*>(resources.at(resourceName).get()));
@@ -340,7 +349,10 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResourceViews(RenderPipeli
     allocator->InitDepthStencilDescriptorHeap(dsvDescriptorSize);
     allocator->InitSharedDescriptorHeap(sharedDescriptorSize);
 
-    renderPipeline->nullHandle = allocator->GetSharedDescriptorHeap()->AllocDescriptorHandle();
+    const auto sharedDescriptorHeap = allocator->GetSharedDescriptorHeap();
+    renderPipeline->nullHandle      = sharedDescriptorHeap->AllocDescriptorHandle();
+    renderPipeline->heaps[0]        = sharedDescriptorHeap->GetDescriptorHeap();
+
     if (Descriptors.onAllocatorCreated) Descriptors.onAllocatorCreated(allocator);
 
     for (const auto &[resourceName, viewDescs]: resourceViewDescs) {
@@ -359,6 +371,7 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResourceViews(RenderPipeli
 void Vertix::RenderPipelineBuilder::InitializePipelinePasses(RenderPipeline* renderPipeline) const {
     const auto device = graphicsDevice->GetD3D12Device().Get();
     const auto &views = renderPipeline->views;
+    const auto &resources = renderPipeline->resources;
     auto &frameInjectors = renderPipeline->frameInjectors;
 
     for (const auto& node : renderPipeline->pipelineGraphNodes) {
@@ -371,52 +384,78 @@ void Vertix::RenderPipelineBuilder::InitializePipelinePasses(RenderPipeline* ren
                 continue;
             }
 
-            const auto& registeredDescs = renderPipeline->resourcesViewDescs.at(passRes.resourceName);
-            auto canonicalIt = std::ranges::find_if(registeredDescs, [&](const RenderResourceViewDesc* p) { return *p == passRes.viewDesc; });
+            if (passRes.method == Md::Resource) {
+                passRes.resourceBinding->Inject(&resources.at(passRes.resourceName));
+            } else if (passRes.method == Md::GPUAddress) {
+                const auto field = resources.at(passRes.resourceName)->GetGPUVirtualAddress();
+                passRes.resourceBinding->InjectValue(&field);
+            } else if (passRes.method == Md::View) {
+                const auto& registeredDescs = renderPipeline->resourcesViewDescs.at(passRes.resourceName);
+                auto canonicalIt = std::ranges::find_if(registeredDescs, [&](const RenderResourceViewDesc* p) { return *p == passRes.viewDesc; });
 
-            if (canonicalIt == registeredDescs.end())
-                throw std::runtime_error("No view found for resource: " + passRes.resourceName);
+                if (canonicalIt == registeredDescs.end())
+                    throw std::runtime_error("No view found for resource: " + passRes.resourceName);
 
-            passRes.resourceBinding->Inject(&views.at(*canonicalIt));
+                passRes.resourceBinding->Inject(&views.at(*canonicalIt));
+            }
         }
 
         node->renderPass->Initialize(device);
     }
 }
 
-D3D12_RESOURCE_STATES Vertix::RenderPipelineBuilder::GetWriterState(const RenderResourceViewDesc &viewDesc) {
-    switch (viewDesc.type) {
-        case RenderResourceViewType::RenderTarget:    return D3D12_RESOURCE_STATE_RENDER_TARGET;
-        case RenderResourceViewType::DepthStencil:    return D3D12_RESOURCE_STATE_DEPTH_WRITE;
-        case RenderResourceViewType::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-        default: throw std::runtime_error("Unsupported view type for WRITE operation.");
+D3D12_RESOURCE_STATES Vertix::RenderPipelineBuilder::GetWriterState(const PassResourceDeclaration &declaration) {
+    if (declaration.method == Md::View) {
+        switch (declaration.viewDesc.type) {
+            case RenderResourceViewType::RenderTarget:    return D3D12_RESOURCE_STATE_RENDER_TARGET;
+            case RenderResourceViewType::DepthStencil:    return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+            case RenderResourceViewType::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+            default: throw std::runtime_error("Unsupported view type for WRITE operation.");
+        }
     }
+
+    if (declaration.resourceState == std::nullopt)
+        throw std::runtime_error("When reading or writing resources using methods other than View, the resource state must be specified.");
+    return declaration.resourceState.value();
 }
 
-D3D12_RESOURCE_STATES Vertix::RenderPipelineBuilder::GetReaderState(const RenderResourceViewDesc &viewDesc) {
-    switch (viewDesc.type) {
-        case RenderResourceViewType::ShaderResource:  return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
-        case RenderResourceViewType::ConstantBuffer:  return D3D12_RESOURCE_STATE_GENERIC_READ;
-        case RenderResourceViewType::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-        case RenderResourceViewType::RenderTarget:    throw std::runtime_error("RenderTarget does not allow READ.");
-        case RenderResourceViewType::DepthStencil:    throw std::runtime_error("DepthStencil does not allow READ.");
-        default: throw std::runtime_error("Unknown view type for READ operation.");
+D3D12_RESOURCE_STATES Vertix::RenderPipelineBuilder::GetReaderState(const PassResourceDeclaration &declaration) {
+    if (declaration.method == Md::View) {
+        switch (declaration.viewDesc.type) {
+            case RenderResourceViewType::ShaderResource:  return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+            case RenderResourceViewType::ConstantBuffer:  return D3D12_RESOURCE_STATE_GENERIC_READ;
+            case RenderResourceViewType::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+            case RenderResourceViewType::RenderTarget:    throw std::runtime_error("RenderTarget does not allow READ.");
+            case RenderResourceViewType::DepthStencil:    throw std::runtime_error("DepthStencil does not allow READ.");
+            default: throw std::runtime_error("Unknown view type for READ operation.");
+        }
     }
+
+    if (declaration.resourceState == std::nullopt)
+        throw std::runtime_error("When reading or writing resources using methods other than View, the resource state must be specified.");
+    return declaration.resourceState.value();
 }
 
-void Vertix::RenderPipelineBuilder::GetResourceStateFlags(
+void Vertix::RenderPipelineBuilder::GetResourceFlags(
     const RenderPipeline* renderPipeline,
     const std::string &resourceName,
-    D3D12_RESOURCE_FLAGS &flags)
+    ResourceDeclaration &declaration)
 {
-    for (const auto &viewDesc : renderPipeline->resourcesViewDescs.at(resourceName)) {
-        if (const auto type = viewDesc->type; type == RenderResourceViewType::RenderTarget) {
-            flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-        } else if (type == RenderResourceViewType::DepthStencil) {
-            flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-        } else if (type == RenderResourceViewType::UnorderedAccess) {
-            flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    auto &flags = declaration.resourceDesc.Flags;
+
+    if (declaration.resourceKind == RenderResourceKind::Texture) {
+        for (const auto &viewDesc : renderPipeline->resourcesViewDescs.at(resourceName)) {
+            if (const auto type = viewDesc->type; type == RenderResourceViewType::RenderTarget) {
+                flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            } else if (type == RenderResourceViewType::DepthStencil) {
+                flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+            } else if (type == RenderResourceViewType::UnorderedAccess) {
+                flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            }
         }
+    } else if (declaration.resourceKind == RenderResourceKind::Buffer) {
+        if (declaration.bufferUsage == RenderBufferUsage::AccelerationStructure)
+            flags |= D3D12_RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE;
     }
 
     if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET && flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
