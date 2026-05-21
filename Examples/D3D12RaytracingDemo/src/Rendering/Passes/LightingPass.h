@@ -5,26 +5,23 @@
 #ifndef VERTIX_LIGHTINGPASS_H
 #define VERTIX_LIGHTINGPASS_H
 
-#include <Vertix/Rendering/RenderResourceView.h>
+#include <Vertix/Graphics/DescriptorView.h>
 #include <Vertix/Rendering/Pipeline/RenderPass.h>
 
 #include "../RenderContext.h"
 
 class LightingPass : public Vertix::RenderPass {
 public:
-    explicit LightingPass(Vertix::SwapChain* swapChain, RenderContext* renderContext)
-    : swapChain(swapChain), renderContext(renderContext) {}
+    explicit LightingPass(RenderContext* renderContext) : renderContext(renderContext) {}
 
     void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::ShaderResource>* shadowMaskSRV = nullptr;
-    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget>* currentFrameRTV = nullptr;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::PixelShaderResource> shadowMaskSRV;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::RenderTarget> currentFrameRTV;
 
 private:
-    Vertix::SwapChain*    swapChain;
-    RenderContext*        renderContext;
-    ID3D12DescriptorHeap* descriptorHeap = nullptr;
+    RenderContext* renderContext;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

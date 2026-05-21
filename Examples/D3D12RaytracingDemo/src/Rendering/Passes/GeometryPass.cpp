@@ -64,22 +64,22 @@ void GeometryPass::Initialize(ID3D12Device10* device) {
 
 void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV->cpuHandle, gNormalRoughnessRTV->cpuHandle };
+    const D3D12_CPU_DESCRIPTOR_HANDLE renderTargets[2] = { gPositionDepthRTV.cpuHandle, gNormalRoughnessRTV.cpuHandle };
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootConstantBufferView(0, renderContext->frameConstantsBuffer->GetGPUVirtualAddress());
-    commandList->OMSetRenderTargets(2, renderTargets, FALSE, &gDepthDSV->cpuHandle);
+    commandList->SetGraphicsRootConstantBufferView(0, frameConstants);
+    commandList->OMSetRenderTargets(2, renderTargets, FALSE, &gDepthDSV.cpuHandle);
 
-    gPositionDepthRTV->Clear(commandList, clearColor);
-    gNormalRoughnessRTV->Clear(commandList, clearColor);
-    gDepthDSV->ClearDepth(commandList);
+    gPositionDepthRTV.Clear(commandList, clearColor);
+    gNormalRoughnessRTV.Clear(commandList, clearColor);
+    gDepthDSV.ClearDepth(commandList);
 
     commandList->SetPipelineState(pipelineState.Get());
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     for (UINT i = 0; i < renderContext->sceneObjects.size(); ++i) {
         const auto &sceneObject = renderContext->sceneObjects[i];
-        commandList->SetGraphicsRootConstantBufferView(1, renderContext->objectConstantsBuffer->GetGpuVirtualAddressAt(i));
+        commandList->SetGraphicsRootConstantBufferView(1, renderContext->objectConstantsBuffer.GetGpuVirtualAddressAt(i));
 
         for (const auto &mesh : sceneObject->SceneModel->Meshes) {
             commandList->IASetVertexBuffers(0, 1, &mesh.VertexBuffer->d3d12VertexBufferView);

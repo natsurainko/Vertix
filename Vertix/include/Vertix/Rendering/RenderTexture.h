@@ -5,14 +5,20 @@
 #ifndef VERTIX_RENDERTEXTURE_H
 #define VERTIX_RENDERTEXTURE_H
 
+#include <memory>
 #include <optional>
 #include <d3d12/d3d12.h>
 #include <wrl/client.h>
 
 #include "RenderResource.h"
+#include "RenderResourceUsage.h"
 #include "Vertix/Math/Vector2D.hpp"
 
 namespace Vertix {
+    class RenderTexture1D;
+    class RenderTexture2D;
+    class RenderTexture3D;
+
     class RenderTexture : public RenderResource {
     public:
         RenderTexture(
@@ -25,6 +31,24 @@ namespace Vertix {
         virtual void Resize(
             ID3D12Device* d3d12Device,
             const uint64_t size[3]) = 0;
+
+        VERTIX_API static std::unique_ptr<RenderTexture1D> Tex1D(
+            ID3D12Device* device,
+            RenderResourceUsage usage,
+            const D3D12_RESOURCE_DESC &resourceDesc,
+            const std::optional<D3D12_CLEAR_VALUE> &clearValue = std::nullopt);
+
+        VERTIX_API static std::unique_ptr<RenderTexture2D> Tex2D(
+            ID3D12Device* device,
+            RenderResourceUsage usage,
+            const D3D12_RESOURCE_DESC &resourceDesc,
+            const std::optional<D3D12_CLEAR_VALUE> &clearValue = std::nullopt);
+
+        VERTIX_API static std::unique_ptr<RenderTexture3D> Tex3D(
+            ID3D12Device* device,
+            RenderResourceUsage usage,
+            const D3D12_RESOURCE_DESC &resourceDesc,
+            const std::optional<D3D12_CLEAR_VALUE> &clearValue = std::nullopt);
 
     protected:
         D3D12_RESOURCE_DESC resourceDesc;

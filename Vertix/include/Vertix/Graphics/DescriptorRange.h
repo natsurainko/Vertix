@@ -22,11 +22,11 @@ namespace Vertix {
 
         VERTIX_API ~DescriptorRange() override;
 
-        VERTIX_API DescriptorHeapHandle AllocDescriptorHandle() override;
-        VERTIX_API void AllocDescriptorHandles(uint32_t count, DescriptorHeapHandle* handles);
+        VERTIX_API DescriptorHandle AllocDescriptorHandle() override;
+        VERTIX_API void AllocDescriptorHandles(uint32_t count, DescriptorHandle* handles);
 
-        VERTIX_API void FreeDescriptorHandle(const DescriptorHeapHandle &handle) override;
-        VERTIX_API void FreeDescriptorHandles(uint32_t count, const DescriptorHeapHandle* handles);
+        VERTIX_API void FreeDescriptorHandle(const DescriptorHandle &handle) override;
+        VERTIX_API void FreeDescriptorHandles(uint32_t count, const DescriptorHandle* handles);
 
         [[nodiscard]] bool     IsFull() const noexcept override { return freeSlots.empty(); }
         [[nodiscard]] uint32_t GetFreeCount() const noexcept override { return static_cast<uint32_t>(freeSlots.size()); }

@@ -7,7 +7,6 @@
 
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "Vertix/Exceptions/HResultException.h"
 #include "Vertix/Mixin/IDescriptorAllocator.h"
 #include "Vertix/Pool/ResourcePool.hpp"
 #include "Vertix/Primitive/Texture.h"

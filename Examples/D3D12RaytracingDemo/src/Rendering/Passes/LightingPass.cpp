@@ -58,19 +58,16 @@ void LightingPass::Initialize(ID3D12Device10* device) {
         psoDesc.SampleMask = UINT_MAX;
         ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
-
-    descriptorHeap = shadowMaskSRV->heap;
 }
 
 void LightingPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     constexpr float clearColor[] = { 0.127437680f, 0.300543794f, 0.846873232f, 1.0f };
 
-    commandList->SetDescriptorHeaps(1, &descriptorHeap);
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV->gpuHandle);
+    commandList->SetGraphicsRootDescriptorTable(0, shadowMaskSRV.gpuHandle);
 
-    currentFrameRTV->SetRenderTarget(commandList);
-    currentFrameRTV->Clear(commandList, clearColor);
+    currentFrameRTV.SetRenderTarget(commandList);
+    currentFrameRTV.Clear(commandList, clearColor);
 
     commandList->SetPipelineState(pipelineState.Get());
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

@@ -7,14 +7,12 @@
 
 #include <imgui/imgui.h>
 
-#include "Vertix/Graphics/DescriptorHeap.h"
+#include "Vertix/Graphics/DescriptorHeapSet.h"
+#include "Vertix/Graphics/DescriptorView.h"
 #include "Vertix/Rendering/RenderTexture.h"
-#include "Vertix/Rendering/RenderResourceView.h"
-#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 #include "Vertix/Windowing/GameWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static Vertix::DescriptorHeap* imguiSrvDescriptorHeap = nullptr;
 
 class MainWindow : public Vertix::GameWindow {
 public:
@@ -35,8 +33,8 @@ private:
     float dpiScale = 1;
     ImGuiIO* io = nullptr;
 
-    std::unique_ptr<Vertix::RenderResourceViewAllocator> renderTextureViewAllocator;
-    Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget> renderTargetViews[2] = {};
+    std::unique_ptr<Vertix::DescriptorHeapSet> descriptorHeapSet;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::RenderTarget> renderTargetViews[2] = {};
 
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList5> commandList;
 };

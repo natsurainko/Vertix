@@ -40,12 +40,9 @@ namespace Vertix {
         [[nodiscard]] UINT GetElementCount() const noexcept { return elementCount; }
         [[nodiscard]] size_t GetElementSize() const noexcept { return elementSize; }
 
-        static D3D12_RESOURCE_DESC DESC(const UINT elementCount, const size_t elementSize) noexcept {
-            return CD3DX12_RESOURCE_DESC::Buffer(elementSize * elementCount);
-        }
-
     protected:
         void FillRaw(const UINT index, const void* data, const size_t offset, const size_t size) const {
+            assert(bufferDataBegin && "Invalid bufferDataPtr");
             assert(index < elementCount && "Index out of range");
             assert(offset + size <= elementSize && "FillRaw out of bounds");
             memcpy(bufferDataBegin + index * elementSize + offset, data, size);
@@ -71,17 +68,7 @@ namespace Vertix {
             FillRaw(index, &value, 0, sizeof(T));
         }
 
-        template<typename TMember>
-        void FillField(const UINT index, const TMember &value, TMember T::* field) {
-            const T* dummy = nullptr;
-            const size_t fieldOffset = reinterpret_cast<size_t>(&(dummy->*field));
-            FillRaw(index, &value, fieldOffset, sizeof(TMember));
-        }
-
-        static D3D12_RESOURCE_DESC DESC(const UINT elementCount) noexcept {
-            return StructuredBufferBase::DESC(elementCount, sizeof(T));
-        }
-
+        static D3D12_RESOURCE_DESC DESC(const UINT elementCount) noexcept { return CD3DX12_RESOURCE_DESC::Buffer(sizeof(T) * elementCount); }
         static std::unique_ptr<StructuredBuffer> Create(
             const GraphicsDevice* device,
             const uint32_t elementCount)

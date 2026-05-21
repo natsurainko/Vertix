@@ -20,30 +20,30 @@ namespace Vertix {
             : hInstance(hInstance), lpCmdLine(lpCmdLine), nCmdShow(nCmdShow) {}
 
         template <GameWindowType TWindow>
-        GameApplicationBuilder ConfigureWindow() {
+        GameApplicationBuilder& ConfigureWindow() {
             gameWindow = new TWindow();
             return *this;
         }
 
         template <GameWindowType TWindow>
-        GameApplicationBuilder ConfigureWindow(const WindowOptions &options) {
+        GameApplicationBuilder& ConfigureWindow(const WindowOptions &options) {
             gameWindow = new TWindow(options);
             return *this;
         }
 
         template <GameWindowType TWindow,  typename... Args>
-        GameApplicationBuilder ConfigureWindow(const WindowOptions &options, Args... args) {
+        GameApplicationBuilder& ConfigureWindow(const WindowOptions &options, Args... args) {
             gameWindow = new TWindow(options, args...);
             return *this;
         }
 
         template <GameWindowType TWindow>
-        GameApplicationBuilder ConfigureWindow(TWindow* window) noexcept {
+        GameApplicationBuilder& ConfigureWindow(TWindow* window) noexcept {
             gameWindow = window;
             return *this;
         }
 
-        GameApplicationBuilder ConfigureGraphicsDevice(const GraphicsDeviceOptions &options) {
+        GameApplicationBuilder& ConfigureGraphicsDevice(const GraphicsDeviceOptions &options) {
             graphicDeviceOptions = options;
             return *this;
         }

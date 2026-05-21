@@ -27,6 +27,14 @@ namespace Vertix {
             structuredBuffer = StructuredBuffer<TConstants>::Create(graphicsDevice, capacity);
         }
 
+        explicit MaterialPool(std::unique_ptr<StructuredBuffer<TConstants>> buffer)
+        : ResourcePool(buffer->GetElementCount()), capacity(buffer->GetElementCount())
+        {
+            dirtySlots = std::make_unique<bool[]>(buffer->GetElementCount());
+            nullHandle = MaterialPool::Allocate();
+            structuredBuffer = buffer;
+        }
+
         ~MaterialPool() override = default;
 
         [[nodiscard]]
@@ -97,7 +105,6 @@ namespace Vertix {
         bool needDirtyFlush = false;
 
         std::unique_ptr<bool[]> dirtySlots;
-
         std::unique_ptr<StructuredBuffer<TConstants>> structuredBuffer;
     };
 }

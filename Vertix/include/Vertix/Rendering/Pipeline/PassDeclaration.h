@@ -11,17 +11,15 @@
 #include <string>
 #include <typeindex>
 
+#include "Vertix/Graphics/DescriptorHandle.h"
+#include "Vertix/Graphics/DescriptorView.h"
 #include "Vertix/Mixin/IPassBinding.h"
-#include "Vertix/Rendering/RenderResourceView.h"
+#include "Vertix/Rendering/RenderResource.h"
+#include "Vertix/Rendering/RenderResourceUsage.h"
 #include "Vertix/Rendering/Pipeline/RenderPass.h"
 
 namespace Vertix {
     struct PassResourceDeclaration {
-        enum class PassResourceOperation {
-            READ,
-            WRITE
-        } operation;
-
         enum class PassResourceUsingMethod {
             Resource,
             View,
@@ -29,9 +27,8 @@ namespace Vertix {
         } method;
 
         std::string resourceName;
+        RenderResourceUsage resourceUsage;
         std::shared_ptr<IPassBinding> resourceBinding;
-        std::optional<D3D12_RESOURCE_STATES> resourceState;
-        RenderResourceViewDesc viewDesc;
     };
 
     struct PassDeclaration {
@@ -44,120 +41,83 @@ namespace Vertix {
 
     template<RenderPassType TRenderPass>
     class PassDeclarationBuilder {
+        using ViewFactoryMethod = std::function<void(
+            ID3D12Device*,
+            const DescriptorHandle&,
+            const std::unordered_map<std::string, std::unique_ptr<RenderResource>>&)>;
+
     public:
+        template<RenderResourceUsage Usage> requires RenderResourceReadUsage<Usage>
+        PassDeclarationBuilder& Read(
+            const std::string& resourceName,
+            DescriptorView<Usage> TRenderPass::* field,
+            const DescriptorViewDesc &desc = std::monostate{},
+            const std::optional<std::string> counterResourceName = std::nullopt)
+        {
+            auto binding = std::make_shared<PassBinding<DescriptorView<Usage>>>(field);
+            DeclareView<Usage>(resourceName, desc, counterResourceName, binding);
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
+                .resourceName = resourceName,
+                .resourceUsage = Usage,
+                .resourceBinding = std::move(binding),
+            });
+
+            return *this;
+        }
+
+        template<RenderResourceUsage Usage> requires RenderResourceWriteUsage<Usage>
+        PassDeclarationBuilder& Write(
+            const std::string& resourceName,
+            DescriptorView<Usage> TRenderPass::* field,
+            const DescriptorViewDesc &desc = std::monostate{},
+            const std::optional<std::string> counterResourceName = std::nullopt)
+        {
+            auto binding = std::make_shared<PassBinding<DescriptorView<Usage>>>(field);
+            DeclareView<Usage>(resourceName, desc, counterResourceName, binding);
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
+                .resourceName = resourceName,
+                .resourceUsage = Usage,
+                .resourceBinding = std::move(binding),
+            });
+
+            return *this;
+        }
+
+        PassDeclarationBuilder& Read(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
+            const RenderResourceUsage resourceUsage)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                .resourceName = resourceName,
+                .resourceUsage = resourceUsage,
+                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field)
+            });
+
+            return *this;
+        }
+
+        PassDeclarationBuilder& Write(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
+            const RenderResourceUsage resourceUsage)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                .resourceName = resourceName,
+                .resourceUsage = resourceUsage,
+                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field),
+            });
+
+            return *this;
+        }
+
         template<RenderPassType TDependency>
         PassDeclarationBuilder& DependsAfter() {
             passDeclaration.PassDependencies.emplace_back(typeid(TDependency));
-            return *this;
-        }
-
-        PassDeclarationBuilder& Write(
-            const std::string& resourceName,
-            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
-            D3D12_RESOURCE_STATES resourceState)
-        {
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .operation = PassResourceDeclaration::PassResourceOperation::WRITE,
-                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
-                .resourceName = resourceName,
-                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field),
-                .resourceState = resourceState
-            });
-
-            return *this;
-        }
-
-        template<RenderResourceViewType VType>
-        PassDeclarationBuilder& Write(
-            const std::string& resourceName,
-            const RenderResourceView<VType>* TRenderPass::* field)
-        {
-            RenderResourceViewDesc viewDesc = {};
-            viewDesc.type = VType;
-
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .operation = PassResourceDeclaration::PassResourceOperation::WRITE,
-                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
-                .resourceName = resourceName,
-                .resourceBinding = std::make_unique<PassBinding<const RenderResourceView<VType>*>>(field),
-                .viewDesc = viewDesc,
-            });
-
-            return *this;
-        }
-
-        template<RenderResourceViewType VType>
-        PassDeclarationBuilder& Write(
-            const std::string& resourceName,
-            const RenderResourceView<VType>* TRenderPass::* field,
-            const RenderResourceViewDesc &desc)
-        {
-            RenderResourceViewDesc viewDesc = desc;
-            viewDesc.type = VType;
-
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .operation = PassResourceDeclaration::PassResourceOperation::WRITE,
-                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
-                .resourceName = resourceName,
-                .resourceBinding = std::make_unique<PassBinding<const RenderResourceView<VType>*>>(field),
-                .viewDesc = viewDesc
-            });
-
-            return *this;
-        }
-
-        PassDeclarationBuilder& Read(
-            const std::string& resourceName,
-            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
-            D3D12_RESOURCE_STATES resourceState)
-        {
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .operation = PassResourceDeclaration::PassResourceOperation::READ,
-                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
-                .resourceName = resourceName,
-                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field),
-                .resourceState = resourceState
-            });
-
-            return *this;
-        }
-
-        template<RenderResourceViewType VType>
-        PassDeclarationBuilder& Read(
-            const std::string& resourceName,
-            const RenderResourceView<VType>* TRenderPass::* field)
-        {
-            RenderResourceViewDesc viewDesc = {};
-            viewDesc.type = VType;
-
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .operation = PassResourceDeclaration::PassResourceOperation::READ,
-                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
-                .resourceName = resourceName,
-                .resourceBinding = std::make_shared<PassBinding<const RenderResourceView<VType>*>>(field),
-                .viewDesc = viewDesc
-            });
-
-            return *this;
-        }
-
-        template<RenderResourceViewType VType>
-        PassDeclarationBuilder& Read(
-            const std::string& resourceName,
-            const RenderResourceView<VType>* TRenderPass::* field,
-            const RenderResourceViewDesc &desc)
-        {
-            RenderResourceViewDesc viewDesc = desc;
-            viewDesc.type = VType;
-
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .operation = PassResourceDeclaration::PassResourceOperation::READ,
-                .method = PassResourceDeclaration::PassResourceUsingMethod::View,
-                .resourceName = resourceName,
-                .resourceBinding = std::make_shared<PassBinding<const RenderResourceView<VType>*>>(field),
-                .viewDesc = viewDesc
-            });
-
             return *this;
         }
 
@@ -174,6 +134,15 @@ namespace Vertix {
     private:
         friend class RenderPipelineBuilder;
 
+        std::function<void(
+            const std::string&,
+            RenderResourceUsage,
+            const std::optional<std::string>&,
+            const DescriptorViewDesc&,
+            const std::weak_ptr<IPassBinding>&,
+            ViewFactoryMethod)
+        > registerView;
+
         PassDeclaration passDeclaration {
             .passType = typeid(TRenderPass),
         };
@@ -187,6 +156,38 @@ namespace Vertix {
             };
         }
 
+        template<RenderResourceUsage Usage>
+        void DeclareView(
+            const std::string& resourceName,
+            const DescriptorViewDesc &desc,
+            const std::optional<std::string> counterResourceName,
+            const std::shared_ptr<IPassBinding> &binding)
+        {
+            registerView(resourceName, Usage, counterResourceName, desc, binding, [=](
+                ID3D12Device* device,
+                const DescriptorHandle &handle,
+                const std::unordered_map<std::string, std::unique_ptr<RenderResource>> &resources)
+            {
+                const auto resource = resources.at(resourceName).get()->GetResource();
+                const auto resourceDesc = desc;
+
+                if constexpr ((Usage & RenderResourceUsage::AllShaderResource) != RenderResourceUsage::None) {
+                    device->CreateShaderResourceView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_SHADER_RESOURCE_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                } else if constexpr (Usage == RenderResourceUsage::RenderTarget) {
+                    device->CreateRenderTargetView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_RENDER_TARGET_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                } else if constexpr (Usage == RenderResourceUsage::DepthWrite || Usage == RenderResourceUsage::DepthRead) {
+                    device->CreateDepthStencilView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_DEPTH_STENCIL_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                } else if constexpr (Usage == RenderResourceUsage::UnorderedAccess) {
+                    const auto counterResource = counterResourceName.has_value() ? resources.at(counterResourceName.value()).get()->GetResource() : nullptr;
+                    device->CreateUnorderedAccessView(resource, counterResource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_UNORDERED_ACCESS_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                } else if constexpr (Usage == RenderResourceUsage::ConstantBuffer) {
+                    auto cbvDesc = *reinterpret_cast<const D3D12_CONSTANT_BUFFER_VIEW_DESC*>(&resourceDesc);
+                    cbvDesc.BufferLocation = resource->GetGPUVirtualAddress();
+                    device->CreateConstantBufferView(&cbvDesc, handle.cpuHandle);
+                }
+            });
+        }
+
         template<typename TMember>
         struct PassBinding : IPassBinding {
             explicit PassBinding(TMember TRenderPass::* member) :member(member) {}
@@ -194,8 +195,7 @@ namespace Vertix {
             TRenderPass* instance = nullptr;
 
             void Target(void *pass) override { instance = static_cast<TRenderPass*>(pass); }
-            void Inject(const void* resource) override { instance->*member = reinterpret_cast<TMember>(resource); }
-            void InjectValue(const void* resource) override { instance->*member = *reinterpret_cast<const TMember*>(resource); }
+            void InjectValue(const void* resource) override { instance->*member = *static_cast<const TMember*>(resource); }
         };
     };
 }

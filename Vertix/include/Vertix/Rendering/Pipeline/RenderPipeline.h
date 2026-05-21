@@ -15,23 +15,30 @@
 #include <wrl/client.h>
 
 #include "RenderGraph.h"
+#include "Vertix/Graphics/DescriptorHeapSet.h"
 #include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Graphics/SwapChain.h"
 #include "Vertix/Math/Vector2D.hpp"
-#include "Vertix/Rendering/RenderResourceView.h"
-#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 #include "Vertix/Rendering/RenderTexture.h"
+#include "Vertix/Rendering/Buffers/ConstantBuffer.hpp"
 
 namespace Vertix {
     class RenderPipeline {
+        using ViewFactoryMethod = std::function<void(
+            ID3D12Device*,
+            const DescriptorHandle&,
+            const std::unordered_map<std::string, std::unique_ptr<RenderResource>>&)>;
     public:
         VERTIX_API void Execute();
         VERTIX_API void Resize(const Vector2D<UINT>& size);
 
-        [[nodiscard]] RenderResource*              GetResource(const std::string &resourceName) const { return resources.at(resourceName).get(); }
-        [[nodiscard]] RenderResourceViewAllocator* GetViewAllocator() const noexcept { return viewAllocator.get(); }
-        [[nodiscard]] const D3D12_VIEWPORT*        GetD3D12Viewport() const noexcept { return &viewport; }
-        [[nodiscard]] const D3D12_RECT*            GetD3D12ScissorRect() const noexcept { return &scissorRect; }
+        template<typename T>
+        [[nodiscard]] ConstantBuffer<T>* GetConstantBuffer(const std::string &resourceName) const { return static_cast<ConstantBuffer<T>*>(resources.at(resourceName).get()); }
+
+        [[nodiscard]] RenderResource*       GetResource(const std::string &resourceName) const { return resources.at(resourceName).get(); }
+        [[nodiscard]] DescriptorHeapSet*    GetDescriptorHeapSet() const noexcept { return descriptorHeapSet.get(); }
+        [[nodiscard]] const D3D12_VIEWPORT* GetD3D12Viewport() const noexcept { return &viewport; }
+        [[nodiscard]] const D3D12_RECT*     GetD3D12ScissorRect() const noexcept { return &scissorRect; }
 
     private:
         explicit RenderPipeline(
@@ -51,33 +58,30 @@ namespace Vertix {
         }
 
         void CompileBarriers();
-        void RecreateTextureView(
-            const RenderTexture* resource,
-            const RenderResourceViewDesc* viewDesc,
-            const DescriptorHeapHandle &handle) const;
 
         friend class RenderPipelineBuilder;
 
-        std::unique_ptr<RenderResourceViewAllocator>                      viewAllocator;
-        std::unordered_map<RenderResourceViewDesc*, DescriptorHeapHandle> views;
+        std::unique_ptr<DescriptorHeapSet> descriptorHeapSet;
+        std::unordered_map<std::string, std::unordered_map<DescriptorHandle, ViewFactoryMethod>> descriptorViews;
 
         PipelineGraph                   pipelineGraph;
         std::vector<PipelineGraphNode*> pipelineGraphNodes;
         std::vector<RenderPass*>        passes;
 
-        std::unordered_map<std::string, std::unique_ptr<RenderResource>>      resources;
-        std::unordered_map<std::string, std::vector<RenderResourceViewDesc*>> resourcesViewDescs;
-        std::unordered_map<std::string, D3D12_RESOURCE_STATES>                resourcesInitialStates;
+        std::unordered_map<std::string, std::unique_ptr<RenderResource>> resources;
+        std::unordered_map<std::string, RenderResourceUsage>             resourcesAllUsages;
+        std::unordered_map<std::string, D3D12_RESOURCE_STATES>           resourcesInitialStates;
 
         std::unordered_map<std::string, RenderTexture*> resizableTextures;
 
-        std::string            swapChainResourceName;
-        RenderResourceViewDesc swapChainViewDesc;
+        std::string                                  swapChainResourceName;
+        std::optional<D3D12_RENDER_TARGET_VIEW_DESC> swapChainViewDesc;
 
-        DescriptorHeapHandle nullHandle;
+        DescriptorHandle nullHandle;
 
-        std::vector<RenderResourceView<RenderResourceViewType::RenderTarget>> frameRTVs;
-        const RenderResourceView<RenderResourceViewType::RenderTarget>*       frameRTV = nullptr;
+        std::unique_ptr<DescriptorView<RenderResourceUsage::RenderTarget>[]> frameRTVs;
+        const DescriptorView<RenderResourceUsage::RenderTarget>* currentFrameRTV = nullptr;
+
         std::vector<std::shared_ptr<IPassBinding>> frameInjectors;
 
         std::vector<std::vector<CD3DX12_RESOURCE_BARRIER>> prePassBarriers;
@@ -91,7 +95,6 @@ namespace Vertix {
         CD3DX12_RECT     scissorRect{};
 
         ID3D12Device10* d3d12Device = nullptr;
-        ID3D12DescriptorHeap* heaps[1] = {};
         ID3D12GraphicsCommandList5* d3d12CommandList = nullptr;
     };
 }

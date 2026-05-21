@@ -5,6 +5,7 @@
 #ifndef VERTIX_RENDERPIPELINEBUILDER_H
 #define VERTIX_RENDERPIPELINEBUILDER_H
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <ranges>
@@ -12,28 +13,36 @@
 
 #include "RenderGraph.h"
 #include "RenderPipeline.h"
-#include "Vertix/Rendering/RenderBuffer.h"
+#include "Vertix/Graphics/DescriptorHandle.h"
 #include "Vertix/Rendering/RenderResource.h"
+#include "Vertix/Rendering/RenderResourceUsage.h"
 #include "Vertix/Rendering/Buffers/ConstantBuffer.hpp"
 #include "Vertix/Rendering/Buffers/StructuredBuffer.hpp"
 
 namespace Vertix {
     class RenderPipelineBuilder {
-        using Op = PassResourceDeclaration::PassResourceOperation;
         using Md = PassResourceDeclaration::PassResourceUsingMethod;
 
-        struct ResourceDeclaration {
-            RenderResourceKind    resourceKind = RenderResourceKind::None;
-            D3D12_RESOURCE_DESC   resourceDesc;
-            D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-            D3D12_CLEAR_VALUE     clearValue;
+        using ResourceFactoryMethod = std::function<std::unique_ptr<RenderResource>(
+            ID3D12Device*,
+            RenderResourceUsage,
+            D3D12_RESOURCE_STATES)>;
 
-            bool resizable     = true;
-            bool optimizeClear = true;
+        using ViewFactoryMethod = std::function<void(
+            ID3D12Device*,
+            DescriptorHandle,
+            const std::unordered_map<std::string, std::unique_ptr<RenderResource>>&)>;
 
-            RenderBufferUsage bufferUsage = RenderBufferUsage::None;
-            size_t            bufferTDataSize = 0;
+        struct ViewRegistry {
+            RenderResourceUsage usage;
+            std::optional<std::string> counterResource;
+            DescriptorViewDesc viewDesc;
+            ViewFactoryMethod factoryMethod;
+
+            DescriptorHandle handle;
+            std::vector<std::weak_ptr<IPassBinding>> bindings;
         };
+
     public:
         VERTIX_API explicit RenderPipelineBuilder(
             GraphicsDevice* graphicsDevice,
@@ -46,40 +55,61 @@ namespace Vertix {
                 const D3D12_RESOURCE_DESC &resourceDesc) const;
 
             template<typename T>
-            void ConstantBuffer(
-                const std::string &resourceName,
-                const D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)) const
-            {
-                func(resourceName, ResourceDeclaration {
-                    .resourceKind    = RenderResourceKind::Buffer,
-                    .resourceDesc    = Vertix::ConstantBuffer<T>::DESC(),
-                    .heapProps       = heapProps,
-                    .resizable       = false,
-                    .optimizeClear   = false,
-                    .bufferUsage     = RenderBufferUsage::ConstantBuffer,
-                    .bufferTDataSize = sizeof(T)
+            void ConstantBuffer(const std::string &resourceName) const {
+                registerResource(resourceName, [&](
+                    ID3D12Device* device,
+                    const RenderResourceUsage allUsages,
+                    const D3D12_RESOURCE_STATES initialState)
+                {
+                    const auto heapProps = DeriveHeapProperties(allUsages);
+                    auto desc = Vertix::ConstantBuffer<T>::DESC();
+                    desc.Flags = DeriveResourceFlags(allUsages);
+
+                    Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+                    ThrowIfFailed(device->CreateCommittedResource(
+                        &heapProps,
+                        D3D12_HEAP_FLAG_NONE,
+                        &desc,
+                        initialState,
+                        nullptr,
+                        IID_PPV_ARGS(&d3d12Resource)
+                    ));
+
+                    return std::make_unique<ConstantBufferBase>(d3d12Resource, initialState, sizeof(T));
                 });
             }
 
             template<typename T>
             void StructuredBuffer(
                 const std::string &resourceName,
-                const D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)) const
+                const uint32_t elementCount) const
             {
-                func(resourceName, ResourceDeclaration {
-                    .resourceKind    = RenderResourceKind::Buffer,
-                    .resourceDesc    = Vertix::StructuredBuffer<T>::DESC(),
-                    .heapProps       = heapProps,
-                    .resizable       = false,
-                    .optimizeClear   = false,
-                    .bufferUsage     = RenderBufferUsage::StructuredBuffer,
-                    .bufferTDataSize = sizeof(T)
+                registerResource(resourceName, [&](
+                    ID3D12Device* device,
+                    const RenderResourceUsage allUsages,
+                    const D3D12_RESOURCE_STATES initialState)
+                {
+                    const auto heapProps = DeriveHeapProperties(allUsages);
+                    auto desc = Vertix::StructuredBuffer<T>::DESC(elementCount);
+                    desc.Flags = DeriveResourceFlags(allUsages);
+
+                    Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+                    ThrowIfFailed(device->CreateCommittedResource(
+                        &heapProps,
+                        D3D12_HEAP_FLAG_NONE,
+                        &desc,
+                        initialState,
+                        nullptr,
+                        IID_PPV_ARGS(&d3d12Resource)
+                    ));
+
+                    return std::make_unique<StructuredBufferBase>(d3d12Resource, initialState, elementCount, sizeof(T));
                 });
             }
 
         private:
             friend class RenderPipelineBuilder;
-            std::function<void(const std::string&, const ResourceDeclaration&)> func;
+            std::function<void(const std::string&, ResourceFactoryMethod)> registerResource;
         } Buffers;
         class TextureCollection {
         public:
@@ -96,7 +126,8 @@ namespace Vertix {
 
         private:
             friend class RenderPipelineBuilder;
-            std::function<void(const std::string&, const ResourceDeclaration&)> func;
+            std::function<void(const std::string&)> registerResizableResource;
+            std::function<void(const std::string&, ResourceFactoryMethod)> registerResource;
         } Textures;
         class PassCollection {
         public:
@@ -108,29 +139,54 @@ namespace Vertix {
             {
                 PassDeclarationBuilder<TRenderPass> builder;
                 builder.Construct(ctorArgs...);
+                builder.registerView = [&](
+                    const std::string& resourceName,
+                    const RenderResourceUsage usage,
+                    const std::optional<std::string>& counterResourceName,
+                    const DescriptorViewDesc& viewDesc,
+                    const std::weak_ptr<IPassBinding> &binding,
+                    const ViewFactoryMethod& factoryMethod)
+                {
+                    auto &registries = viewRegistries[resourceName];
+                    auto it = std::ranges::find_if(registries, [&](const ViewRegistry& r) {
+                        return (r.usage == usage || ((r.usage == RenderResourceUsage::DepthRead || r.usage == RenderResourceUsage::DepthWrite) && (usage == RenderResourceUsage::DepthRead || usage == RenderResourceUsage::DepthWrite))) &&
+                               r.counterResource == counterResourceName &&
+                               r.viewDesc == viewDesc;
+                    });
+
+                    if (it != registries.end()) {
+                        it->bindings.push_back(binding);
+                        return;
+                    }
+
+                    auto &r = registries.emplace_back(usage, counterResourceName, viewDesc, factoryMethod);
+                    r.bindings.push_back(binding);
+                };
                 declareFunc(builder);
                 decl.emplace_back(builder.Build());
             }
 
         private:
             friend class RenderPipelineBuilder;
-            std::vector<PassDeclaration> decl;
-            std::set<std::type_index> registeredTypes;
-        } Passes;
+
+            explicit PassCollection(std::unordered_map<std::string, std::vector<ViewRegistry>> &viewRegistries) : viewRegistries(viewRegistries) {}
+
+            std::vector<PassDeclaration> decl = {};
+            std::unordered_map<std::string, std::vector<ViewRegistry>> &viewRegistries;
+        } Passes { viewRegistries };
 
         struct SwapChainDeclaration {
             SwapChain*  ptr = nullptr;
-            std::string resourceName;
-            RenderResourceViewDesc resourceViewDesc = {
-                .type = RenderResourceViewType::RenderTarget
-            };
+            std::string swapChainResourceName;
+            std::optional<D3D12_RENDER_TARGET_VIEW_DESC> swapChainViewDesc = std::nullopt;
         } SwapChain = {};
         struct DescriptorDeclaration {
             UINT reservedRTVDescriptorCount = 0;
             UINT reservedDSVDescriptorCount = 0;
+            UINT reservedSamplerDescriptorCount = 0;
             UINT reservedSharedDescriptorCount = 0;
 
-            std::function<void(const RenderResourceViewAllocator*)> onAllocatorCreated = nullptr;
+            std::function<void(const DescriptorHeapSet*)> onDescriptorSetCreated = nullptr;
         } Descriptors = {};
 
         VERTIX_API std::unique_ptr<RenderPipeline> Build();
@@ -139,7 +195,9 @@ namespace Vertix {
         GraphicsDevice*   graphicsDevice   = nullptr;
         FrameCommandList* frameCommandList = nullptr;
 
-        std::unordered_map<std::string, ResourceDeclaration> resourceDeclarations;
+        std::unordered_map<std::string, ResourceFactoryMethod>     resourceRegistries;
+        std::unordered_map<std::string, std::vector<ViewRegistry>> viewRegistries;
+        std::unordered_set<std::string> resizableTextures;
 
         class EndRenderPass : public RenderPass {
         public:
@@ -147,26 +205,27 @@ namespace Vertix {
             void Execute(ID3D12GraphicsCommandList5* commandList) override {}
         };
 
-        VERTIX_API void InitializePipelineGraph(RenderPipeline* renderPipeline);
+        void InitializePipelineGraph(RenderPipeline* renderPipeline);
 
-        VERTIX_API void InitializePipelineResourceStates(
+        void InitializePipelineResourceStates(
             RenderPipeline* renderPipeline,
             std::unordered_set<std::string> &usedResources) const;
 
-        VERTIX_API void InitializePipelineResources(
+        void InitializePipelineResources(
+            RenderPipeline* renderPipeline,
+            const std::unordered_set<std::string>& usedResources) const;
+
+        void InitializePipelineResourceViews(
             RenderPipeline* renderPipeline,
             const std::unordered_set<std::string>& usedResources);
 
-        VERTIX_API void InitializePipelineResourceViews(RenderPipeline* renderPipeline) const;
-        VERTIX_API void InitializePipelinePasses(RenderPipeline* renderPipeline) const;
+        void InitializePipelinePasses(RenderPipeline* renderPipeline) const;
 
-        VERTIX_API static D3D12_RESOURCE_STATES GetWriterState(const PassResourceDeclaration &declaration);
-        VERTIX_API static D3D12_RESOURCE_STATES GetReaderState(const PassResourceDeclaration &declaration);
-
-        VERTIX_API static void GetResourceFlags(
-            const RenderPipeline* renderPipeline,
-            const std::string &resourceName,
-            ResourceDeclaration &declaration);
+        static void TraceDataflowEdges(
+            PipelineGraphNode* startNode,
+            PipelineGraph& graph,
+            const std::unordered_map<std::string, std::vector<std::shared_ptr<PipelineGraphNode>>>& writerMap,
+            std::unordered_set<PipelineGraphNode*>& visited);
     };
 }
 

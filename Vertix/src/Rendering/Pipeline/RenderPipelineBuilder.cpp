@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <queue>
 #include <stdexcept>
-#include <d3d12/d3dx12_core.h>
 
 #include "Vertix/Exceptions/HResultException.h"
 #include "Vertix/Rendering/RenderBuffer.h"
@@ -17,24 +16,43 @@ Vertix::RenderPipelineBuilder::RenderPipelineBuilder(
     FrameCommandList *frameCommandList)
 : graphicsDevice(graphicsDevice), frameCommandList(frameCommandList)
 {
-    auto func = [&](const std::string &resourceName, const ResourceDeclaration &resourceDeclaration) {
-        if (const auto result = resourceDeclarations.emplace(resourceName, resourceDeclaration); !result.second)
+    auto func = [&](const std::string &resourceName, const ResourceFactoryMethod &method) {
+        if (const auto result = resourceRegistries.emplace(resourceName, method); !result.second)
             throw std::runtime_error("Duplicately declared resources");
     };
 
-    Buffers.func = func;
-    Textures.func = func;
+    Buffers.registerResource = func;
+    Textures.registerResource = func;
+    Textures.registerResizableResource = [&](const std::string &resourceName) {
+        if (const auto result = resizableTextures.insert(resourceName); !result.second)
+            throw std::runtime_error("Duplicately declared resources");
+    };
 }
 
 void Vertix::RenderPipelineBuilder::BufferCollection::Add(
     const std::string &resourceName,
     const D3D12_RESOURCE_DESC &resourceDesc) const
 {
-    func(resourceName, ResourceDeclaration {
-        .resourceKind  = RenderResourceKind::Buffer,
-        .resourceDesc  = resourceDesc,
-        .resizable     = false,
-        .optimizeClear = false,
+    registerResource(resourceName, [&](
+        ID3D12Device* device,
+        const RenderResourceUsage allUsages,
+        const D3D12_RESOURCE_STATES initialState)
+    {
+        const auto heapProps = DeriveHeapProperties(allUsages);
+        auto desc = resourceDesc;
+        desc.Flags = DeriveResourceFlags(allUsages);
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            initialState,
+            nullptr,
+            IID_PPV_ARGS(&d3d12Resource)
+        ));
+
+        return std::make_unique<RenderBuffer>(d3d12Resource, initialState);
     });
 }
 
@@ -43,11 +61,32 @@ void Vertix::RenderPipelineBuilder::TextureCollection::Add(
     const D3D12_RESOURCE_DESC &resourceDesc,
     const bool resizable) const
 {
-    func(resourceName, ResourceDeclaration {
-        .resourceKind  = RenderResourceKind::Texture,
-        .resourceDesc  = resourceDesc,
-        .resizable     = resizable,
-        .optimizeClear = false,
+    if (resizable) registerResizableResource(resourceName);
+    registerResource(resourceName, [&](
+        ID3D12Device* device,
+        const RenderResourceUsage allUsages,
+        const D3D12_RESOURCE_STATES initialState) -> std::unique_ptr<RenderResource>
+    {
+        const auto heapProps = DeriveHeapProperties(allUsages);
+        auto desc = resourceDesc;
+        desc.Flags = DeriveResourceFlags(allUsages);
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            initialState,
+            nullptr,
+            IID_PPV_ARGS(&d3d12Resource)
+        ));
+
+        switch (desc.Dimension) {
+            case D3D12_RESOURCE_DIMENSION_TEXTURE1D: return std::make_unique<RenderTexture1D>(d3d12Resource, desc, initialState);
+            case D3D12_RESOURCE_DIMENSION_TEXTURE2D: return std::make_unique<RenderTexture2D>(d3d12Resource, desc, initialState);
+            case D3D12_RESOURCE_DIMENSION_TEXTURE3D: return std::make_unique<RenderTexture3D>(d3d12Resource, desc, initialState);
+            default: throw std::runtime_error("Invalid Dimension in D3D12_RESOURCE_DESC");
+        }
     });
 }
 
@@ -57,27 +96,47 @@ void Vertix::RenderPipelineBuilder::TextureCollection::Add(
     const D3D12_CLEAR_VALUE &clearValue,
     const bool resizable) const
 {
-    func(resourceName, ResourceDeclaration {
-        .resourceKind  = RenderResourceKind::Texture,
-        .resourceDesc  = resourceDesc,
-        .clearValue    = clearValue,
-        .resizable     = resizable,
-        .optimizeClear = true,
+    if (resizable) registerResizableResource(resourceName);
+    registerResource(resourceName, [&](
+        ID3D12Device* device,
+        const RenderResourceUsage allUsages,
+        const D3D12_RESOURCE_STATES initialState) -> std::unique_ptr<RenderResource>
+    {
+        const auto heapProps = DeriveHeapProperties(allUsages);
+        auto desc = resourceDesc;
+        desc.Flags = DeriveResourceFlags(allUsages);
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            initialState,
+            &clearValue,
+            IID_PPV_ARGS(&d3d12Resource)
+        ));
+
+        switch (desc.Dimension) {
+            case D3D12_RESOURCE_DIMENSION_TEXTURE1D: return std::make_unique<RenderTexture1D>(d3d12Resource, desc, initialState, std::optional(clearValue));
+            case D3D12_RESOURCE_DIMENSION_TEXTURE2D: return std::make_unique<RenderTexture2D>(d3d12Resource, desc, initialState, std::optional(clearValue));
+            case D3D12_RESOURCE_DIMENSION_TEXTURE3D: return std::make_unique<RenderTexture3D>(d3d12Resource, desc, initialState, std::optional(clearValue));
+            default: throw std::runtime_error("Invalid Dimension in D3D12_RESOURCE_DESC");
+        }
     });
 }
 
 std::unique_ptr<Vertix::RenderPipeline> Vertix::RenderPipelineBuilder::Build() {
     if (!SwapChain.ptr) throw std::runtime_error("Cannot build a RenderPipeline without a valid SwapChain");
     auto renderPipeline = new RenderPipeline(graphicsDevice, frameCommandList, SwapChain.ptr);
-    renderPipeline->swapChainResourceName = SwapChain.resourceName;
-    renderPipeline->swapChainViewDesc     = SwapChain.resourceViewDesc;
+    renderPipeline->swapChainResourceName = SwapChain.swapChainResourceName;
+    renderPipeline->swapChainViewDesc     = SwapChain.swapChainViewDesc;
 
     InitializePipelineGraph(renderPipeline);
 
     std::unordered_set<std::string> usedResources;
     InitializePipelineResourceStates(renderPipeline, usedResources);
     InitializePipelineResources(renderPipeline, usedResources);
-    InitializePipelineResourceViews(renderPipeline);
+    InitializePipelineResourceViews(renderPipeline, usedResources);
 
     InitializePipelinePasses(renderPipeline);
     renderPipeline->CompileBarriers();
@@ -91,14 +150,13 @@ void Vertix::RenderPipelineBuilder::InitializePipelineGraph(RenderPipeline* rend
     pipelineGraph.outRootNode = std::make_shared<PipelineGraphNode>();
     pipelineGraph.outRootNode->renderPass = std::make_unique<EndRenderPass>();
     pipelineGraph.outRootNode->passDeclaration.Resources.push_back({
-        .operation        = Op::READ,
-        .resourceName     = SwapChain.resourceName,
-        .viewDesc         = SwapChain.resourceViewDesc,
+        .resourceName  = SwapChain.swapChainResourceName,
+        .resourceUsage = RenderResourceUsage::Present,
     });
 
     std::unordered_map<std::string, std::vector<std::shared_ptr<PipelineGraphNode>>> writerMap;
-    std::unordered_map<std::string, std::vector<std::shared_ptr<PipelineGraphNode>>> readerMap;
     std::unordered_map<std::type_index, std::shared_ptr<PipelineGraphNode>> passTypeMap;
+    std::unordered_set<PipelineGraphNode*> visited;
 
     for (auto& passDecl : Passes.decl) {
         auto node = std::make_shared<PipelineGraphNode>();
@@ -106,63 +164,20 @@ void Vertix::RenderPipelineBuilder::InitializePipelineGraph(RenderPipeline* rend
         node->passDeclaration = std::move(passDecl);
 
         for (auto& res : node->passDeclaration.Resources) {
-            if (res.operation == Op::WRITE)
+            if (IsWriteUsage(res.resourceUsage))
                 writerMap[res.resourceName].push_back(node);
-            else
-                readerMap[res.resourceName].push_back(node);
         }
+
         pipelineGraph.nodeStorage.push_back(node);
         passTypeMap.emplace(node->passDeclaration.passType, node);
     }
 
-    std::queue<std::shared_ptr<PipelineGraphNode>> queue;
-    std::unordered_set<PipelineGraphNode*> visited;
-    queue.emplace(pipelineGraph.outRootNode);
-
-    while (!queue.empty()) {
-        auto currentNode = queue.front(); queue.pop();
-        if (!visited.insert(currentNode.get()).second) continue;
-
-        for (const auto& res : currentNode->passDeclaration.Resources) {
-            if (res.operation == Op::WRITE) continue;
-
-            auto it = writerMap.find(res.resourceName);
-            if (it == writerMap.end()) continue;
-
-            for (auto& writerNode : it->second) {
-                auto edge = std::make_shared<PipelineGraphEdge>();
-                edge->resourceName        = res.resourceName;
-                edge->resourceDeclaration = &res;
-                edge->writerNode   = writerNode;
-                edge->readerNode   = currentNode;
-
-                currentNode->inEdges.push_back(edge);
-                writerNode->outEdges.push_back(edge);
-                queue.push(writerNode);
-            }
-        }
-    }
+    TraceDataflowEdges(pipelineGraph.outRootNode.get(), pipelineGraph, writerMap, visited);
 
     // Handle SideEffect passes
     for (auto& node : pipelineGraph.nodeStorage) {
         if (node->passDeclaration.hasSideEffect && !visited.contains(node.get())) {
-            visited.insert(node.get());
-            queue.push(node);
-
-            while (!queue.empty()) {
-                auto n = queue.front(); queue.pop();
-                if (!visited.insert(n.get()).second) continue;
-
-                for (const auto& res : n->passDeclaration.Resources) {
-                    if (res.operation != Op::READ) continue;
-
-                    auto it = writerMap.find(res.resourceName);
-                    if (it == writerMap.end()) continue;
-
-                    for (auto& w : it->second)
-                        queue.push(w);
-                }
-            }
+            TraceDataflowEdges(node.get(), pipelineGraph, writerMap, visited);
         }
     }
 
@@ -173,12 +188,13 @@ void Vertix::RenderPipelineBuilder::InitializePipelineGraph(RenderPipeline* rend
             if (it == passTypeMap.end())
                 throw std::runtime_error("Unknown pass dependency: " + std::string(typeIndex.name()));
 
-            auto edge = std::make_shared<PipelineGraphEdge>();
-            edge->writerNode = it->second;
-            edge->readerNode = node;
+            auto edge = std::make_unique<PipelineGraphEdge>();
+            edge->writerNode = it->second.get();
+            edge->readerNode = node.get();
 
-            node->inEdges.push_back(edge);
-            it->second->outEdges.push_back(edge);
+            node->inEdges.push_back(edge.get());
+            it->second->outEdges.push_back(edge.get());
+            pipelineGraph.edgeStorage.push_back(std::move(edge));
         }
     }
 
@@ -197,10 +213,9 @@ void Vertix::RenderPipelineBuilder::InitializePipelineGraph(RenderPipeline* rend
             sortedNodes.emplace_back(currentNode);
 
             for (auto& edge : currentNode->outEdges) {
-                auto reader = edge->readerNode.lock();
-                if (!reader) continue;
-                if (--remainingInDegree[reader.get()] == 0)
-                    topoQueue.push(reader.get());
+                auto* reader = edge->readerNode; if (!reader) continue;
+                if (--remainingInDegree[reader] == 0)
+                    topoQueue.push(reader);
             }
         }
 
@@ -212,165 +227,109 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResourceStates(
     RenderPipeline* renderPipeline,
     std::unordered_set<std::string> &usedResources) const
 {
-    auto &outViewDescs = renderPipeline->resourcesViewDescs;
-    auto &outInitialStates = renderPipeline->resourcesInitialStates;
+    auto &initialStates = renderPipeline->resourcesInitialStates;
+    auto &allUsages = renderPipeline->resourcesAllUsages;
 
-    for (const auto& node : renderPipeline->pipelineGraphNodes) {
-        std::unordered_map<std::string, PassResourceDeclaration*> declMap;
-        for (auto& res : node->passDeclaration.Resources)
-            declMap[res.resourceName] = &res;
-
-        auto collectViewDesc = [&](const std::string& resName, RenderResourceViewDesc& viewDesc) {
-            auto& ptrs = outViewDescs[resName];
-            if (!std::ranges::any_of(ptrs, [&](const RenderResourceViewDesc* p) { return *p == viewDesc; }))
-                ptrs.push_back(&viewDesc);
-        };
-
-        // current node is writer node
-        for (const auto& edge : node->outEdges) {
-            if (edge->resourceName.empty() || edge->resourceName == SwapChain.resourceName) continue;
-
-            auto it = declMap.find(edge->resourceName);
-            if (it == declMap.end()) throw std::runtime_error("Writer node missing declaration for: " + edge->resourceName);
-
-            edge->writerState = GetWriterState(*it->second);
-            usedResources.insert(edge->resourceName);
-            outInitialStates.emplace(edge->resourceName, edge->writerState);
-
-            if (it->second->method == Md::View)
-                collectViewDesc(edge->resourceName, it->second->viewDesc);
-        }
-
-        // current node is reader node
-        for (const auto& edge : node->inEdges) {
-            if (edge->resourceName.empty() || edge->resourceName == SwapChain.resourceName) continue;
-
-            auto it = declMap.find(edge->resourceName);
-            if (it == declMap.end()) throw std::runtime_error("Reader node missing declaration for: " + edge->resourceName);
-
-            edge->readerState = GetReaderState(*it->second);
-        }
-
-        for (auto& passRes : node->passDeclaration.Resources) {
-            if (passRes.operation != Op::READ) continue;
-            if (passRes.resourceName.empty() || passRes.resourceName == SwapChain.resourceName) continue;
-            if (!resourceDeclarations.contains(passRes.resourceName)) continue;
-
-            usedResources.insert(passRes.resourceName);
-            outInitialStates.emplace(passRes.resourceName, GetReaderState(passRes));
-            if (passRes.method == Md::View) collectViewDesc(passRes.resourceName, passRes.viewDesc);
-        }
-
-        if (node->passDeclaration.hasSideEffect) {
-            for (auto& passRes : node->passDeclaration.Resources) {
-                if (passRes.resourceName.empty() || passRes.resourceName == SwapChain.resourceName) continue;
-                if (passRes.operation != Op::WRITE) continue;
-                if (std::ranges::any_of(node->outEdges, [&](const auto& e) { return e->resourceName == passRes.resourceName; })) continue;
-
-                usedResources.insert(passRes.resourceName);
-                outInitialStates.emplace(passRes.resourceName, GetWriterState(passRes));
-                if (passRes.method == Md::View) collectViewDesc(passRes.resourceName, passRes.viewDesc);
-            }
+    for (const auto* node : renderPipeline->pipelineGraphNodes) {
+        for (const auto& res : node->passDeclaration.Resources) {
+            if (res.resourceName.empty() || res.resourceName == SwapChain.swapChainResourceName) continue;
+            usedResources.insert(res.resourceName);
+            initialStates.emplace(res.resourceName, DeriveState(res.resourceUsage));
+            allUsages[res.resourceName] = allUsages[res.resourceName] | res.resourceUsage;
         }
     }
 }
 
 void Vertix::RenderPipelineBuilder::InitializePipelineResources(
     RenderPipeline* renderPipeline,
-    const std::unordered_set<std::string>& usedResources)
+    const std::unordered_set<std::string>& usedResources) const
 {
-    const auto device = graphicsDevice->GetD3D12Device();
-    const auto &inInitialStates = renderPipeline->resourcesInitialStates;
-    auto &resizableTextures = renderPipeline->resizableTextures;
-    auto &resources = renderPipeline->resources;
-
+    ID3D12Device* device = graphicsDevice->GetD3D12Device().Get();
     for (const auto &resourceName : usedResources) {
-        auto &resDecl = resourceDeclarations.at(resourceName);
-        GetResourceFlags(renderPipeline, resourceName, resDecl);
+        const D3D12_RESOURCE_STATES initState = renderPipeline->resourcesInitialStates.at(resourceName);
+        const RenderResourceUsage   allUsages = renderPipeline->resourcesAllUsages.at(resourceName);
 
-        Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
-        const D3D12_RESOURCE_STATES initState = inInitialStates.at(resourceName);
-        ThrowIfFailed(device->CreateCommittedResource(
-            &resDecl.heapProps,
-            D3D12_HEAP_FLAG_NONE,
-            &resDecl.resourceDesc,
-            initState,
-            resDecl.optimizeClear ? &resDecl.clearValue : nullptr,
-            IID_PPV_ARGS(&d3d12Resource)
-        ));
+        const auto& factoryMethod = resourceRegistries.at(resourceName);
+        renderPipeline->resources.emplace(resourceName, factoryMethod(device, allUsages, initState));
 
-        if (resDecl.resourceKind == RenderResourceKind::Buffer) {
-            switch (resDecl.bufferUsage) {
-                case RenderBufferUsage::ConstantBuffer: resources.emplace(resourceName, std::make_unique<ConstantBufferBase>(d3d12Resource, initState, resDecl.bufferTDataSize)); break;
-                case RenderBufferUsage::StructuredBuffer: resources.emplace(resourceName, std::make_unique<StructuredBufferBase>(d3d12Resource, initState, static_cast<UINT>(resDecl.resourceDesc.Width / resDecl.bufferTDataSize), resDecl.bufferTDataSize)); break;
-                default: resources.emplace(resourceName, std::make_unique<RenderBuffer>(d3d12Resource, initState)); break;
-            }
-        } else if (resDecl.resourceKind == RenderResourceKind::Texture) {
-            const D3D12_RESOURCE_DESC &desc = resDecl.resourceDesc;
-            const std::optional<D3D12_CLEAR_VALUE> &clearValue = resDecl.optimizeClear ? std::optional(resDecl.clearValue) : std::nullopt;
-
-            switch (resDecl.resourceDesc.Dimension) {
-                case D3D12_RESOURCE_DIMENSION_TEXTURE1D: resources.emplace(resourceName, std::make_unique<RenderTexture1D>(d3d12Resource, desc, initState, clearValue)); break;
-                case D3D12_RESOURCE_DIMENSION_TEXTURE2D: resources.emplace(resourceName, std::make_unique<RenderTexture2D>(d3d12Resource, desc, initState, clearValue)); break;
-                case D3D12_RESOURCE_DIMENSION_TEXTURE3D: resources.emplace(resourceName, std::make_unique<RenderTexture3D>(d3d12Resource, desc, initState, clearValue)); break;
-                default: throw std::runtime_error("Not support this resource dimension");
-            }
-
-            if (resDecl.resizable) resizableTextures.emplace(resourceName, static_cast<RenderTexture*>(resources.at(resourceName).get()));
-        }
+        if (resizableTextures.contains(resourceName))
+            renderPipeline->resizableTextures.emplace(resourceName, static_cast<RenderTexture*>(renderPipeline->resources.at(resourceName).get()));
     }
 }
 
-void Vertix::RenderPipelineBuilder::InitializePipelineResourceViews(RenderPipeline* renderPipeline) const {
-    const auto &resources = renderPipeline->resources;
-    const auto &resourceViewDescs = renderPipeline->resourcesViewDescs;
+void Vertix::RenderPipelineBuilder::InitializePipelineResourceViews(
+    RenderPipeline* renderPipeline,
+    const std::unordered_set<std::string>& usedResources)
+{
+    uint32_t heapsCapacity[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] = {
+        (std::max)(Descriptors.reservedSharedDescriptorCount + 1, static_cast<uint32_t>(1)),
+        (std::max)(Descriptors.reservedSamplerDescriptorCount, static_cast<uint32_t>(1)),
+        (std::max)(Descriptors.reservedRTVDescriptorCount + SwapChain.ptr->GetFrameCount(), static_cast<uint32_t>(1)),
+        (std::max)(Descriptors.reservedDSVDescriptorCount, static_cast<uint32_t>(1)),
+    };
 
-    renderPipeline->viewAllocator = std::make_unique<RenderResourceViewAllocator>(graphicsDevice);
-    auto allocator = renderPipeline->viewAllocator.get();
-    auto &views = renderPipeline->views;
+    struct Allocation {
+        D3D12_DESCRIPTOR_HEAP_TYPE heapType;
+        const ViewFactoryMethod &factory;
+        const std::string &resourceName;
+        DescriptorHandle &handle;
+    };
 
-    uint32_t rtvDescriptorSize    = Descriptors.reservedRTVDescriptorCount + SwapChain.ptr->GetFrameCount();
-    uint32_t dsvDescriptorSize    = Descriptors.reservedDSVDescriptorCount;
-    uint32_t sharedDescriptorSize = Descriptors.reservedSharedDescriptorCount + 1;
-
-    for (const auto &viewDescs: resourceViewDescs | std::views::values) {
-        for (const auto& viewDesc : viewDescs) {
-            switch (viewDesc->type) {
-                case RenderResourceViewType::RenderTarget: ++rtvDescriptorSize; break;
-                case RenderResourceViewType::DepthStencil: ++dsvDescriptorSize; break;
-                case RenderResourceViewType::ConstantBuffer:
-                case RenderResourceViewType::UnorderedAccess:
-                case RenderResourceViewType::ShaderResource: ++sharedDescriptorSize; break;
+    std::vector<Allocation> allocations;
+    for (const auto &resourceName : usedResources) {
+        if (!viewRegistries.contains(resourceName)) continue;
+        for (auto &viewRegistry : viewRegistries.at(resourceName)) {
+            switch (viewRegistry.usage) {
+                case RenderResourceUsage::RenderTarget: {
+                    ++heapsCapacity[D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
+                    allocations.emplace_back(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, viewRegistry.factoryMethod, resourceName, viewRegistry.handle);
+                } break;
+                case RenderResourceUsage::DepthRead:
+                case RenderResourceUsage::DepthWrite: {
+                    ++heapsCapacity[D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
+                    allocations.emplace_back(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, viewRegistry.factoryMethod, resourceName, viewRegistry.handle);
+                } break;
+                case RenderResourceUsage::ConstantBuffer:
+                case RenderResourceUsage::UnorderedAccess:
+                case RenderResourceUsage::NonPixelShaderResource:
+                case RenderResourceUsage::PixelShaderResource:
+                case RenderResourceUsage::AllShaderResource: {
+                    ++heapsCapacity[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
+                    allocations.emplace_back(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, viewRegistry.factoryMethod, resourceName, viewRegistry.handle);
+                } break;
+                default: throw std::runtime_error("Unreachable");
             }
         }
     }
 
-    allocator->InitRenderTargetDescriptorHeap(rtvDescriptorSize);
-    allocator->InitDepthStencilDescriptorHeap(dsvDescriptorSize);
-    allocator->InitSharedDescriptorHeap(sharedDescriptorSize);
+    ID3D12Device* device = graphicsDevice->GetD3D12Device().Get();
+    renderPipeline->descriptorHeapSet = std::make_unique<DescriptorHeapSet>(device, heapsCapacity);
 
-    const auto sharedDescriptorHeap = allocator->GetSharedDescriptorHeap();
-    renderPipeline->nullHandle      = sharedDescriptorHeap->AllocDescriptorHandle();
-    renderPipeline->heaps[0]        = sharedDescriptorHeap->GetDescriptorHeap();
+    const DescriptorHeapSet &heapSet = *renderPipeline->descriptorHeapSet;
+    renderPipeline->nullHandle = heapSet[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]->AllocDescriptorHandle();
+    if (Descriptors.onDescriptorSetCreated) Descriptors.onDescriptorSetCreated(&heapSet);
 
-    if (Descriptors.onAllocatorCreated) Descriptors.onAllocatorCreated(allocator);
-
-    for (const auto &[resourceName, viewDescs]: resourceViewDescs) {
-        if (resourceName == SwapChain.resourceName) continue;
-
-        for (const auto& viewDesc : viewDescs) {
-            views.emplace(viewDesc, allocator->CreateView(resources.at(resourceName).get(), *viewDesc));
-        }
+    for (const auto &[heapType, factory, resourceName, handle] : allocations) {
+        handle = heapSet[heapType]->AllocDescriptorHandle();
+        factory(device, handle, renderPipeline->resources );
+        renderPipeline->descriptorViews[resourceName].emplace(handle, factory);
     }
 
-    for (UINT i = 0; i < SwapChain.ptr->GetFrameCount(); ++i) {
-        renderPipeline->frameRTVs.emplace_back(allocator->CreateView(SwapChain.ptr->GetBuffer(i), SwapChain.resourceViewDesc));
+    const auto frameCount = SwapChain.ptr->GetFrameCount();
+    renderPipeline->frameRTVs = std::make_unique<DescriptorView<RenderResourceUsage::RenderTarget>[]>(frameCount);
+    for (UINT i = 0; i < frameCount; ++i) {
+        const auto handle = heapSet[D3D12_DESCRIPTOR_HEAP_TYPE_RTV]->AllocDescriptorHandle();
+        device->CreateRenderTargetView(
+            SwapChain.ptr->GetBuffer(i)->GetResource(),
+            SwapChain.swapChainViewDesc.has_value() ? &SwapChain.swapChainViewDesc.value() : nullptr,
+            handle.cpuHandle
+        );
+        renderPipeline->frameRTVs[i] = handle;
     }
 }
 
 void Vertix::RenderPipelineBuilder::InitializePipelinePasses(RenderPipeline* renderPipeline) const {
     const auto device = graphicsDevice->GetD3D12Device().Get();
-    const auto &views = renderPipeline->views;
     const auto &resources = renderPipeline->resources;
     auto &frameInjectors = renderPipeline->frameInjectors;
 
@@ -379,85 +338,72 @@ void Vertix::RenderPipelineBuilder::InitializePipelinePasses(RenderPipeline* ren
             if (!passRes.resourceBinding) continue;
             passRes.resourceBinding->Target(node->renderPass.get());
 
-            if (passRes.resourceName == SwapChain.resourceName) {
+            if (passRes.resourceName == SwapChain.swapChainResourceName) {
                 frameInjectors.push_back(passRes.resourceBinding);
                 continue;
             }
 
             if (passRes.method == Md::Resource) {
-                passRes.resourceBinding->Inject(&resources.at(passRes.resourceName));
+                const auto field = resources.at(passRes.resourceName).get();
+                passRes.resourceBinding->InjectValue(&field);
             } else if (passRes.method == Md::GPUAddress) {
                 const auto field = resources.at(passRes.resourceName)->GetGPUVirtualAddress();
                 passRes.resourceBinding->InjectValue(&field);
-            } else if (passRes.method == Md::View) {
-                const auto& registeredDescs = renderPipeline->resourcesViewDescs.at(passRes.resourceName);
-                auto canonicalIt = std::ranges::find_if(registeredDescs, [&](const RenderResourceViewDesc* p) { return *p == passRes.viewDesc; });
-
-                if (canonicalIt == registeredDescs.end())
-                    throw std::runtime_error("No view found for resource: " + passRes.resourceName);
-
-                passRes.resourceBinding->Inject(&views.at(*canonicalIt));
             }
         }
+    }
 
+    for (const auto &registries: viewRegistries | std::views::values) {
+        for (const auto& registry : registries) {
+            for (const auto& weakBinding : registry.bindings) {
+                if (const auto b = weakBinding.lock())
+                    b->InjectValue(&registry.handle);
+            }
+        }
+    }
+
+    for (const auto& node : renderPipeline->pipelineGraphNodes) {
         node->renderPass->Initialize(device);
     }
 }
 
-D3D12_RESOURCE_STATES Vertix::RenderPipelineBuilder::GetWriterState(const PassResourceDeclaration &declaration) {
-    if (declaration.method == Md::View) {
-        switch (declaration.viewDesc.type) {
-            case RenderResourceViewType::RenderTarget:    return D3D12_RESOURCE_STATE_RENDER_TARGET;
-            case RenderResourceViewType::DepthStencil:    return D3D12_RESOURCE_STATE_DEPTH_WRITE;
-            case RenderResourceViewType::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-            default: throw std::runtime_error("Unsupported view type for WRITE operation.");
-        }
-    }
-
-    if (declaration.resourceState == std::nullopt)
-        throw std::runtime_error("When reading or writing resources using methods other than View, the resource state must be specified.");
-    return declaration.resourceState.value();
-}
-
-D3D12_RESOURCE_STATES Vertix::RenderPipelineBuilder::GetReaderState(const PassResourceDeclaration &declaration) {
-    if (declaration.method == Md::View) {
-        switch (declaration.viewDesc.type) {
-            case RenderResourceViewType::ShaderResource:  return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
-            case RenderResourceViewType::ConstantBuffer:  return D3D12_RESOURCE_STATE_GENERIC_READ;
-            case RenderResourceViewType::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-            case RenderResourceViewType::RenderTarget:    throw std::runtime_error("RenderTarget does not allow READ.");
-            case RenderResourceViewType::DepthStencil:    throw std::runtime_error("DepthStencil does not allow READ.");
-            default: throw std::runtime_error("Unknown view type for READ operation.");
-        }
-    }
-
-    if (declaration.resourceState == std::nullopt)
-        throw std::runtime_error("When reading or writing resources using methods other than View, the resource state must be specified.");
-    return declaration.resourceState.value();
-}
-
-void Vertix::RenderPipelineBuilder::GetResourceFlags(
-    const RenderPipeline* renderPipeline,
-    const std::string &resourceName,
-    ResourceDeclaration &declaration)
+void Vertix::RenderPipelineBuilder::TraceDataflowEdges(
+    PipelineGraphNode* startNode,
+    PipelineGraph& graph,
+    const std::unordered_map<std::string, std::vector<std::shared_ptr<PipelineGraphNode>>>& writerMap,
+    std::unordered_set<PipelineGraphNode*>& visited)
 {
-    auto &flags = declaration.resourceDesc.Flags;
+    std::queue<PipelineGraphNode*> queue;
+    queue.push(startNode);
 
-    if (declaration.resourceKind == RenderResourceKind::Texture) {
-        for (const auto &viewDesc : renderPipeline->resourcesViewDescs.at(resourceName)) {
-            if (const auto type = viewDesc->type; type == RenderResourceViewType::RenderTarget) {
-                flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-            } else if (type == RenderResourceViewType::DepthStencil) {
-                flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-            } else if (type == RenderResourceViewType::UnorderedAccess) {
-                flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    while (!queue.empty()) {
+        auto* currentNode = queue.front(); queue.pop();
+        if (!visited.insert(currentNode).second) continue;
+
+        for (const auto& res : currentNode->passDeclaration.Resources) {
+            if (IsWriteUsage(res.resourceUsage)) continue;
+
+            auto it = writerMap.find(res.resourceName);
+            if (it == writerMap.end()) continue;
+
+            for (auto& writerNode : it->second) {
+                auto edge = std::make_unique<PipelineGraphEdge>();
+                edge->resourceName        = res.resourceName;
+                edge->resourceDeclaration = &res;
+                edge->writerNode = writerNode.get();
+                edge->readerNode = currentNode;
+                edge->readerState = DeriveState(res.resourceUsage);
+
+                auto wDecl = std::ranges::find_if(writerNode->passDeclaration.Resources,
+                    [&](auto& wr) { return wr.resourceName == res.resourceName && IsWriteUsage(wr.resourceUsage); });
+                if (wDecl != writerNode->passDeclaration.Resources.end())
+                    edge->writerState = DeriveState(wDecl->resourceUsage);
+
+                currentNode->inEdges.push_back(edge.get());
+                writerNode->outEdges.push_back(edge.get());
+                graph.edgeStorage.push_back(std::move(edge));
+                queue.push(writerNode.get());
             }
         }
-    } else if (declaration.resourceKind == RenderResourceKind::Buffer) {
-        if (declaration.bufferUsage == RenderBufferUsage::AccelerationStructure)
-            flags |= D3D12_RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE;
     }
-
-    if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET && flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-        throw std::runtime_error("RenderTarget and DepthStencil cannot be combined on the same resource.");
 }

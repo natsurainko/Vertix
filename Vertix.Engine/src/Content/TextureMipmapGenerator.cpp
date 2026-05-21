@@ -10,7 +10,7 @@
 #include <d3d12/d3dx12_root_signature.h>
 #include <Vertix/Exceptions/HResultException.h>
 #include <Vertix/Graphics/DescriptorHeap.h>
-#include <Vertix/Graphics/DescriptorHeapHandle.h>
+#include <Vertix/Graphics/DescriptorHandle.h>
 #include <Vertix/Graphics/GraphicsDevice.h>
 #include <Vertix/Graphics/ResourceUploadHeap.hpp>
 #include <Vertix/Helpers/FormatsHelper.h>
@@ -206,7 +206,7 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
     const D3D12_RESOURCE_DESC resourceDesc = uavResource->GetDesc();
 
     auto descriptorHeap = std::make_unique<DescriptorHeap>(graphicsDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, resourceDesc.MipLevels, true);
-    DescriptorHeapHandle handle = descriptorHeap->AllocDescriptorHandle();
+    DescriptorHandle handle = descriptorHeap->AllocDescriptorHandle();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = uavResourceViewFormat;

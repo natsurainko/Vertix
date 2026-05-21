@@ -19,24 +19,25 @@ namespace Vertix {
     struct PipelineGraphNode;
     struct PipelineGraphEdge {
         std::string resourceName;
-        const PassResourceDeclaration* resourceDeclaration;
+        const PassResourceDeclaration* resourceDeclaration = nullptr;
 
-        D3D12_RESOURCE_STATES readerState;
-        D3D12_RESOURCE_STATES writerState;
+        D3D12_RESOURCE_STATES readerState = D3D12_RESOURCE_STATE_COMMON;
+        D3D12_RESOURCE_STATES writerState = D3D12_RESOURCE_STATE_COMMON;
 
-        std::weak_ptr<PipelineGraphNode> readerNode;
-        std::weak_ptr<PipelineGraphNode> writerNode;
+        PipelineGraphNode* readerNode = nullptr;
+        PipelineGraphNode* writerNode = nullptr;
     };
     struct PipelineGraphNode {
         std::unique_ptr<RenderPass> renderPass;
         PassDeclaration passDeclaration;
 
-        std::vector<std::shared_ptr<PipelineGraphEdge>> inEdges;
-        std::vector<std::shared_ptr<PipelineGraphEdge>> outEdges;
+        std::vector<PipelineGraphEdge*> inEdges;
+        std::vector<PipelineGraphEdge*> outEdges;
     };
     struct PipelineGraph {
         std::shared_ptr<PipelineGraphNode> outRootNode;
         std::vector<std::shared_ptr<PipelineGraphNode>> nodeStorage;
+        std::vector<std::unique_ptr<PipelineGraphEdge>> edgeStorage;
     };
 }
 

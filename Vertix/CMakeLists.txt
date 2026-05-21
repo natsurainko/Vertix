@@ -4,6 +4,7 @@ target_compile_definitions(Vertix PRIVATE Vertix_EXPORTS UNICODE _UNICODE)
 target_sources(Vertix
     PRIVATE
         src/Graphics/DescriptorHeap.cpp
+        src/Graphics/DescriptorHeapSet.cpp
         src/Graphics/DescriptorRange.cpp
         src/Graphics/FrameCommandList.cpp
         src/Graphics/GraphicsCommandList.cpp
@@ -19,8 +20,6 @@ target_sources(Vertix
         src/Rendering/HlslShader.cpp
         src/Rendering/RenderResource.cpp
         src/Rendering/RenderTexture.cpp
-        src/Rendering/RenderResourceView.cpp
-        src/Rendering/RenderResourceViewAllocator.cpp
         src/Rendering/Pipeline/RenderPipeline.cpp
         src/Rendering/Pipeline/RenderPipelineBuilder.cpp
         src/Windowing/GameWindow.cpp
@@ -32,9 +31,11 @@ target_sources(Vertix
 
             include/Vertix/Dispatching/DispatcherQueue.hpp
             include/Vertix/Exceptions/HResultException.h
+            include/Vertix/Graphics/DescriptorHandle.h
             include/Vertix/Graphics/DescriptorHeap.h
-            include/Vertix/Graphics/DescriptorHeapHandle.h
+            include/Vertix/Graphics/DescriptorHeapSet.h
             include/Vertix/Graphics/DescriptorRange.h
+            include/Vertix/Graphics/DescriptorView.h
             include/Vertix/Graphics/FrameCommandList.h
             include/Vertix/Graphics/GraphicsCommandList.h
             include/Vertix/Graphics/GraphicsDevice.h
@@ -67,8 +68,7 @@ target_sources(Vertix
             include/Vertix/Rendering/RenderTexture.h
             include/Vertix/Rendering/RenderBuffer.h
             include/Vertix/Rendering/RenderResource.h
-            include/Vertix/Rendering/RenderResourceView.h
-            include/Vertix/Rendering/RenderResourceViewAllocator.h
+            include/Vertix/Rendering/RenderResourceUsage.h
             include/Vertix/Rendering/Buffers/ConstantBuffer.hpp
             include/Vertix/Rendering/Buffers/StructuredBuffer.hpp
             include/Vertix/Rendering/Pipeline/RenderGraph.h

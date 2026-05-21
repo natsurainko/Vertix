@@ -36,10 +36,6 @@ namespace Vertix {
             }
         }
 
-        static D3D12_RESOURCE_DESC DESC(const size_t dataSize) noexcept {
-            return CD3DX12_RESOURCE_DESC::Buffer((dataSize + 255) & ~255);
-        }
-
     protected:
         void FillRaw(const void* data, const size_t offset, const size_t size) const {
             assert(offset + size <= dataSize && "FillRaw out of bounds");
@@ -47,7 +43,6 @@ namespace Vertix {
         }
 
         size_t dataSize = 0;
-    private:
         UINT8* bufferDataBegin = nullptr;
     };
 
@@ -59,21 +54,10 @@ namespace Vertix {
             const D3D12_RESOURCE_STATES currentResourceState)
         : ConstantBufferBase(d3d12Resource, currentResourceState, sizeof(T)) {}
 
-        void Fill(const T& value) {
-            FillRaw(&value, 0, sizeof(T));
-        }
+        void Fill(const T& value) { FillRaw(&value, 0, sizeof(T)); }
+        [[nodiscard]] T* Data() { return reinterpret_cast<T*>(bufferDataBegin); }
 
-        template<typename TMember>
-        void FillField(const TMember &value, TMember T::* field) {
-            const T* dummy = nullptr;
-            const size_t offset = reinterpret_cast<size_t>(&(dummy->*field));
-            FillRaw(&value, offset, sizeof(TMember));
-        }
-
-        static D3D12_RESOURCE_DESC DESC() noexcept {
-            return ConstantBufferBase::DESC(sizeof(T));
-        }
-
+        static D3D12_RESOURCE_DESC DESC() noexcept { return CD3DX12_RESOURCE_DESC::Buffer((sizeof(T) + 255) & ~255); }
         static std::unique_ptr<ConstantBuffer> Create(const GraphicsDevice* device) {
             Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
             const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);

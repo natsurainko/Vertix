@@ -5,7 +5,7 @@
 #ifndef VERTIX_RAYTRACINGPASS_H
 #define VERTIX_RAYTRACINGPASS_H
 
-#include <Vertix/Rendering/RenderResourceView.h>
+#include <Vertix/Graphics/DescriptorView.h>
 #include <Vertix/Rendering/Pipeline/RenderPass.h>
 
 #include "../RenderContext.h"
@@ -17,13 +17,14 @@ public:
     void Initialize(ID3D12Device10* device) override;
     void Execute(ID3D12GraphicsCommandList5* commandList) override;
 
-    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::ShaderResource>* gPositionDepthSRV = nullptr;
-    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::ShaderResource>* gNormalRoughnessSRV= nullptr;
-    const Vertix::RenderResourceView<Vertix::RenderResourceViewType::UnorderedAccess>* shadowMaskUAV = nullptr;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::PixelShaderResource> gPositionDepthSRV;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::PixelShaderResource> gNormalRoughnessSRV;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::UnorderedAccess> shadowMaskUAV;
+
+    D3D12_GPU_VIRTUAL_ADDRESS lightConstantsAddress = {};
 
 private:
-    RenderContext*        renderContext;
-    ID3D12DescriptorHeap* descriptorHeap = nullptr;
+    RenderContext* renderContext;
 
     uint32_t shaderTableEntrySize = 0;
 

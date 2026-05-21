@@ -39,14 +39,14 @@ Vertix::DescriptorHeap::DescriptorHeap(
     }
 }
 
-Vertix::DescriptorHeapHandle Vertix::DescriptorHeap::AllocDescriptorHandle() {
+Vertix::DescriptorHandle Vertix::DescriptorHeap::AllocDescriptorHandle() {
     assert(!IsFull() && "The descriptor heap is full.");
 
     const auto it = freeSlots.begin();
     const uint32_t slot = *it;
     freeSlots.erase(it);
 
-    DescriptorHeapHandle handle {
+    DescriptorHandle handle {
         .slot      = slot,
         .cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, static_cast<INT>(slot), descriptorLength),
         .heap      = descriptorHeap.Get()
@@ -57,7 +57,7 @@ Vertix::DescriptorHeapHandle Vertix::DescriptorHeap::AllocDescriptorHandle() {
     return handle;
 }
 
-void Vertix::DescriptorHeap::AllocDescriptorHandles(const uint32_t count, DescriptorHeapHandle* handles) {
+void Vertix::DescriptorHeap::AllocDescriptorHandles(const uint32_t count, DescriptorHandle* handles) {
     assert(!IsFull() && "The descriptor heap is full.");
     assert(freeSlots.size() >= count && "Not enough free descriptors in heap.");
 
@@ -66,7 +66,7 @@ void Vertix::DescriptorHeap::AllocDescriptorHandles(const uint32_t count, Descri
         const uint32_t slot = *it;
         freeSlots.erase(it);
 
-        handles[i] = DescriptorHeapHandle {
+        handles[i] = DescriptorHandle {
             .slot      = slot,
             .cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heapStartCpuHandle, static_cast<INT>(slot), descriptorLength),
             .heap      = descriptorHeap.Get()
@@ -106,7 +106,7 @@ void Vertix::DescriptorHeap::FreeRange(DescriptorRange* range) {
     range->parentHeap = nullptr;
 }
 
-void Vertix::DescriptorHeap::FreeDescriptorHandle(const DescriptorHeapHandle &handle) {
+void Vertix::DescriptorHeap::FreeDescriptorHandle(const DescriptorHandle &handle) {
     freeSlots.insert(handle.slot);
 }
 
@@ -114,7 +114,7 @@ void Vertix::DescriptorHeap::FreeDescriptorHandle(const D3D12_CPU_DESCRIPTOR_HAN
     freeSlots.insert(GetIndexOfDescriptorHandle(handle));
 }
 
-void Vertix::DescriptorHeap::FreeDescriptorHandles(const uint32_t count, const DescriptorHeapHandle* handles) {
+void Vertix::DescriptorHeap::FreeDescriptorHandles(const uint32_t count, const DescriptorHandle* handles) {
     for (uint32_t i = 0; i < count; ++i) {
         freeSlots.insert(handles[i].slot);
     }

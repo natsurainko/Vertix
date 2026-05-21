@@ -27,12 +27,12 @@ namespace Vertix {
             uint32_t maxDescriptors = 16,
             bool shaderVisible = false);
 
-        VERTIX_API DescriptorHeapHandle AllocDescriptorHandle() override;
-        VERTIX_API void AllocDescriptorHandles(uint32_t count, DescriptorHeapHandle* handles);
+        VERTIX_API DescriptorHandle AllocDescriptorHandle() override;
+        VERTIX_API void AllocDescriptorHandles(uint32_t count, DescriptorHandle* handles);
 
-        VERTIX_API void FreeDescriptorHandle(const DescriptorHeapHandle &handle) override;
+        VERTIX_API void FreeDescriptorHandle(const DescriptorHandle &handle) override;
         VERTIX_API void FreeDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE handle);
-        VERTIX_API void FreeDescriptorHandles(uint32_t count, const DescriptorHeapHandle* handles);
+        VERTIX_API void FreeDescriptorHandles(uint32_t count, const DescriptorHandle* handles);
 
         VERTIX_API std::unique_ptr<DescriptorRange> AllocateRange(UINT count);
         VERTIX_API void FreeRange(DescriptorRange* range);

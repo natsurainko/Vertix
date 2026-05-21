@@ -8,10 +8,10 @@
 #include <wrl/client.h>
 #include <d3d12/d3d12.h>
 
-#include "Vertix/Graphics/DescriptorHeapHandle.h"
+#include "Vertix/Graphics/DescriptorHandle.h"
 
 namespace Vertix {
-    using TextureHandle = DescriptorHeapHandle;
+    using TextureHandle = DescriptorHandle;
 
     class Texture {
     public:

@@ -14,8 +14,9 @@
 #include "Vertix.Engine/Input/GameInputInterface.h"
 #include "Vertix.Engine/Input/GeneralKeyboardDevice.hpp"
 #include "Vertix.Engine/Input/GeneralMouseDevice.hpp"
+#include "Vertix/Graphics/DescriptorHeapSet.h"
+#include "Vertix/Graphics/DescriptorView.h"
 #include "Vertix/Primitive/Model.h"
-#include "Vertix/Rendering/RenderResourceViewAllocator.h"
 #include "Vertix/Rendering/RenderTexture.h"
 #include "Vertix/Windowing/GameWindow.h"
 
@@ -54,12 +55,10 @@ private:
 
     std::unique_ptr<Vertix::ConstantBuffer<RootConstants>> constantBuffer;
     std::unique_ptr<Vertix::RenderTexture2D> depthStencilTexture;
-    std::unique_ptr<Vertix::RenderResourceViewAllocator> resViewAllocator;
-    Vertix::RenderResourceView<Vertix::RenderResourceViewType::DepthStencil> depthStencilView{};
-    Vertix::RenderResourceView<Vertix::RenderResourceViewType::RenderTarget> renderTargetViews[2] = {};
 
-    Vertix::RenderResourceViewDesc rtvDesc = { .type = Vertix::RenderResourceViewType::RenderTarget };
-    Vertix::RenderResourceViewDesc dsvDesc = { .type = Vertix::RenderResourceViewType::DepthStencil };
+    std::unique_ptr<Vertix::DescriptorHeapSet> descriptorHeapSet;
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::DepthWrite> depthStencilView{};
+    Vertix::DescriptorView<Vertix::RenderResourceUsage::RenderTarget> renderTargetViews[2] = {};
 
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;

@@ -163,8 +163,6 @@ void RayTracingShadowPass::Initialize(ID3D12Device10* device) {
         }
         stbResource->Unmap(0, nullptr);
     }
-
-    descriptorHeap = shadowMaskUAV->heap;
 }
 
 void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
@@ -189,14 +187,13 @@ void RayTracingShadowPass::Execute(ID3D12GraphicsCommandList5* commandList) {
     raytraceDesc.HitGroupTable.StrideInBytes = shaderTableEntrySize;
     raytraceDesc.HitGroupTable.SizeInBytes = shaderTableEntrySize;
 
-    commandList->SetDescriptorHeaps(1, &descriptorHeap);
     commandList->SetComputeRootSignature(globalRootSig.Get());
 
     commandList->SetComputeRootShaderResourceView(0, topLevelAS->TLASResource->GetGPUVirtualAddress());
-    commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV->gpuHandle);
-    commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV->gpuHandle);
-    commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV->gpuHandle);
-    commandList->SetComputeRootConstantBufferView(4, renderContext->lightConstantsBuffer->GetGPUVirtualAddress());
+    commandList->SetComputeRootDescriptorTable(1, gPositionDepthSRV.gpuHandle);
+    commandList->SetComputeRootDescriptorTable(2, gNormalRoughnessSRV.gpuHandle);
+    commandList->SetComputeRootDescriptorTable(3, shadowMaskUAV.gpuHandle);
+    commandList->SetComputeRootConstantBufferView(4, lightConstantsAddress);
 
     commandList->SetPipelineState1(rtStateObject.Get());
     commandList->DispatchRays(&raytraceDesc);
