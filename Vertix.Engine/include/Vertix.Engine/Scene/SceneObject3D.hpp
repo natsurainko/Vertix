@@ -24,7 +24,7 @@ namespace Vertix::Engine {
             }
         }
 
-        Model* SceneModel = nullptr;
+        const Model* SceneModel = nullptr;
     };
 }
 

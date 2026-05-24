@@ -8,10 +8,10 @@
 #include <cassert>
 #include <memory>
 
-#include "../Rendering/Buffers/StructuredBuffer.hpp"
 #include "Vertix/Mixin/IFillConstants.h"
 #include "Vertix/Pool/ResourcePool.hpp"
 #include "Vertix/Primitive/Material.h"
+#include "Vertix/Rendering/Buffers/StructuredBuffer.hpp"
 
 namespace Vertix {
     template<typename TConstants>
@@ -24,10 +24,11 @@ namespace Vertix {
         {
             dirtySlots = std::make_unique<bool[]>(capacity);
             nullHandle = MaterialPool::Allocate();
-            structuredBuffer = StructuredBuffer<TConstants>::Create(graphicsDevice, capacity);
+            createdBuffer = StructuredBuffer<TConstants>::Create(graphicsDevice, capacity);
+            structuredBuffer = createdBuffer.get();
         }
 
-        explicit MaterialPool(std::unique_ptr<StructuredBuffer<TConstants>> buffer)
+        explicit MaterialPool(StructuredBuffer<TConstants>* buffer)
         : ResourcePool(buffer->GetElementCount()), capacity(buffer->GetElementCount())
         {
             dirtySlots = std::make_unique<bool[]>(buffer->GetElementCount());
@@ -69,7 +70,7 @@ namespace Vertix {
             needDirtyFlush = true;
         }
 
-        void FlushDirty() {
+        void FlushDirty(ID3D12GraphicsCommandList* cmdList) {
             if (!needDirtyFlush) return;
 
             for (uint32_t i = 0; i < capacity; ++i) {
@@ -79,7 +80,7 @@ namespace Vertix {
                 if (this->slots[i]) {
                     FillConstants(*this->slots[i], constants);
                 }
-                structuredBuffer->Fill(i, constants);
+                structuredBuffer->Fill(cmdList, i, constants);
                 dirtySlots[i] = false;
             }
         }
@@ -105,7 +106,9 @@ namespace Vertix {
         bool needDirtyFlush = false;
 
         std::unique_ptr<bool[]> dirtySlots;
-        std::unique_ptr<StructuredBuffer<TConstants>> structuredBuffer;
+        std::unique_ptr<StructuredBuffer<TConstants>> createdBuffer;
+
+        StructuredBuffer<TConstants>* structuredBuffer;
     };
 }
 

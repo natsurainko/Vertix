@@ -1,6 +1,6 @@
 ﻿add_library(Vertix SHARED)
 set_target_properties(Vertix PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_definitions(Vertix PRIVATE Vertix_EXPORTS UNICODE _UNICODE)
+target_compile_definitions(Vertix PRIVATE Vertix_EXPORTS)
 target_sources(Vertix
     PRIVATE
         src/Graphics/DescriptorHeap.cpp
@@ -50,6 +50,7 @@ target_sources(Vertix
             include/Vertix/Hosting/GameApplication.h
             include/Vertix/Hosting/GameApplicationBuilder.hpp
             include/Vertix/Math/Vector2D.hpp
+            include/Vertix/Mixin/IDescriptorAllocator.h
             include/Vertix/Mixin/IFillConstants.h
             include/Vertix/Mixin/IResourceUploading.h
             include/Vertix/Mixin/IPassBinding.h

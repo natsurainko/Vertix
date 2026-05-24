@@ -176,6 +176,18 @@ void Vertix::Engine::ModelLoader::ProcessMesh(
                 aiMesh->mTextureCoords[0][i].y);
         }
     }
+
+    DirectX::BoundingBox::CreateFromPoints(
+        mesh.BoundingBox,
+        mesh.Vertices.size(),
+        &mesh.Vertices[0].Position,
+        sizeof(Vertex)
+    );
+
+    DirectX::BoundingSphere::CreateFromBoundingBox(
+        mesh.BoundingSphere,
+        mesh.BoundingBox
+    );
 }
 
 void Vertix::Engine::ModelAsyncLoader::LoadModelAsync(

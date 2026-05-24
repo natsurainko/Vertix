@@ -44,7 +44,7 @@ namespace Vertix {
                            | IndexBufferRead | IndirectArgumentRead | CopySource,
 
         ConstantBuffer     = GenericRead | UploadHeap,
-        StructuredBuffer   = GenericRead | UploadHeap,
+        StructuredBuffer   = GenericRead,
         RWStructuredBuffer = UnorderedAccess,
     };
 

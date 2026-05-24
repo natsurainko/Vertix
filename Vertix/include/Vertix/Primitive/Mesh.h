@@ -22,9 +22,13 @@ namespace Vertix {
     class GraphicsDevice;
     class Mesh {
     public:
+        std::string Name;
+
         std::vector<Vertex> Vertices;
         std::vector<UINT32> Indices;
-        std::string Name;
+
+        DirectX::BoundingBox BoundingBox;
+        DirectX::BoundingSphere BoundingSphere;
 
         VertexBuffer* VertexBuffer = nullptr;
         IndexBuffer* IndexBuffer = nullptr;

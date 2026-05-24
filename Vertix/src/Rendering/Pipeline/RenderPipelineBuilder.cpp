@@ -33,7 +33,7 @@ void Vertix::RenderPipelineBuilder::BufferCollection::Add(
     const std::string &resourceName,
     const D3D12_RESOURCE_DESC &resourceDesc) const
 {
-    registerResource(resourceName, [&](
+    registerResource(resourceName, [=](
         ID3D12Device* device,
         const RenderResourceUsage allUsages,
         const D3D12_RESOURCE_STATES initialState)
@@ -62,7 +62,7 @@ void Vertix::RenderPipelineBuilder::TextureCollection::Add(
     const bool resizable) const
 {
     if (resizable) registerResizableResource(resourceName);
-    registerResource(resourceName, [&](
+    registerResource(resourceName, [=](
         ID3D12Device* device,
         const RenderResourceUsage allUsages,
         const D3D12_RESOURCE_STATES initialState) -> std::unique_ptr<RenderResource>
@@ -97,7 +97,7 @@ void Vertix::RenderPipelineBuilder::TextureCollection::Add(
     const bool resizable) const
 {
     if (resizable) registerResizableResource(resourceName);
-    registerResource(resourceName, [&](
+    registerResource(resourceName, [=](
         ID3D12Device* device,
         const RenderResourceUsage allUsages,
         const D3D12_RESOURCE_STATES initialState) -> std::unique_ptr<RenderResource>
@@ -311,7 +311,7 @@ void Vertix::RenderPipelineBuilder::InitializePipelineResourceViews(
 
     for (const auto &[heapType, factory, resourceName, handle] : allocations) {
         handle = heapSet[heapType]->AllocDescriptorHandle();
-        factory(device, handle, renderPipeline->resources );
+        factory(device, handle, renderPipeline->resources);
         renderPipeline->descriptorViews[resourceName].emplace(handle, factory);
     }
 

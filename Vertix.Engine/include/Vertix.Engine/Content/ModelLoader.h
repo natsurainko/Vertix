@@ -25,8 +25,8 @@ namespace Vertix::Engine {
             aiProcess_GenSmoothNormals |
             aiProcess_CalcTangentSpace |
             aiProcess_FlipWindingOrder |
-            aiProcess_FlipUVs |
-            aiProcess_OptimizeMeshes;
+            aiProcess_FlipUVs; // |
+            // aiProcess_OptimizeMeshes;
     };
 
     struct ModelMaterialDeclaration {

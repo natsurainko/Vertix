@@ -34,7 +34,7 @@ namespace Vertix {
     private:
         std::mutex mutex;
         std::queue<std::function<void()>> callbackQueue;
-        size_t pendingCount{0};
+        size_t pendingCount = 0;
     };
 }
 

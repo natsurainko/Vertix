@@ -20,9 +20,14 @@
 #include "Vertix/Graphics/SwapChain.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Rendering/RenderTexture.h"
-#include "Vertix/Rendering/Buffers/ConstantBuffer.hpp"
 
 namespace Vertix {
+    template<typename>
+    class ConstantBuffer;
+
+    template<typename>
+    class StructuredBuffer;
+
     class RenderPipeline {
         using ViewFactoryMethod = std::function<void(
             ID3D12Device*,
@@ -34,6 +39,8 @@ namespace Vertix {
 
         template<typename T>
         [[nodiscard]] ConstantBuffer<T>* GetConstantBuffer(const std::string &resourceName) const { return static_cast<ConstantBuffer<T>*>(resources.at(resourceName).get()); }
+        template<typename T>
+        [[nodiscard]] StructuredBuffer<T>* GetStructuredBuffer(const std::string &resourceName) const { return static_cast<StructuredBuffer<T>*>(resources.at(resourceName).get()); }
 
         [[nodiscard]] RenderResource*       GetResource(const std::string &resourceName) const { return resources.at(resourceName).get(); }
         [[nodiscard]] DescriptorHeapSet*    GetDescriptorHeapSet() const noexcept { return descriptorHeapSet.get(); }

@@ -22,7 +22,7 @@ Vertix::Engine::PerspectiveCamera::PerspectiveCamera(
     up = Vector3::Transform(Vector3::Up, orientation);
 }
 
-Vertix::Engine::PerspectiveCamera::PerspectiveCamera() : aspect(4.0 / 3.0) , fov(DegreesToRadians(45)) , nearPlane(0.1f) , farPlane(500) {
+Vertix::Engine::PerspectiveCamera::PerspectiveCamera() : aspect(4.0f / 3.0f) , fov(DegreesToRadians(45.0f)) , nearPlane(0.1f) , farPlane(500.0f) {
     projectionMatrix = Matrix::CreatePerspectiveFieldOfView(fov, aspect, nearPlane, farPlane);
 
     forward = Vector3::Transform(Vector3::Forward, orientation);

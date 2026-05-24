@@ -115,6 +115,64 @@ namespace Vertix {
             return *this;
         }
 
+        PassDeclarationBuilder& ReadConstantBuffer(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                .resourceName = resourceName,
+                .resourceUsage = RenderResourceUsage::ConstantBuffer,
+                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field)
+            });
+
+            return *this;
+        }
+
+        PassDeclarationBuilder& ReadStructuredBuffer(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                .resourceName = resourceName,
+                .resourceUsage = RenderResourceUsage::StructuredBuffer,
+                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field)
+            });
+
+            return *this;
+        }
+
+        PassDeclarationBuilder& Read(
+            const std::string& resourceName,
+            RenderResource* TRenderPass::* field,
+            const RenderResourceUsage resourceUsage)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::Resource,
+                .resourceName = resourceName,
+                .resourceUsage = resourceUsage,
+                .resourceBinding = std::make_shared<PassBinding<RenderResource*>>(field)
+            });
+
+            return *this;
+        }
+
+        PassDeclarationBuilder& Write(
+            const std::string& resourceName,
+            RenderResource* TRenderPass::* field,
+            const RenderResourceUsage resourceUsage)
+        {
+            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                .method = PassResourceDeclaration::PassResourceUsingMethod::Resource,
+                .resourceName = resourceName,
+                .resourceUsage = resourceUsage,
+                .resourceBinding = std::make_shared<PassBinding<RenderResource*>>(field),
+            });
+
+            return *this;
+        }
+
         template<RenderPassType TDependency>
         PassDeclarationBuilder& DependsAfter() {
             passDeclaration.PassDependencies.emplace_back(typeid(TDependency));
@@ -169,19 +227,18 @@ namespace Vertix {
                 const std::unordered_map<std::string, std::unique_ptr<RenderResource>> &resources)
             {
                 const auto resource = resources.at(resourceName).get()->GetResource();
-                const auto resourceDesc = desc;
 
                 if constexpr ((Usage & RenderResourceUsage::AllShaderResource) != RenderResourceUsage::None) {
-                    device->CreateShaderResourceView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_SHADER_RESOURCE_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                    device->CreateShaderResourceView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_SHADER_RESOURCE_VIEW_DESC*>(&desc), handle.cpuHandle);
                 } else if constexpr (Usage == RenderResourceUsage::RenderTarget) {
-                    device->CreateRenderTargetView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_RENDER_TARGET_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                    device->CreateRenderTargetView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_RENDER_TARGET_VIEW_DESC*>(&desc), handle.cpuHandle);
                 } else if constexpr (Usage == RenderResourceUsage::DepthWrite || Usage == RenderResourceUsage::DepthRead) {
-                    device->CreateDepthStencilView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_DEPTH_STENCIL_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                    device->CreateDepthStencilView(resource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_DEPTH_STENCIL_VIEW_DESC*>(&desc), handle.cpuHandle);
                 } else if constexpr (Usage == RenderResourceUsage::UnorderedAccess) {
                     const auto counterResource = counterResourceName.has_value() ? resources.at(counterResourceName.value()).get()->GetResource() : nullptr;
-                    device->CreateUnorderedAccessView(resource, counterResource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_UNORDERED_ACCESS_VIEW_DESC*>(&resourceDesc), handle.cpuHandle);
+                    device->CreateUnorderedAccessView(resource, counterResource, desc.index() == 0 ? nullptr : reinterpret_cast<const D3D12_UNORDERED_ACCESS_VIEW_DESC*>(&desc), handle.cpuHandle);
                 } else if constexpr (Usage == RenderResourceUsage::ConstantBuffer) {
-                    auto cbvDesc = *reinterpret_cast<const D3D12_CONSTANT_BUFFER_VIEW_DESC*>(&resourceDesc);
+                    auto cbvDesc = *reinterpret_cast<const D3D12_CONSTANT_BUFFER_VIEW_DESC*>(&desc);
                     cbvDesc.BufferLocation = resource->GetGPUVirtualAddress();
                     device->CreateConstantBufferView(&cbvDesc, handle.cpuHandle);
                 }

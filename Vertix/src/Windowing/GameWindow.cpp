@@ -42,7 +42,8 @@ void Vertix::GameWindow::NativeInitialize(const HINSTANCE &hInstance) {
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
     RegisterDefaultWindowClass(hInstance);
 
-    m_hwnd = CreateWindow(
+    m_hwnd = CreateWindowExW(
+        0L,
         windowOptions.windowClassName.c_str(),
         windowOptions.windowTitle.c_str(),
         WS_OVERLAPPEDWINDOW,
@@ -57,7 +58,7 @@ void Vertix::GameWindow::NativeInitialize(const HINSTANCE &hInstance) {
 
     if (windowOptions.startupLocation == CenterScreen) {
         RECT workArea{};
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &workArea, 0);
 
         RECT rc{};
         GetWindowRect(m_hwnd, &rc);
@@ -106,9 +107,9 @@ void Vertix::GameWindow::RunMessageLoop(WPARAM &result) {
     MSG msg = {};
 
     while (msg.message != WM_QUIT) {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+        if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         } else {
             OnTick();
         }
@@ -118,11 +119,11 @@ void Vertix::GameWindow::RunMessageLoop(WPARAM &result) {
 }
 
 LRESULT Vertix::GameWindow::HitTest(const Vector2D<UINT> &point) const {
-    return SendMessage(m_hwnd, WM_NCHITTEST, 0, MAKELPARAM(point.X, point.Y));
+    return SendMessageW(m_hwnd, WM_NCHITTEST, 0, MAKELPARAM(point.X, point.Y));
 }
 
 LRESULT Vertix::GameWindow::HitTest(const POINT &point) const {
-    return SendMessage(m_hwnd, WM_NCHITTEST, 0, MAKELPARAM(point.x, point.y));
+    return SendMessageW(m_hwnd, WM_NCHITTEST, 0, MAKELPARAM(point.x, point.y));
 }
 
 void Vertix::GameWindow::Show(const int nCmdShow) const {
@@ -156,7 +157,7 @@ void Vertix::GameWindow::SetWindowTitle(const std::wstring &title) {
     windowTitle = title;
 
     if (m_hwnd) {
-        SetWindowText(m_hwnd, title.c_str());
+        SetWindowTextW(m_hwnd, title.c_str());
     }
 }
 
@@ -178,7 +179,7 @@ LRESULT Vertix::GameWindow::WindowProc(
     const WPARAM wParam,
     const LPARAM lParam)
 {
-    auto* gameWindow = reinterpret_cast<GameWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    auto* gameWindow = reinterpret_cast<GameWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
     if (gameWindow) {
         if (const LRESULT result = gameWindow->BeforeWindowProc(hWnd, message, wParam, lParam); result) {
             return result;
@@ -262,7 +263,7 @@ LRESULT Vertix::GameWindow::WindowProc(
 
         case WM_CREATE: {
             const auto pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+            SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
             return 0;
         }
 
@@ -276,21 +277,21 @@ LRESULT Vertix::GameWindow::WindowProc(
         }
     }
 
-    return DefWindowProc(hWnd, message, wParam, lParam);
+    return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
 void Vertix::GameWindow::RegisterDefaultWindowClass(const HINSTANCE &hInstance) {
     static bool defaultWindowClassRegistered = false;
     if (defaultWindowClassRegistered) return;
 
-    WNDCLASSEX windowClass = {};
-    windowClass.cbSize = sizeof(WNDCLASSEX);
+    WNDCLASSEXW windowClass = {};
+    windowClass.cbSize = sizeof(WNDCLASSEXW);
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
     windowClass.lpszClassName = L"Vertix_GameWindow";
-    RegisterClassEx(&windowClass);
+    RegisterClassExW(&windowClass);
 
     defaultWindowClassRegistered = true;
 }

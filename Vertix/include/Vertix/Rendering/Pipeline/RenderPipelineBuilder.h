@@ -56,7 +56,7 @@ namespace Vertix {
 
             template<typename T>
             void ConstantBuffer(const std::string &resourceName) const {
-                registerResource(resourceName, [&](
+                registerResource(resourceName, [=](
                     ID3D12Device* device,
                     const RenderResourceUsage allUsages,
                     const D3D12_RESOURCE_STATES initialState)
@@ -84,26 +84,48 @@ namespace Vertix {
                 const std::string &resourceName,
                 const uint32_t elementCount) const
             {
-                registerResource(resourceName, [&](
+                registerResource(resourceName, [=](
                     ID3D12Device* device,
                     const RenderResourceUsage allUsages,
                     const D3D12_RESOURCE_STATES initialState)
                 {
-                    const auto heapProps = DeriveHeapProperties(allUsages);
-                    auto desc = Vertix::StructuredBuffer<T>::DESC(elementCount);
-                    desc.Flags = DeriveResourceFlags(allUsages);
+                    const auto name = resourceName;
 
                     Microsoft::WRL::ComPtr<ID3D12Resource> d3d12Resource;
-                    ThrowIfFailed(device->CreateCommittedResource(
-                        &heapProps,
-                        D3D12_HEAP_FLAG_NONE,
-                        &desc,
-                        initialState,
-                        nullptr,
-                        IID_PPV_ARGS(&d3d12Resource)
-                    ));
+                    Microsoft::WRL::ComPtr<ID3D12Resource> stagingBuffer;
+                    const auto desc = Vertix::StructuredBuffer<T>::DESC(elementCount);
 
-                    return std::make_unique<StructuredBufferBase>(d3d12Resource, initialState, elementCount, sizeof(T));
+                    {
+                        const auto heapProps = DeriveHeapProperties(allUsages);
+                        auto bufferDesc = desc;
+                        bufferDesc.Flags = DeriveResourceFlags(allUsages);
+                        ThrowIfFailed(device->CreateCommittedResource(
+                            &heapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &bufferDesc,
+                            initialState,
+                            nullptr,
+                            IID_PPV_ARGS(&d3d12Resource)
+                        ));
+                    }
+
+                    {
+                        const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+                        ThrowIfFailed(device->CreateCommittedResource(
+                            &heapProps,
+                            D3D12_HEAP_FLAG_NONE,
+                            &desc,
+                            D3D12_RESOURCE_STATE_GENERIC_READ,
+                            nullptr,
+                            IID_PPV_ARGS(&stagingBuffer)));
+                    }
+
+                    return std::make_unique<StructuredBufferBase>(
+                        d3d12Resource,
+                        initialState,
+                        stagingBuffer,
+                        elementCount,
+                        sizeof(T));
                 });
             }
 

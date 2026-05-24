@@ -59,58 +59,25 @@ namespace Vertix {
         virtual void OnInitialize() {}
         virtual void OnDestroy() {}
 
-        [[nodiscard]]
-        VERTIX_API LRESULT HitTest(const Vector2D<UINT> &point) const;
-
-        [[nodiscard]]
-        VERTIX_API LRESULT HitTest(const POINT &point) const;
+        [[nodiscard]] VERTIX_API LRESULT HitTest(const Vector2D<UINT> &point) const;
+        [[nodiscard]] VERTIX_API LRESULT HitTest(const POINT &point) const;
 
         VERTIX_API void Show(int nCmdShow = SW_SHOW) const;
+        VERTIX_API void SetWindowTitle(const std::wstring& title);
+        VERTIX_API void SetCursorCenterWindow() const;
 
-        [[nodiscard]]
-        const Vector2D<UINT>& GetWindowSize() const noexcept {
-            return windowSize;
-        }
+        [[nodiscard]] const HWND&           GetWindowHandle() const noexcept { return m_hwnd; }
+        [[nodiscard]] const Vector2D<UINT>& GetWindowSize() const noexcept { return windowSize; }
+        [[nodiscard]] const std::wstring&   GetWindowTitle() const noexcept { return windowTitle; }
+        [[nodiscard]] WindowState           GetWindowState() const noexcept { return windowState; }
 
-        [[nodiscard]]
-        const std::wstring& GetWindowTitle() const noexcept {
-            return windowTitle;
-        }
+        [[nodiscard]] bool GetDraggingState() const noexcept { return isDraggingWindow; }
+        [[nodiscard]] bool GetFocusingState() const noexcept { return isFocused; }
 
-        [[nodiscard]]
-        const HWND& GetWindowHandle() const noexcept {
-            return m_hwnd;
-        }
-
-        [[nodiscard]]
-        bool GetDraggingState() const noexcept {
-            return isDraggingWindow;
-        }
-
-        [[nodiscard]]
-        bool GetFocusingState() const noexcept {
-            return isFocused;
-        }
-
-        [[nodiscard]]
-        WindowState GetWindowState() const noexcept {
-            return windowState;
-        }
-
-        [[nodiscard]]
-        SwapChain* GetSwapChain() const noexcept {
-            return swapChain;
-        }
-
-        [[nodiscard]]
-        FrameCommandList* GetFrameCommandList() const noexcept {
-            return frameCommandList;
-        }
-
-        [[nodiscard]]
-        GraphicsDevice* GetGraphicsDevice() const noexcept {
-            return graphicsDevice;
-        }
+        [[nodiscard]] SwapChain*        GetSwapChain() const noexcept { return swapChain; }
+        [[nodiscard]] GraphicsDevice*   GetGraphicsDevice() const noexcept { return graphicsDevice; }
+        [[nodiscard]] FrameCommandList* GetFrameCommandList() const noexcept { return frameCommandList; }
+        [[nodiscard]] DispatcherQueue*  GetDispatcherQueue() noexcept { return &dispatcherQueue; }
 
         void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const noexcept {
             viewport.Width = static_cast<float>(windowSize.X);
@@ -118,9 +85,6 @@ namespace Vertix {
             scissorRect.right = static_cast<LONG>(windowSize.X);
             scissorRect.bottom = static_cast<LONG>(windowSize.Y);
         }
-
-        VERTIX_API void SetWindowTitle(const std::wstring& title);
-        VERTIX_API void SetCursorCenterWindow() const;
 
     protected:
         GraphicsDevice* graphicsDevice = nullptr;
