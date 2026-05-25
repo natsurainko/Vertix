@@ -121,7 +121,7 @@ void Vertix::Engine::TextureMipmapGenerator::Generate(
         barriers[2].Transition.pResource = uavResource.Get();
 
         computeCommandList->ResourceBarrier(1, &barriers[1]);
-        ProcessUAVCompatibleResource(uavResource, computeCommandList, DXGI_FORMAT_R8G8B8A8_UNORM, resourceUploadHeap);
+        ProcessUAVCompatibleResource(uavResource, computeCommandList, DXGI_FORMAT_R8G8B8A8_UNORM, resourceUploadHeap, true);
         computeCommandList->ResourceBarrier(2, &barriers[2]);
         computeCommandList->CopyResource(d3d12Resource.Get(), uavResource.Get());
         computeCommandList->ResourceBarrier(1, &barriers[4]);
@@ -200,7 +200,8 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
     const Microsoft::WRL::ComPtr<ID3D12Resource> &uavResource,
     const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &computeCommandList,
     const DXGI_FORMAT uavResourceViewFormat,
-    ResourceUploadHeap &resourceUploadHeap) const
+    ResourceUploadHeap &resourceUploadHeap,
+    const bool isSRGBFormat) const
 {
     ID3D12Resource* uavResourcePtr = uavResource.Get();
     const D3D12_RESOURCE_DESC resourceDesc = uavResource->GetDesc();
@@ -209,7 +210,7 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
     DescriptorHandle handle = descriptorHeap->AllocDescriptorHandle();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = uavResourceViewFormat;
+    srvDesc.Format = isSRGBFormat ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : uavResourceViewFormat;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Texture2D.MostDetailedMip = 0;
@@ -238,7 +239,9 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
     D3D12_RESOURCE_BARRIER srvToUavBarrier = CD3DX12_RESOURCE_BARRIER::Transition(uavResourcePtr, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     D3D12_RESOURCE_BARRIER uavToSrvBarrier = CD3DX12_RESOURCE_BARRIER::Transition(uavResourcePtr, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-    MipConstants constants{};
+    MipConstants constants = {
+        .IsSRGBFormat = isSRGBFormat
+    };
 
     auto mipWidth = static_cast<UINT32>(resourceDesc.Width);
     UINT32 mipHeight = resourceDesc.Height;
@@ -254,7 +257,7 @@ void Vertix::Engine::TextureMipmapGenerator::ProcessUAVCompatibleResource(
 
         computeCommandList->ResourceBarrier(1, &srvToUavBarrier);
         computeCommandList->SetComputeRootDescriptorTable(2, uavHandle);
-        computeCommandList->SetComputeRoot32BitConstants(0, 3, &constants, 0);
+        computeCommandList->SetComputeRoot32BitConstants(0, 4, &constants, 0);
         computeCommandList->Dispatch((mipWidth + 7) / 8, (mipHeight + 7) / 8, 1);
         computeCommandList->ResourceBarrier(1, &uavBarrier);
         computeCommandList->ResourceBarrier(1, &uavToSrvBarrier);
@@ -288,7 +291,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> Vertix::Engine::TextureMipmapGenerat
     pointSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
     CD3DX12_ROOT_PARAMETER rootParameters[3];
-    rootParameters[0].InitAsConstants(3, 0);
+    rootParameters[0].InitAsConstants(4, 0);
     rootParameters[1].InitAsDescriptorTable(1, &descRanges[0]);
     rootParameters[2].InitAsDescriptorTable(1, &descRanges[1]);
 

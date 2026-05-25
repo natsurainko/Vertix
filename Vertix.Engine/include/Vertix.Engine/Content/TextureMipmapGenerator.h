@@ -18,6 +18,7 @@ namespace Vertix::Engine {
         struct MipConstants {
             DirectX::SimpleMath::Vector2 OutputMipmapTexelSize;
             std::uint32_t                InputMipmapLevel;
+            std::uint32_t                IsSRGBFormat;
         };
 
     public:
@@ -55,7 +56,9 @@ namespace Vertix::Engine {
         void ProcessUAVCompatibleResource(
             const Microsoft::WRL::ComPtr<ID3D12Resource> &uavResource,
             const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &computeCommandList,
-            DXGI_FORMAT uavResourceViewFormat, ResourceUploadHeap &resourceUploadHeap) const;
+            DXGI_FORMAT uavResourceViewFormat,
+            ResourceUploadHeap &resourceUploadHeap,
+            bool isSRGBFormat = false) const;
 
         static Microsoft::WRL::ComPtr<ID3D12PipelineState> CreateComputePipelineState(
             const Microsoft::WRL::ComPtr<ID3D12Device> &d3d12Device,

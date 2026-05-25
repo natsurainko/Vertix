@@ -20,8 +20,8 @@ void Vertix::Engine::DefaultPBRMaterial::ReadPropertiesFromAssimp(const aiMateri
     material->Get(AI_MATKEY_EMISSIVE_INTENSITY, aiEmissiveStrength);
 
     this->emissiveFactor[0] = aiEmissiveFactor.r;
-    this->emissiveFactor[1] = aiEmissiveFactor.b;
-    this->emissiveFactor[2] = aiEmissiveFactor.g;
+    this->emissiveFactor[1] = aiEmissiveFactor.g;
+    this->emissiveFactor[2] = aiEmissiveFactor.b;
     // TODO: Implement emissiveStrength in KHR_materials_emissive_strength extension
 
     material->Get(AI_MATKEY_GLTF_TEXTURE_STRENGTH(aiTextureType_LIGHTMAP, 0), this->occlusionStrength);
@@ -65,7 +65,7 @@ DirectX::WIC_LOADER_FLAGS Vertix::Engine::DefaultPBRMaterial::GetWicLoaderFlags(
     switch (aiTextureType) {
         case aiTextureType_BASE_COLOR:
         case aiTextureType_DIFFUSE:
-        case aiTextureType_LIGHTMAP:
+        case aiTextureType_EMISSIVE:
             return DirectX::WIC_LOADER_FORCE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
         default:
             return DirectX::WIC_LOADER_IGNORE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;

@@ -6,10 +6,13 @@ cbuffer MipConstants : register(b0)
 {
     float2 OutputMipmapTexelSize;
     uint   InputMipmapLevel;
+    uint   IsSRGBTexture;
 }
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 threadId : SV_DispatchThreadID) {
     float2 uv = (threadId.xy + 0.5) * OutputMipmapTexelSize;
-    OutputMipmap[threadId.xy] = InputMipmap.SampleLevel(MipMapSampler, uv, InputMipmapLevel);
+    float4 color = InputMipmap.SampleLevel(MipMapSampler, uv, InputMipmapLevel);
+    if (IsSRGBTexture) color = pow(color, 1.0 / 2.2);
+    OutputMipmap[threadId.xy] = color;
 }
