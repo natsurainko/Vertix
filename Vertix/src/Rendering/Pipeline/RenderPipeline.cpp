@@ -82,6 +82,10 @@ void Vertix::RenderPipeline::CompileBarriers() {
             auto* d3d12Res = resources.at(resName)->GetResource();
             prePassBarriers[i].push_back(CD3DX12_RESOURCE_BARRIER::Transition(d3d12Res, before, after));
         };
+        auto addUAVBarrier = [&](const std::string& resName) {
+            auto* d3d12Res = resources.at(resName)->GetResource();
+            prePassBarriers[i].push_back(CD3DX12_RESOURCE_BARRIER::UAV(d3d12Res));
+        };
 
         for (const auto* edge : node->inEdges) {
             if (edge->resourceName.empty() || edge->resourceName == swapChainResourceName) continue;
@@ -89,6 +93,8 @@ void Vertix::RenderPipeline::CompileBarriers() {
             if (cur != edge->readerState) {
                 addTransitionBarrier(edge->resourceName, cur, edge->readerState);
                 cur = edge->readerState;
+            } else if (cur & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) {
+                addUAVBarrier(edge->resourceName);
             }
         }
 
@@ -98,6 +104,8 @@ void Vertix::RenderPipeline::CompileBarriers() {
             if (cur != edge->writerState) {
                 addTransitionBarrier(edge->resourceName, cur, edge->writerState);
                 cur = edge->writerState;
+            } else if (cur & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) {
+                addUAVBarrier(edge->resourceName);
             }
         }
     }

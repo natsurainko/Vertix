@@ -19,6 +19,9 @@
 #include "Vertix/Rendering/Pipeline/RenderPass.h"
 
 namespace Vertix {
+    template<typename>
+    class StructuredBuffer;
+
     struct PassResourceDeclaration {
         enum class PassResourceUsingMethod {
             Resource,
@@ -47,6 +50,7 @@ namespace Vertix {
             const std::unordered_map<std::string, std::unique_ptr<RenderResource>>&)>;
 
     public:
+#pragma region Single View R/W
         template<RenderResourceUsage Usage> requires RenderResourceReadUsage<Usage>
         PassDeclarationBuilder& Read(
             const std::string& resourceName,
@@ -84,7 +88,9 @@ namespace Vertix {
 
             return *this;
         }
+#pragma endregion
 
+#pragma region Single GPUAddress R/W
         PassDeclarationBuilder& Read(
             const std::string& resourceName,
             D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field,
@@ -114,35 +120,9 @@ namespace Vertix {
 
             return *this;
         }
+#pragma endregion
 
-        PassDeclarationBuilder& ReadConstantBuffer(
-            const std::string& resourceName,
-            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field)
-        {
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
-                .resourceName = resourceName,
-                .resourceUsage = RenderResourceUsage::ConstantBuffer,
-                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field)
-            });
-
-            return *this;
-        }
-
-        PassDeclarationBuilder& ReadStructuredBuffer(
-            const std::string& resourceName,
-            D3D12_GPU_VIRTUAL_ADDRESS TRenderPass::* field)
-        {
-            passDeclaration.Resources.emplace_back(PassResourceDeclaration {
-                .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
-                .resourceName = resourceName,
-                .resourceUsage = RenderResourceUsage::StructuredBuffer,
-                .resourceBinding = std::make_shared<PassBinding<D3D12_GPU_VIRTUAL_ADDRESS>>(field)
-            });
-
-            return *this;
-        }
-
+#pragma region Single Resource* R/W
         PassDeclarationBuilder& Read(
             const std::string& resourceName,
             RenderResource* TRenderPass::* field,
@@ -172,6 +152,141 @@ namespace Vertix {
 
             return *this;
         }
+#pragma endregion
+
+#pragma region Array View R/W
+        template<size_t I = 0, size_t N, RenderResourceUsage Usage> requires RenderResourceReadUsage<Usage>
+        PassDeclarationBuilder& ReadArray(
+            const std::string& resourceName,
+            DescriptorView<Usage> (TRenderPass::* field)[N],
+            const DescriptorViewDesc &desc = std::monostate{},
+            const std::optional<std::string> counterResourceName = std::nullopt)
+        {
+            for (size_t i = 0; i < N; ++i) {
+                const std::string indexedName = resourceName + "[" + std::to_string(i + I) + "]";
+                auto binding = std::make_shared<PassArrayBinding<DescriptorView<Usage>, N>>(field, i);
+                DeclareView<Usage>(indexedName, desc, counterResourceName, binding);
+                passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                    .method = PassResourceDeclaration::PassResourceUsingMethod::View,
+                    .resourceName = indexedName,
+                    .resourceUsage = Usage,
+                    .resourceBinding = std::move(binding),
+                });
+            }
+
+            return *this;
+        }
+
+        template<size_t I = 0, size_t N, RenderResourceUsage Usage> requires RenderResourceWriteUsage<Usage>
+        PassDeclarationBuilder& WriteArray(
+            const std::string& resourceName,
+            DescriptorView<Usage> (TRenderPass::* field)[N],
+            const DescriptorViewDesc &desc = std::monostate{},
+            const std::optional<std::string> counterResourceName = std::nullopt)
+        {
+            for (size_t i = 0; i < N; ++i) {
+                const std::string indexedName = resourceName + "[" + std::to_string(i + I) + "]";
+                auto binding = std::make_shared<PassArrayBinding<DescriptorView<Usage>, N>>(field, i);
+                DeclareView<Usage>(indexedName, desc, counterResourceName, binding);
+                passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                    .method = PassResourceDeclaration::PassResourceUsingMethod::View,
+                    .resourceName = indexedName,
+                    .resourceUsage = Usage,
+                    .resourceBinding = std::move(binding),
+                });
+            }
+
+            return *this;
+        }
+#pragma endregion
+
+#pragma region Array GPUAddress R/W
+        #pragma region Array View R/W
+        template<size_t I = 0, size_t N>
+        PassDeclarationBuilder& ReadArray(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS (TRenderPass::* field)[N],
+            const RenderResourceUsage resourceUsage)
+        {
+            for (size_t i = 0; i < N; ++i) {
+                const std::string indexedName = resourceName + "[" + std::to_string(i + I) + "]";
+                auto binding = std::make_shared<PassArrayBinding<D3D12_GPU_VIRTUAL_ADDRESS, N>>(field, i);
+                passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                    .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                    .resourceName = indexedName,
+                    .resourceUsage = resourceUsage,
+                    .resourceBinding = std::move(binding),
+                });
+            }
+
+            return *this;
+        }
+
+        template<size_t I = 0, size_t N>
+        PassDeclarationBuilder& WriteArray(
+            const std::string& resourceName,
+            D3D12_GPU_VIRTUAL_ADDRESS (TRenderPass::* field)[N],
+            const RenderResourceUsage resourceUsage)
+        {
+            for (size_t i = 0; i < N; ++i) {
+                const std::string indexedName = resourceName + "[" + std::to_string(i + I) + "]";
+                auto binding = std::make_shared<PassArrayBinding<D3D12_GPU_VIRTUAL_ADDRESS, N>>(field, i);
+                passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                    .method = PassResourceDeclaration::PassResourceUsingMethod::GPUAddress,
+                    .resourceName = indexedName,
+                    .resourceUsage = resourceUsage,
+                    .resourceBinding = std::move(binding),
+                });
+            }
+
+            return *this;
+        }
+#pragma endregion
+#pragma endregion
+
+#pragma region Array Resource* R/W
+        #pragma region Array View R/W
+        template<size_t I = 0, size_t N>
+        PassDeclarationBuilder& ReadArray(
+            const std::string& resourceName,
+            RenderResource* (TRenderPass::* field)[N],
+            const RenderResourceUsage resourceUsage)
+        {
+            for (size_t i = 0; i < N; ++i) {
+                const std::string indexedName = resourceName + "[" + std::to_string(i + I) + "]";
+                auto binding = std::make_shared<PassArrayBinding<RenderResource*, N>>(field, i);
+                passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                    .method = PassResourceDeclaration::PassResourceUsingMethod::Resource,
+                    .resourceName = indexedName,
+                    .resourceUsage = resourceUsage,
+                    .resourceBinding = std::move(binding),
+                });
+            }
+
+            return *this;
+        }
+
+        template<size_t I = 0, size_t N>
+        PassDeclarationBuilder& WriteArray(
+            const std::string& resourceName,
+            RenderResource* (TRenderPass::* field)[N],
+            const RenderResourceUsage resourceUsage)
+        {
+            for (size_t i = 0; i < N; ++i) {
+                const std::string indexedName = resourceName + "[" + std::to_string(i + I) + "]";
+                auto binding = std::make_shared<PassArrayBinding<RenderResource*, N>>(field, i);
+                passDeclaration.Resources.emplace_back(PassResourceDeclaration {
+                    .method = PassResourceDeclaration::PassResourceUsingMethod::Resource,
+                    .resourceName = indexedName,
+                    .resourceUsage = resourceUsage,
+                    .resourceBinding = std::move(binding),
+                });
+            }
+
+            return *this;
+        }
+#pragma endregion
+#pragma endregion
 
         template<RenderPassType TDependency>
         PassDeclarationBuilder& DependsAfter() {
@@ -253,6 +368,21 @@ namespace Vertix {
 
             void Target(void *pass) override { instance = static_cast<TRenderPass*>(pass); }
             void InjectValue(const void* resource) override { instance->*member = *static_cast<const TMember*>(resource); }
+        };
+
+        template<typename TMember, size_t N>
+        struct PassArrayBinding : IPassBinding {
+            TMember (TRenderPass::* arrayField)[N];
+            size_t index;
+            TRenderPass* instance = nullptr;
+
+            PassArrayBinding(
+                TMember (TRenderPass::* field)[N],
+                const size_t index)
+            : arrayField(field), index(index) {}
+
+            void Target(void* pass) override { instance = static_cast<TRenderPass*>(pass); }
+            void InjectValue(const void* resource) override { (instance->*arrayField)[index] = *static_cast<const TMember*>(resource); }
         };
     };
 }

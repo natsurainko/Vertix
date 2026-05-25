@@ -39,6 +39,13 @@ namespace Vertix {
 
         template<typename T>
         [[nodiscard]] ConstantBuffer<T>* GetConstantBuffer(const std::string &resourceName) const { return static_cast<ConstantBuffer<T>*>(resources.at(resourceName).get()); }
+        template<size_t I = 0, size_t N, typename T>
+        void GetConstantBufferArray(const std::string &resourceName, ConstantBuffer<T>* (&field)[N]) const {
+            for (size_t i = 0; i < N; ++i) {
+                field[i] = static_cast<ConstantBuffer<T>*>(resources.at(resourceName + "[" + std::to_string(i + I) + "]").get());
+            }
+        }
+
         template<typename T>
         [[nodiscard]] StructuredBuffer<T>* GetStructuredBuffer(const std::string &resourceName) const { return static_cast<StructuredBuffer<T>*>(resources.at(resourceName).get()); }
 

@@ -129,6 +129,37 @@ namespace Vertix {
                 });
             }
 
+            template<typename T>
+            void ConstantBufferArray(
+                const std::string& resourceName,
+                const uint32_t arraySize) const
+            {
+                for (uint32_t i = 0; i < arraySize; ++i) {
+                    ConstantBuffer<T>(resourceName + "[" + std::to_string(i) + "]");
+                }
+            }
+
+            template<typename T>
+            void StructuredBufferArray(
+                const std::string& resourceName,
+                const uint32_t arraySize,
+                const uint32_t elementCount) const
+            {
+                for (uint32_t i = 0; i < arraySize; ++i) {
+                    StructuredBuffer<T>(resourceName + "[" + std::to_string(i) + "]", elementCount);
+                }
+            }
+
+            void AddArray(
+                const std::string& resourceName,
+                const uint32_t arraySize,
+                const D3D12_RESOURCE_DESC& resourceDesc) const
+            {
+                for (uint32_t i = 0; i < arraySize; ++i) {
+                    Add(resourceName + "[" + std::to_string(i) + "]", resourceDesc);
+                }
+            }
+
         private:
             friend class RenderPipelineBuilder;
             std::function<void(const std::string&, ResourceFactoryMethod)> registerResource;
