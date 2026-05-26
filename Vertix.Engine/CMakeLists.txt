@@ -35,7 +35,6 @@ target_sources(Vertix.Engine
             include/Vertix.Engine/Input/KeyboardDevice.h
             include/Vertix.Engine/Input/MouseDevice.h
             include/Vertix.Engine/Input/InputDevice.hpp
-            include/Vertix.Engine/Pool/DefaultMaterialPool.hpp
             include/Vertix.Engine/Primitive/DefaultPBRMaterial.h
             include/Vertix.Engine/Scene/DirectionalLight.h
             include/Vertix.Engine/Scene/SceneObject3D.hpp
