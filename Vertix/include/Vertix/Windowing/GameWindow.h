@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2025/12/23.
 //
 
-#ifndef VERTIX_GAMEWINDOW_H
-#define VERTIX_GAMEWINDOW_H
+#pragma once
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -11,125 +10,117 @@
 #include <chrono>
 #include <string>
 #include <windows.h>
-#include <d3d12/d3dx12_core.h>
 
-#include "Vertix/VERTIX_EXPORT.h"
-#include "Vertix/Dispatching/DispatcherQueue.hpp"
+#include "Vertix/Graphics/Command/CommandAllocator.h"
 #include "Vertix/Math/Vector2D.hpp"
 
 namespace Vertix {
-    enum WindowState {
+    enum class WindowState {
         Normal,
         Minimized,
         Maximized,
     };
 
-    enum WindowStartupLocation {
+    enum class WindowStartupLocation {
         Manual,
         CenterScreen
     };
 
     struct WindowOptions {
-        UINT swapChainFrameCount = 2;
-        DXGI_FORMAT swapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+        using SwapChainDescFunc = DXGI_SWAP_CHAIN_DESC1 (*)();
 
-        Vector2D<UINT> windowSize { 800, 600 };
-        WindowStartupLocation startupLocation = CenterScreen;
-        std::wstring windowTitle = L"Vertix.GameWindow";
-        std::wstring windowClassName = L"Vertix_GameWindow";
+        bool              swapChainEnableVSync       = true;
+        SwapChainDescFunc swapChainDescFactoryMethod = nullptr;
 
-        bool enableVSync = true;
+        Vector2D<uint32_t>    windowSize            = { 800, 600 };
+        std::wstring_view     windowTitle           = L"Vertix.GameWindow";
+        WindowStartupLocation windowStartupLocation = WindowStartupLocation::CenterScreen;
     };
 
-    struct KeyboardEventArgs;
     class GraphicsDevice;
-    class FrameCommandList;
+    class CommandList;
+    class CommandQueue;
+    class DispatcherQueue;
     class SwapChain;
+
     class GameWindow {
+        WindowOptions windowOptions;
+
+        Vector2D<UINT> windowSize;
+        std::wstring   windowTitle;
+        WindowState    windowState = WindowState::Normal;
+
+        bool isDragging = false;
+        bool isResizing = false;
+        bool isFocusing = false;
+
+        std::chrono::steady_clock::time_point lastTickTime;
+
+        HWND hWnd = nullptr;
+
+    protected:
+        GraphicsDevice* graphicsDevice = nullptr;
+        CommandQueue*   commandQueue   = nullptr;
+
+        std::unique_ptr<SwapChain>       swapChain;
+        std::unique_ptr<CommandList>     commandList;
+        std::unique_ptr<DispatcherQueue> dispatcherQueue;
+
+        std::vector<CommandAllocator> commandAllocators;
+
     public:
-        VERTIX_API GameWindow();
         VERTIX_API explicit GameWindow(const WindowOptions &options);
-        VERTIX_API virtual ~GameWindow();
+        virtual             ~GameWindow();
 
-        VERTIX_API void NativeInitialize(const HINSTANCE &hInstance);
-        VERTIX_API void InitializeDevice(GraphicsDevice* device);
+        VERTIX_API virtual void Run(WPARAM &result);
 
-        VERTIX_API virtual void RunMessageLoop(WPARAM &result);
+        [[nodiscard]] VERTIX_API LRESULT HitTest(const Vector2D<UINT> &point) const noexcept;
+        [[nodiscard]] VERTIX_API LRESULT HitTest(const POINT &point) const noexcept;
 
-        virtual void OnInitialize() {}
-        virtual void OnDestroy() {}
-
-        [[nodiscard]] VERTIX_API LRESULT HitTest(const Vector2D<UINT> &point) const;
-        [[nodiscard]] VERTIX_API LRESULT HitTest(const POINT &point) const;
-
-        VERTIX_API void Show(int nCmdShow = SW_SHOW) const;
-        VERTIX_API void SetWindowTitle(const std::wstring& title);
+        VERTIX_API void Show(int nCmdShow = SW_SHOW) const noexcept;
+        VERTIX_API void SetWindowTitle(const std::wstring_view &title);
         VERTIX_API void SetCursorCenterWindow() const;
 
-        [[nodiscard]] const HWND&           GetWindowHandle() const noexcept { return m_hwnd; }
+        [[nodiscard]] const HWND&           GetWindowHandle() const noexcept { return hWnd; }
         [[nodiscard]] const Vector2D<UINT>& GetWindowSize() const noexcept { return windowSize; }
         [[nodiscard]] const std::wstring&   GetWindowTitle() const noexcept { return windowTitle; }
         [[nodiscard]] WindowState           GetWindowState() const noexcept { return windowState; }
 
-        [[nodiscard]] bool GetDraggingState() const noexcept { return isDraggingWindow; }
-        [[nodiscard]] bool GetFocusingState() const noexcept { return isFocused; }
+        [[nodiscard]] bool GetDraggingState() const noexcept { return isDragging; }
+        [[nodiscard]] bool GetFocusingState() const noexcept { return isFocusing; }
 
-        [[nodiscard]] SwapChain*        GetSwapChain() const noexcept { return swapChain; }
-        [[nodiscard]] GraphicsDevice*   GetGraphicsDevice() const noexcept { return graphicsDevice; }
-        [[nodiscard]] FrameCommandList* GetFrameCommandList() const noexcept { return frameCommandList; }
-        [[nodiscard]] DispatcherQueue*  GetDispatcherQueue() noexcept { return &dispatcherQueue; }
-
-        void GetD3D12ViewportRectSize(CD3DX12_VIEWPORT &viewport, CD3DX12_RECT &scissorRect) const noexcept {
-            viewport.Width = static_cast<float>(windowSize.X);
-            viewport.Height = static_cast<float>(windowSize.Y);
-            scissorRect.right = static_cast<LONG>(windowSize.X);
-            scissorRect.bottom = static_cast<LONG>(windowSize.Y);
-        }
+        [[nodiscard]] SwapChain*       GetSwapChain() const noexcept { return swapChain.get(); }
+        [[nodiscard]] DispatcherQueue* GetDispatcherQueue() const noexcept { return dispatcherQueue.get(); }
+        [[nodiscard]] GraphicsDevice*  GetGraphicsDevice() const noexcept { return graphicsDevice; }
 
     protected:
-        GraphicsDevice* graphicsDevice = nullptr;
-        FrameCommandList* frameCommandList = nullptr;
-        DispatcherQueue dispatcherQueue;
-        SwapChain* swapChain = nullptr;
-
-        VERTIX_API virtual void InitializeSwapChain();
-
         VERTIX_API virtual void OnTick();
         VERTIX_API virtual void OnInternalRender(double deltaTime);
         VERTIX_API virtual void OnInternalUpdate(double deltaTime);
+
+        virtual void OnInitialize() {}
+        virtual void OnDestroy() {}
         virtual void OnUpdate(double deltaTime) {}
         virtual void OnRender(double deltaTime) {}
-
         virtual void OnResizing(const Vector2D<UINT> &size) {}
         virtual void OnResized(const Vector2D<UINT> &size) {}
-
         virtual void OnFocusLost() {}
         virtual void OnFocusGot() {}
-
         virtual void OnDragEnter() {}
         virtual void OnDragExit() {}
 
-        virtual LRESULT BeforeWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) { return 0; }
+        virtual LRESULT BeforeWndProc(HWND, UINT, WPARAM, LPARAM) { return 0; }
 
     private:
-        WindowOptions windowOptions{};
-        Vector2D<UINT> windowSize;
-        std::wstring windowTitle;
+        void NativeInitialize(HINSTANCE hInstance);
 
-        bool isDraggingWindow = false;
-        bool isFocused = false;
-        WindowState windowState = Normal;
-
-        std::chrono::steady_clock::time_point lastTickTime;
-
-        HWND m_hwnd = nullptr;
-
-        static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-        static void RegisterDefaultWindowClass(const HINSTANCE &hInstance);
+        static LRESULT CALLBACK      WndProc(HWND, UINT, WPARAM, LPARAM);
+        static void                  RegisterWindowClass(const HINSTANCE &hInstance);
+        static DXGI_SWAP_CHAIN_DESC1 CreateSwapChainDesc();
 
     public:
+        static constexpr std::wstring_view WindowClassName = L"Vertix_GameWindow";
+
         VERTIX_API static void ApplySystemThemeMode(const HWND &hwnd);
     };
 }
-
-#endif //VERTIX_GAMEWINDOW_H

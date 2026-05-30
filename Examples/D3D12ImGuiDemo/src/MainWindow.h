@@ -7,7 +7,7 @@
 
 #include <imgui/imgui.h>
 
-#include "Vertix/Graphics/DescriptorHeapSet.h"
+#include "../../../Vertix/include/Vertix/Graphics/Descriptor/DescriptorHeapSet.h"
 #include "Vertix/Graphics/DescriptorView.h"
 #include "Vertix/Rendering/RenderTexture.h"
 #include "Vertix/Windowing/GameWindow.h"
@@ -25,7 +25,7 @@ protected:
     void OnResized(const Vertix::Vector2D<unsigned> &size) override;
     void OnRender(double deltaTime) override;
 
-    LRESULT BeforeWindowProc(const HWND hWnd, const UINT msg, const WPARAM wParam, const LPARAM lParam) override {
+    LRESULT BeforeWndProc(const HWND hWnd, const UINT msg, const WPARAM wParam, const LPARAM lParam) override {
         return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
     }
 

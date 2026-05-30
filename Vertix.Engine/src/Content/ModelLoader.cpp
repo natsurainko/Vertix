@@ -223,7 +223,7 @@ void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(
         std::vector<ModelLoadingContext> modelLoadingContexts;
 
         ResourceUploadHeap resourceUploadHeap{};
-        GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
+        CommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
         copyCommandList.BeginCommand(nullptr);
         {
             const auto& commandList = copyCommandList.GetD3D12GraphicsCommandList();
@@ -245,12 +245,12 @@ void Vertix::Engine::ModelAsyncLoader::ExecuteAsync(
         copyCommandList.WaitForCommand();
 
         if (createBLAS && computeQueue) {
-            GraphicsCommandList computeCommandList(device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+            CommandList computeCommandList(device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
             computeCommandList.BeginCommand(nullptr);
             {
                 const auto& commandList = computeCommandList.GetD3D12GraphicsCommandList();
                 for (const auto &[handle, model] : modelLoadingContexts) {
-                    model->UploadBLASToGPU(device, commandList);
+                    model->UploadAccelerationStructureToGPU(device, commandList);
                 }
             }
             computeCommandList.EndCommand();

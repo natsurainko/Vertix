@@ -4,46 +4,48 @@
 
 #include "Vertix/Primitive/Mesh.h"
 
-#include <d3d12/d3dx12_barriers.h>
-
-#include "Vertix/Graphics/FrameCommandList.h"
-#include "Vertix/Graphics/GraphicsDevice.h"
 #include "Vertix/Graphics/ResourceUploadHeap.hpp"
-
-using Microsoft::WRL::ComPtr;
-
-Vertix::Mesh::~Mesh() {
-    delete VertexBuffer;
-    delete IndexBuffer;
-    delete BLAS;
-}
+#include "Vertix/Rendering/Buffers/AccelerationStructure.h"
+#include "Vertix/Rendering/Buffers/IndexBuffer.h"
+#include "Vertix/Rendering/Buffers/VertexBuffer.h"
 
 void Vertix::Mesh::UploadToGPU(
-    const ComPtr<ID3D12Device> &device,
-    const ComPtr<ID3D12GraphicsCommandList> &commandList,
-    ResourceUploadHeap &resourceUploadHeap)
-{
+    ID3D12Device*              device,
+    ID3D12GraphicsCommandList* commandList,
+    ResourceUploadHeap &       resourceUploadHeap) {
+    assert(!VertexBuffer);
+    assert(!IndexBuffer);
     VertexBuffer = VertexBuffer::Create(Vertices, device, commandList, resourceUploadHeap);
-    IndexBuffer = IndexBuffer::Create(Indices, device, commandList, resourceUploadHeap);
+    IndexBuffer  = IndexBuffer::Create(Indices, device, commandList, resourceUploadHeap);
 }
 
-void Vertix::Mesh::UploadBLASToGPU(
-    const ComPtr<ID3D12Device5> &device,
-    const ComPtr<ID3D12GraphicsCommandList4> &commandList) {
-    BLAS = BottomLevelAccelerationStructure::Create(device, commandList, this);
+#if VERTIX_D3D12_DEVICE_VERSION >= 5 && VERTIX_D3D12_COMMAND_LIST_VERSION >= 5
+void Vertix::Mesh::UploadAccelerationStructureToGPU(
+    D3D12Interface::Device*      device,
+    D3D12Interface::CommandList* commandList) {
+    assert(VertexBuffer);
+    assert(IndexBuffer);
+    assert(!AccelerationStructure);
+    AccelerationStructure = AccelerationStructure::CreateBottomLevelAccelerationStructure(
+        device,
+        commandList,
+        VertexBuffer.get(),
+        IndexBuffer.get(),
+        DXGI_FORMAT_R32G32B32_FLOAT
+    );
 }
+#endif
 
-void Vertix::Mesh::Draw(const ComPtr<ID3D12GraphicsCommandList> &commandList) const {
-    commandList->IASetVertexBuffers(0, 1, &VertexBuffer->d3d12VertexBufferView);
-    commandList->IASetIndexBuffer(&IndexBuffer->d3d12IndexBufferView);
-    commandList->DrawIndexedInstanced(IndexBuffer->indexCount, 1, 0, 0, 0);
+void Vertix::Mesh::Draw(ID3D12GraphicsCommandList* commandList) const {
+    commandList->IASetVertexBuffers(0, 1, &VertexBuffer->GetBufferView());
+    commandList->IASetIndexBuffer(&IndexBuffer->GetBufferView());
+    commandList->DrawIndexedInstanced(IndexBuffer->GetIndexCount(), 1, 0, 0, 0);
 }
 
 void Vertix::Mesh::DrawInstanced(
-    const ComPtr<ID3D12GraphicsCommandList> &commandList,
-    const UINT instanceCount) const
-{
-    commandList->IASetVertexBuffers(0, 1, &VertexBuffer->d3d12VertexBufferView);
-    commandList->IASetIndexBuffer(&IndexBuffer->d3d12IndexBufferView);
-    commandList->DrawIndexedInstanced(IndexBuffer->indexCount, instanceCount, 0, 0, 0);
+    ID3D12GraphicsCommandList* commandList,
+    const uint32_t             instanceCount) const {
+    commandList->IASetVertexBuffers(0, 1, &VertexBuffer->GetBufferView());
+    commandList->IASetIndexBuffer(&IndexBuffer->GetBufferView());
+    commandList->DrawIndexedInstanced(IndexBuffer->GetIndexCount(), instanceCount, 0, 0, 0);
 }

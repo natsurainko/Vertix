@@ -5,7 +5,7 @@
 #ifndef VERTIX_LIGHTINGPASS_H
 #define VERTIX_LIGHTINGPASS_H
 
-#include <Vertix/Graphics/DescriptorView.h>
+#include <../../../../../Vertix/include/Vertix/Graphics/Descriptor/DescriptorView.h>
 #include <Vertix/Rendering/Pipeline/RenderPass.h>
 
 #include "../RenderContext.h"

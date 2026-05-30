@@ -6,30 +6,41 @@
 
 #include "Vertix.Engine/Content/ModelLoader.h"
 #include "Vertix/Exceptions/HResultException.h"
-#include "Vertix/Graphics/FrameCommandList.h"
 #include "Vertix/Graphics/GraphicsDevice.h"
-#include "Vertix/Graphics/SwapChain.h"
-#include "Vertix/Rendering/HlslShader.h"
+#include "Vertix/Graphics/Command/CommandList.h"
+#include "Vertix/Graphics/Command/CommandQueue.h"
+#include "Vertix/Graphics/Hlsl/D3DCompiler.h"
+#include "Vertix/Windowing/SwapChain.h"
+
+DemoMainWindow::DemoMainWindow(const Vertix::WindowOptions &options) : GameWindow(options) {
+    const auto windowSize = GetWindowSize();
+    viewport.Width        = static_cast<float>(windowSize.X);
+    viewport.Height       = static_cast<float>(windowSize.Y);
+    scissorRect.right     = static_cast<LONG>(windowSize.X);
+    scissorRect.bottom    = static_cast<LONG>(windowSize.Y);
+}
 
 void DemoMainWindow::OnInitialize() {
-    const auto &device = graphicsDevice->GetD3D12Device();
-    const auto windowSize = GetWindowSize();
+    const auto &device     = graphicsDevice->GetD3D12Device();
+    const auto  windowSize = GetWindowSize();
 
     {
-        commandList = frameCommandList->GetD3D12GraphicsCommandList();
-
-        Vertix::ResourceUploadHeap resourceUploadHeap{};
-        frameCommandList->BeginCommand(nullptr);
+        Vertix::ResourceUploadHeap resourceUploadHeap {};
+        commandList->BeginCommand(nullptr);
         {
             // release after command list executed
-            Vertix::Engine::ModelLoader::TryLoadFromFile([&](const auto* context) -> void {
-                cubeModel = *context->Model;
-                cubeModel.UploadToGPU(device, frameCommandList->GetD3D12GraphicsCommandList(), resourceUploadHeap);
-                delete context->Model;
-            }, "assets/models/block.fbx");
+            Vertix::Engine::ModelLoader::TryLoadFromFile(
+                [&](const auto* context) -> void {
+                    cubeModel = *context->Model;
+                    cubeModel.UploadToGPU(device, commandList->GetD3D12GraphicsCommandList(), resourceUploadHeap);
+                    delete context->Model;
+                },
+                "assets/models/block.fbx"
+            );
         }
-        frameCommandList->EndCommand();
-        frameCommandList->WaitForCommand();
+        commandList->EndCommand();
+        commandQueue->ExecuteCommandLists(commandList.get());
+        commandQueue->WaitAllCommands();
     }
 
     {
@@ -45,21 +56,25 @@ void DemoMainWindow::OnInitialize() {
             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
         );
 
-        ComPtr<ID3DBlob> signature;
-        ComPtr<ID3DBlob> error;
+        Microsoft::WRL::ComPtr<ID3DBlob> signature;
+        Microsoft::WRL::ComPtr<ID3DBlob> error;
 
-        ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(device->CreateRootSignature(0,signature->GetBufferPointer(),signature->GetBufferSize(),IID_PPV_ARGS(&rootSignature)));
+        Vertix::ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+        Vertix::ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),IID_PPV_ARGS(&rootSignature)));
     }
 
     {
-        depthStencilTexture = Vertix::RenderTexture::Tex2D(device.Get(), Vertix::RenderResourceUsage::DepthWrite,
+        depthStencilTexture = Vertix::RenderTexture::Tex2D(
+            device,
+            Vertix::RenderResourceUsage::DepthWrite,
             CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, windowSize.X, windowSize.Y),
-            D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_D24_UNORM_S8_UINT, .DepthStencil = { .Depth = 1.0 } });
+            D3D12_CLEAR_VALUE { .Format = DXGI_FORMAT_D24_UNORM_S8_UINT, .DepthStencil = { .Depth = 1.0 } }
+        );
 
         uint32_t heapsCapacity[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] = { 1, 1, 2, 1 };
-        descriptorHeapSet = std::make_unique<Vertix::DescriptorHeapSet>(device.Get(), heapsCapacity);
-        depthStencilView = descriptorHeapSet->CreateDSV(depthStencilTexture->GetResource());
+
+        descriptorHeapSet = std::make_unique<Vertix::DescriptorHeapSet>(device, heapsCapacity);
+        depthStencilView  = descriptorHeapSet->CreateDSV(depthStencilTexture->GetResource());
 
         for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
             renderTargetViews[i] = descriptorHeapSet->CreateRTV(swapChain->GetBuffer(i)->GetResource());
@@ -67,11 +82,8 @@ void DemoMainWindow::OnInitialize() {
     }
 
     {
-        Vertix::HlslShader vertexShader{L"assets/shaders/Simple3dShader.hlsl"};
-        Vertix::HlslShader pixelShader{L"assets/shaders/Simple3dShader.hlsl"};
-
-        vertexShader.Compile("VSMain", "vs_5_0");
-        pixelShader.Compile("PSMain", "ps_5_0");
+        const auto vsShader = Vertix::D3DCompiler::Compile(L"assets/shaders/Simple3dShader.hlsl", "VSMain", "vs_5_0");
+        const auto psShader = Vertix::D3DCompiler::Compile(L"assets/shaders/Simple3dShader.hlsl", "PSMain", "ps_5_0");
 
         D3D12_INPUT_ELEMENT_DESC inputElementDesc[] =
         {
@@ -80,30 +92,30 @@ void DemoMainWindow::OnInitialize() {
         };
 
         // describe and create the graphics pipeline state object (PSO).
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.InputLayout = { inputElementDesc, _countof(inputElementDesc) };
-        psoDesc.pRootSignature = rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.GetShaderBlob());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.GetShaderBlob());
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC2(D3D12_DEFAULT);
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc {};
+        psoDesc.InputLayout           = { inputElementDesc, _countof(inputElementDesc) };
+        psoDesc.pRootSignature        = rootSignature.Get();
+        psoDesc.VS                    = CD3DX12_SHADER_BYTECODE(vsShader.Get());
+        psoDesc.PS                    = CD3DX12_SHADER_BYTECODE(psShader.Get());
+        psoDesc.RasterizerState       = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.BlendState            = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState     = CD3DX12_DEPTH_STENCIL_DESC2(D3D12_DEFAULT);
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.SampleDesc.Count = 1;
-        psoDesc.SampleMask = UINT_MAX;
-        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
+        psoDesc.RTVFormats[0]         = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DSVFormat             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        psoDesc.NumRenderTargets      = 1;
+        psoDesc.SampleDesc.Count      = 1;
+        psoDesc.SampleMask            = UINT_MAX;
+        Vertix::ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
 
     {
         perspectiveCamera.SetAspect(static_cast<float>(windowSize.X) / static_cast<float>(windowSize.Y));
-        perspectiveCamera.Move({-5,0,0});
+        perspectiveCamera.Move({ -5, 0, 0 });
         perspectiveCamera.GetProjectionMatrix(projectionMatrix);
         perspectiveCamera.GetViewMatrix(viewMatrix);
 
-        constantBuffer = Vertix::ConstantBuffer<RootConstants>::Create(graphicsDevice);
+        constantBuffer = Vertix::ConstantBuffer<RootConstants>::Create(device);
         FillConstantBuffer();
     }
 }
@@ -132,8 +144,8 @@ void DemoMainWindow::OnUpdate(const double deltaTime) {
         }
 
         if (enableRotating) {
-            const Vertix::Vector2D<float> mouseDeltaOffset = -mouseDevice.GetDeltaOffset().Cast<float>();
-            const DirectX::SimpleMath::Vector3 rotationOffset {mouseDeltaOffset.Y, mouseDeltaOffset.X, 0.0f};
+            const Vertix::Vector2D<float>      mouseDeltaOffset = -mouseDevice.GetDeltaOffset().Cast<float>();
+            const DirectX::SimpleMath::Vector3 rotationOffset { mouseDeltaOffset.Y, mouseDeltaOffset.X, 0.0f };
             perspectiveCamera.Rotate(rotationOffset * 0.002f);
             SetCursorCenterWindow();
         }
@@ -154,37 +166,40 @@ void DemoMainWindow::OnRender(const double deltaTime) {
     FillConstantBuffer();
     constexpr float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 
-    const auto commandListPtr = commandList.Get();
+    const auto  cmdList      = commandList->GetD3D12GraphicsCommandList();
     const auto &renderTarget = renderTargetViews[swapChain->GetCurrentFrameIndex()];
 
-    swapChain->GetCurrentBuffer()->Transition(commandListPtr, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    swapChain->GetCurrentBuffer()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     {
-        commandList->RSSetViewports(1, &viewport);
-        commandList->RSSetScissorRects(1, &scissorRect);
-        commandList->SetGraphicsRootSignature(rootSignature.Get());
-        commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
-        renderTarget.SetRenderTarget(commandListPtr, &depthStencilView);
-        renderTarget.Clear(commandListPtr, clearColor);
-        depthStencilView.ClearDepth(commandListPtr);
-        commandList->SetPipelineState(pipelineState.Get());
-        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        cubeModel.Draw(commandList);
+        cmdList->RSSetViewports(1, &viewport);
+        cmdList->RSSetScissorRects(1, &scissorRect);
+        cmdList->SetGraphicsRootSignature(rootSignature.Get());
+        cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
+        renderTarget.SetRenderTarget(cmdList, &depthStencilView);
+        renderTarget.Clear(cmdList, clearColor);
+        depthStencilView.ClearDepth(cmdList);
+        cmdList->SetPipelineState(pipelineState.Get());
+        cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        cubeModel.Draw(cmdList);
     }
-    swapChain->GetCurrentBuffer()->Transition(commandListPtr, D3D12_RESOURCE_STATE_PRESENT);
+    swapChain->GetCurrentBuffer()->Transition(cmdList, D3D12_RESOURCE_STATE_PRESENT);
 }
 
 void DemoMainWindow::OnResized(const Vertix::Vector2D<UINT> &size) {
-    const auto d3d12Device = graphicsDevice->GetD3D12Device().Get();
+    viewport.Width     = static_cast<float>(size.X);
+    viewport.Height    = static_cast<float>(size.Y);
+    scissorRect.right  = static_cast<LONG>(size.X);
+    scissorRect.bottom = static_cast<LONG>(size.Y);
 
-    GetD3D12ViewportRectSize(viewport, scissorRect);
-    frameCommandList->WaitForCommand();
+    commandQueue->WaitAllCommands();
 
-    depthStencilTexture->Resize(d3d12Device, size);
-    depthStencilView.CreateDSV(d3d12Device, depthStencilTexture->GetResource());
+    const auto device = graphicsDevice->GetD3D12Device();
+    depthStencilTexture->Resize(device, size);
+    depthStencilView.CreateDSV(device, depthStencilTexture->GetResource());
 
     swapChain->Resize(size);
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
-        renderTargetViews[i].CreateRTV(d3d12Device, swapChain->GetBuffer(i)->GetResource());
+        renderTargetViews[i].CreateRTV(device, swapChain->GetBuffer(i)->GetResource());
     }
 
     perspectiveCamera.SetAspect(static_cast<float>(size.X) / static_cast<float>(size.Y));
@@ -199,7 +214,7 @@ void DemoMainWindow::OnFocusLost() {
 }
 
 void DemoMainWindow::FillConstantBuffer() const {
-    RootConstants constants = {};
+    RootConstants constants       = {};
     constants.WorldViewProjection = worldMatrix * viewMatrix * projectionMatrix;
     worldMatrix.Invert(constants.WorldInverseTranspose);
     constants.WorldInverseTranspose.Transpose(constants.WorldInverseTranspose);

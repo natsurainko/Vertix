@@ -255,7 +255,7 @@ void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatche
         ThrowIfFailed(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
         {
             ResourceUploadHeap resourceUploadHeap{};
-            GraphicsCommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
+            CommandList copyCommandList(device, copyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
             copyCommandList.BeginCommand(nullptr);
             {
                 for (const auto &[handle, filePath, flags] : requests) {
@@ -284,7 +284,7 @@ void Vertix::Engine::TextureAsyncLoader::ExecuteAsync(DispatcherQueue* dispatche
         if (genMipmaps && computeQueue) {
             ResourceUploadHeap resourceUploadHeap{};
             const TextureMipmapGenerator textureMipmapGenerator { graphicsDevice };
-            GraphicsCommandList computeCommandList(device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+            CommandList computeCommandList(device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
             computeCommandList.BeginCommand(nullptr);
             {
                 for (const auto &[_, texture] : textureLoadingContexts) {

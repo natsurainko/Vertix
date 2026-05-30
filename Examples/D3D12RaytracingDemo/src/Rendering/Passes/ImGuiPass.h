@@ -8,8 +8,8 @@
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <imgui/backends/imgui_impl_win32.h>
-#include <Vertix/Graphics/DescriptorHeap.h>
-#include <Vertix/Graphics/DescriptorView.h>
+#include <../../../../../Vertix/include/Vertix/Graphics/Descriptor/DescriptorHeap.h>
+#include <../../../../../Vertix/include/Vertix/Graphics/Descriptor/DescriptorView.h>
 #include <Vertix/Rendering/RenderResourceUsage.h>
 #include <Vertix/Rendering/Pipeline/RenderPass.h>
 #include <Vertix/Windowing/GameWindow.h>

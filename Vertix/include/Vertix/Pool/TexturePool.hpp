@@ -2,12 +2,11 @@
 // Created by Natsurainko on 2026/3/17.
 //
 
-#ifndef VERTIX_TEXTUREPOOL_HPP
-#define VERTIX_TEXTUREPOOL_HPP
+#pragma once
 
 #include <d3d12/d3dx12_root_signature.h>
 
-#include "Vertix/Mixin/IDescriptorAllocator.h"
+#include "../Graphics/Descriptor/IDescriptorAllocator.h"
 #include "Vertix/Pool/ResourcePool.hpp"
 #include "Vertix/Primitive/Texture.h"
 
@@ -15,8 +14,8 @@ namespace Vertix {
     class TexturePool : public ResourcePool<Texture, TextureHandle> {
     public:
         explicit TexturePool(std::unique_ptr<IDescriptorAllocator> inAllocator) {
-            startSlot  = inAllocator->GetStartSlot();
-            capacity   = inAllocator->GetTotalCount();
+            startSlot = inAllocator->GetStartSlot();
+            capacity  = inAllocator->GetTotalCount();
             assert(inAllocator->GetFreeCount() == capacity && "Allocator must be completely empty.");
 
             allocator  = std::move(inAllocator);
@@ -28,14 +27,14 @@ namespace Vertix {
             }
 
             slots          = std::make_unique<std::unique_ptr<Texture>[]>(capacity);
-            readyCallbacks = std::make_unique<std::vector<std::function<void(const TextureHandle&)>>[]>(capacity);
+            readyCallbacks = std::make_unique<std::vector<std::function<void(const TextureHandle &)>>[]>(capacity);
         }
 
         explicit TexturePool(
             std::unique_ptr<IDescriptorAllocator> allocator,
-            const uint32_t capacity)
-        : ResourcePool(capacity), allocator(std::move(allocator))
-        {
+            const uint32_t                        capacity)
+        : ResourcePool(capacity),
+          allocator(std::move(allocator)) {
             assert(allocator->GetFreeCount() == allocator->GetTotalCount() && "Allocator must be completely empty.");
             assert(allocator->GetTotalCount() >= capacity && "Allocator capacity is smaller than pool capacity.");
             startSlot = allocator->GetStartSlot();
@@ -68,9 +67,8 @@ namespace Vertix {
 
         [[nodiscard]]
         TextureHandle AllocateNamed(
-            const std::wstring &name,
-            std::unique_ptr<Texture> resource = nullptr) noexcept
-        {
+            const std::wstring &     name,
+            std::unique_ptr<Texture> resource = nullptr) noexcept {
             const TextureHandle handle = Allocate(std::move(resource));
             NameResource(handle, name);
             return handle;
@@ -82,7 +80,7 @@ namespace Vertix {
         }
 
         void NameResource(const TextureHandle &handle, const std::wstring &name) noexcept {
-            namedResources[handle] = name;
+            namedResources[handle]     = name;
             namedResourceHandles[name] = handle;
         }
 
@@ -108,19 +106,17 @@ namespace Vertix {
         }
 
     protected:
-        uint32_t HandleToIndex(const TextureHandle& handle) const noexcept override {
+        uint32_t HandleToIndex(const TextureHandle &handle) const noexcept override {
             return handle.slot - slotOffset;
         }
 
     private:
         std::unique_ptr<IDescriptorAllocator> allocator;
-        uint32_t startSlot;
-        uint32_t slotOffset;
-        TextureHandle nullHandle;
+        uint32_t                              startSlot;
+        uint32_t                              slotOffset;
+        TextureHandle                         nullHandle;
 
-        std::unordered_map<TextureHandle, std::wstring> namedResources{};
-        std::unordered_map<std::wstring, TextureHandle> namedResourceHandles{};
+        std::unordered_map<TextureHandle, std::wstring> namedResources {};
+        std::unordered_map<std::wstring, TextureHandle> namedResourceHandles {};
     };
 }
-
-#endif //VERTIX_TEXTUREPOOL_HPP

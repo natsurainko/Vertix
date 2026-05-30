@@ -28,7 +28,7 @@ protected:
     void OnResized(const Vertix::Vector2D<unsigned> &size) override;
     void OnFocusLost() override;
 
-    LRESULT BeforeWindowProc(const HWND hWnd, const UINT msg, const WPARAM wParam, const LPARAM lParam) override {
+    LRESULT BeforeWndProc(const HWND hWnd, const UINT msg, const WPARAM wParam, const LPARAM lParam) override {
         return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
     }
 

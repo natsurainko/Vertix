@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2026/5/19.
 //
 
-#ifndef VERTIX_RENDERRESOURCEUSAGE_H
-#define VERTIX_RENDERRESOURCEUSAGE_H
+#pragma once
 
 #include <cassert>
 #include <cstdint>
@@ -14,37 +13,37 @@ namespace Vertix {
     enum class RenderResourceUsage : uint32_t {
         None = 0,
 
-        PixelShaderResource       = 1 << 0,   // → PIXEL_SHADER_RESOURCE
-        NonPixelShaderResource    = 1 << 1,   // → NON_PIXEL_SHADER_RESOURCE (compute/vertex)
-        ConstantBufferRead        = 1 << 2,   // → VERTEX_AND_CONSTANT_BUFFER (CBV)
-        VertexBufferRead          = 1 << 3,   // → VERTEX_AND_CONSTANT_BUFFER (VB)
-        IndexBufferRead           = 1 << 4,   // → INDEX_BUFFER
-        IndirectArgumentRead      = 1 << 5,   // → INDIRECT_ARGUMENT
-        CopySource                = 1 << 6,   // → COPY_SOURCE
-        ResolveSource             = 1 << 7,   // → RESOLVE_SOURCE
-        DepthRead                 = 1 << 8,   // → DEPTH_READ
+        PixelShaderResource = 1 << 0,    // → PIXEL_SHADER_RESOURCE
+        NonPixelShaderResource = 1 << 1, // → NON_PIXEL_SHADER_RESOURCE (compute/vertex)
+        ConstantBufferRead = 1 << 2,     // → VERTEX_AND_CONSTANT_BUFFER (CBV)
+        VertexBufferRead = 1 << 3,       // → VERTEX_AND_CONSTANT_BUFFER (VB)
+        IndexBufferRead = 1 << 4,        // → INDEX_BUFFER
+        IndirectArgumentRead = 1 << 5,   // → INDIRECT_ARGUMENT
+        CopySource = 1 << 6,             // → COPY_SOURCE
+        ResolveSource = 1 << 7,          // → RESOLVE_SOURCE
+        DepthRead = 1 << 8,              // → DEPTH_READ
 
-        RenderTarget              = 1 << 9,   // → RENDER_TARGET
-        DepthWrite                = 1 << 10,  // → DEPTH_WRITE
-        UnorderedAccess           = 1 << 11,  // → UNORDERED_ACCESS
-        CopyDest                  = 1 << 12,  // → COPY_DEST
-        ResolveDest               = 1 << 13,  // → RESOLVE_DEST
-        Present                   = 1 << 14,  // → PRESENT
-        StreamOut                 = 1 << 15,  // → STREAM_OUT
+        RenderTarget = 1 << 9,     // → RENDER_TARGET
+        DepthWrite = 1 << 10,      // → DEPTH_WRITE
+        UnorderedAccess = 1 << 11, // → UNORDERED_ACCESS
+        CopyDest = 1 << 12,        // → COPY_DEST
+        ResolveDest = 1 << 13,     // → RESOLVE_DEST
+        Present = 1 << 14,         // → PRESENT
+        StreamOut = 1 << 15,       // → STREAM_OUT
 
-        AccelerationStructure     = 1 << 16,  // → RAYTRACING_ACCELERATION_STRUCTURE
-        ShadingRateSource         = 1 << 17,  // → SHADING_RATE_SOURCE
+        AccelerationStructure = 1 << 16, // → RAYTRACING_ACCELERATION_STRUCTURE
+        ShadingRateSource = 1 << 17,     // → SHADING_RATE_SOURCE
 
-        UploadHeap                = 1 << 18,
-        ReadbackHeap              = 1 << 19,
+        UploadHeap = 1 << 18,
+        ReadbackHeap = 1 << 19,
 
-        AllShaderResource  = PixelShaderResource | NonPixelShaderResource,  // → ALL_SHADER_RESOURCE
-        VertexConstantRead = VertexBufferRead | ConstantBufferRead,         // → VERTEX_AND_CONSTANT_BUFFER
-        GenericRead        = AllShaderResource | VertexBufferRead | ConstantBufferRead
-                           | IndexBufferRead | IndirectArgumentRead | CopySource,
+        AllShaderResource = PixelShaderResource | NonPixelShaderResource, // → ALL_SHADER_RESOURCE
+        VertexConstantRead = VertexBufferRead | ConstantBufferRead,       // → VERTEX_AND_CONSTANT_BUFFER
+        GenericRead = AllShaderResource | VertexBufferRead | ConstantBufferRead
+        | IndexBufferRead | IndirectArgumentRead | CopySource,
 
-        ConstantBuffer     = GenericRead | UploadHeap,
-        StructuredBuffer   = GenericRead,
+        ConstantBuffer = GenericRead | UploadHeap,
+        StructuredBuffer = GenericRead,
         RWStructuredBuffer = UnorderedAccess,
     };
 
@@ -53,16 +52,16 @@ namespace Vertix {
     }
 
     constexpr RenderResourceUsage operator |(RenderResourceUsage a, RenderResourceUsage b) {
-        return static_cast<RenderResourceUsage>(static_cast<uint32_t>(a) |static_cast<uint32_t>(b));
+        return static_cast<RenderResourceUsage>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
     }
 
     inline D3D12_RESOURCE_STATES DeriveState(const RenderResourceUsage usage) {
         if ((usage & RenderResourceUsage::UploadHeap) != RenderResourceUsage::None) {
             constexpr RenderResourceUsage kGpuWriteFlags =
-                RenderResourceUsage::UnorderedAccess  |
-                RenderResourceUsage::RenderTarget     |
-                RenderResourceUsage::DepthWrite       |
-                RenderResourceUsage::AccelerationStructure;
+                    RenderResourceUsage::UnorderedAccess |
+                    RenderResourceUsage::RenderTarget |
+                    RenderResourceUsage::DepthWrite |
+                    RenderResourceUsage::AccelerationStructure;
 
             assert((usage & kGpuWriteFlags) == RenderResourceUsage::None && "GPU-write usage flags are incompatible with UploadHeap");
             return D3D12_RESOURCE_STATE_GENERIC_READ;
@@ -147,57 +146,48 @@ namespace Vertix {
         return flags;
     }
 
-    namespace detail
-    {
+    namespace detail {
         inline constexpr RenderResourceUsage kReadUsageMask =
-            RenderResourceUsage::PixelShaderResource   |
-            RenderResourceUsage::NonPixelShaderResource|
-            RenderResourceUsage::ConstantBufferRead    |
-            RenderResourceUsage::VertexBufferRead      |
-            RenderResourceUsage::IndexBufferRead       |
-            RenderResourceUsage::IndirectArgumentRead  |
-            RenderResourceUsage::CopySource            |
-            RenderResourceUsage::ResolveSource         |
-            RenderResourceUsage::DepthRead             |
-            RenderResourceUsage::AccelerationStructure |
-            RenderResourceUsage::ShadingRateSource     |
-            RenderResourceUsage::Present               |
-            RenderResourceUsage::UploadHeap;
+                RenderResourceUsage::PixelShaderResource |
+                RenderResourceUsage::NonPixelShaderResource |
+                RenderResourceUsage::ConstantBufferRead |
+                RenderResourceUsage::VertexBufferRead |
+                RenderResourceUsage::IndexBufferRead |
+                RenderResourceUsage::IndirectArgumentRead |
+                RenderResourceUsage::CopySource |
+                RenderResourceUsage::ResolveSource |
+                RenderResourceUsage::DepthRead |
+                RenderResourceUsage::AccelerationStructure |
+                RenderResourceUsage::ShadingRateSource |
+                RenderResourceUsage::Present |
+                RenderResourceUsage::UploadHeap;
 
         inline constexpr RenderResourceUsage kWriteUsageMask =
-            RenderResourceUsage::RenderTarget    |
-            RenderResourceUsage::DepthWrite      |
-            RenderResourceUsage::UnorderedAccess |
-            RenderResourceUsage::CopyDest        |
-            RenderResourceUsage::ResolveDest     |
-            RenderResourceUsage::StreamOut       |
-            RenderResourceUsage::ReadbackHeap;
+                RenderResourceUsage::RenderTarget |
+                RenderResourceUsage::DepthWrite |
+                RenderResourceUsage::UnorderedAccess |
+                RenderResourceUsage::CopyDest |
+                RenderResourceUsage::ResolveDest |
+                RenderResourceUsage::StreamOut |
+                RenderResourceUsage::ReadbackHeap;
 
-        static_assert((kReadUsageMask & kWriteUsageMask) == RenderResourceUsage::None,
-            "Read and Write usage masks must not overlap");
+        static_assert(
+            (kReadUsageMask & kWriteUsageMask) == RenderResourceUsage::None,
+            "Read and Write usage masks must not overlap"
+        );
     }
 
     template <RenderResourceUsage Usage>
-    concept RenderResourceReadUsage =
-        Usage != RenderResourceUsage::None &&
-        (Usage & detail::kReadUsageMask) == Usage;
+    concept RenderResourceReadUsage = Usage != RenderResourceUsage::None && (Usage & detail::kReadUsageMask) == Usage;
 
     template <RenderResourceUsage Usage>
-    concept RenderResourceWriteUsage =
-        Usage != RenderResourceUsage::None &&
-        (Usage & detail::kWriteUsageMask) == Usage;
+    concept RenderResourceWriteUsage = Usage != RenderResourceUsage::None && (Usage & detail::kWriteUsageMask) == Usage;
 
-    [[nodiscard]]
-    constexpr bool IsReadUsage(RenderResourceUsage usage) noexcept {
-        return usage != RenderResourceUsage::None &&
-               (usage & detail::kReadUsageMask) == usage;
+    [[nodiscard]] constexpr bool IsReadUsage(const RenderResourceUsage usage) noexcept {
+        return usage != RenderResourceUsage::None && (usage & detail::kReadUsageMask) == usage;
     }
 
-    [[nodiscard]]
-    constexpr bool IsWriteUsage(RenderResourceUsage usage) noexcept {
-        return usage != RenderResourceUsage::None &&
-               (usage & detail::kWriteUsageMask) == usage;
+    [[nodiscard]] constexpr bool IsWriteUsage(const RenderResourceUsage usage) noexcept {
+        return usage != RenderResourceUsage::None && (usage & detail::kWriteUsageMask) == usage;
     }
 }
-
-#endif //VERTIX_RENDERRESOURCEUSAGE_H

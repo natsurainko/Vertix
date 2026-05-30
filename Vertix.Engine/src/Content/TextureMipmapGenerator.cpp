@@ -10,7 +10,7 @@
 #include <d3d12/d3dx12_root_signature.h>
 #include <Vertix/Exceptions/HResultException.h>
 #include <Vertix/Graphics/DescriptorHeap.h>
-#include <Vertix/Graphics/DescriptorHandle.h>
+#include <../../../Vertix/include/Vertix/Graphics/Descriptor/DescriptorHandle.h>
 #include <Vertix/Graphics/GraphicsDevice.h>
 #include <Vertix/Graphics/ResourceUploadHeap.hpp>
 #include <Vertix/Helpers/FormatsHelper.h>

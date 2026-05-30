@@ -9,7 +9,7 @@
 #include <string>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <Vertix/Dispatching/DispatcherQueue.hpp>
+#include <Vertix/Dispatching/DispatcherQueue.h>
 #include <Vertix/Graphics/GraphicsDevice.h>
 #include <Vertix/Pool/ModelPool.hpp>
 #include <Vertix/Primitive/Material.h>

@@ -2,57 +2,54 @@
 // Created by Natsurainko on 2026/1/10.
 //
 
-#ifndef VERTIX_MESH_H
-#define VERTIX_MESH_H
+#pragma once
 
 #include <string>
 #include <vector>
 #include <d3d12/d3d12.h>
-#include <wrl/client.h>
 
-#include "Vertix/VERTIX_EXPORT.h"
-#include "Vertix/Graphics/Buffers/IndexBuffer.h"
-#include "Vertix/Graphics/Buffers/VertexBuffer.h"
-#include "Vertix/Graphics/Raytracing/BottomLevelAccelerationStructure.h"
+#include "Vertix/Graphics/ResourceUploadHeap.hpp"
 #include "Vertix/Primitive/Material.h"
 #include "Vertix/Primitive/Vertex.h"
 
 namespace Vertix {
-    class ResourceUploadHeap;
     class GraphicsDevice;
+
+    class VertexBuffer;
+    class IndexBuffer;
+    class AccelerationStructure;
+
     class Mesh {
     public:
         std::string Name;
 
-        std::vector<Vertex> Vertices;
-        std::vector<UINT32> Indices;
+        std::vector<Vertex>   Vertices;
+        std::vector<uint32_t> Indices;
 
-        DirectX::BoundingBox BoundingBox;
+        DirectX::BoundingBox    BoundingBox;
         DirectX::BoundingSphere BoundingSphere;
 
-        VertexBuffer* VertexBuffer = nullptr;
-        IndexBuffer* IndexBuffer = nullptr;
-        BottomLevelAccelerationStructure* BLAS = nullptr;
+        std::unique_ptr<VertexBuffer>          VertexBuffer;
+        std::unique_ptr<IndexBuffer>           IndexBuffer;
+        std::unique_ptr<AccelerationStructure> AccelerationStructure;
 
         MaterialHandle Material;
 
-        VERTIX_API ~Mesh();
-
         VERTIX_API void UploadToGPU(
-            const Microsoft::WRL::ComPtr<ID3D12Device> &device,
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
-            ResourceUploadHeap &resourceUploadHeap);
+            ID3D12Device*              device,
+            ID3D12GraphicsCommandList* commandList,
+            ResourceUploadHeap &       resourceUploadHeap);
 
-        VERTIX_API void UploadBLASToGPU(
-            const Microsoft::WRL::ComPtr<ID3D12Device5> &device,
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> &commandList);
+#if VERTIX_D3D12_DEVICE_VERSION >= 5 && VERTIX_D3D12_COMMAND_LIST_VERSION >= 5
+        VERTIX_API void UploadAccelerationStructureToGPU(
+            D3D12Interface::Device*      device,
+            D3D12Interface::CommandList* commandList);
+#endif
 
-        VERTIX_API void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList) const;
+        VERTIX_API void Draw(ID3D12GraphicsCommandList* commandList) const;
 
         VERTIX_API void DrawInstanced(
-            const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> &commandList,
-            UINT instanceCount) const;
+            ID3D12GraphicsCommandList* commandList,
+            uint32_t                   instanceCount) const;
     };
 }
-
-#endif //VERTIX_MESH_H

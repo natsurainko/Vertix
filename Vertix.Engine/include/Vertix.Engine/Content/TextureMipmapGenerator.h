@@ -7,7 +7,7 @@
 
 #include <d3d12/d3d12.h>
 #include <DirectXTK12/SimpleMath.h>
-#include <Vertix/Graphics/GraphicsCommandList.h>
+#include <Vertix/Graphics/Command/GraphicsCommandList.h>
 #include <Vertix/Graphics/ResourceUploadHeap.hpp>
 #include <wrl/client.h>
 

@@ -6,7 +6,7 @@
 
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <imgui/backends/imgui_impl_win32.h>
-#include <Vertix/Graphics/SwapChain.h>
+#include <../../../../../Vertix/include/Vertix/Windowing/SwapChain.h>
 
 ImGuiPass::~ImGuiPass() {
     if (ImGui::GetCurrentContext() == nullptr) return;

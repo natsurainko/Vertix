@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2026/1/10.
 //
 
-#ifndef VERTIX_VERTEX_H
-#define VERTIX_VERTEX_H
+#pragma once
 
 #include <DirectXTK12/SimpleMath.h>
 
@@ -16,5 +15,3 @@ namespace Vertix {
         DirectX::SimpleMath::Vector3 Bitangent;
     };
 }
-
-#endif //VERTIX_VERTEX_H

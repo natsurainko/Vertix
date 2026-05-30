@@ -7,7 +7,7 @@
 
 #include <string>
 #include <DirectXTK12/WICTextureLoader.h>
-#include <Vertix/Dispatching/DispatcherQueue.hpp>
+#include <Vertix/Dispatching/DispatcherQueue.h>
 #include <Vertix/Graphics/GraphicsDevice.h>
 #include <Vertix/Graphics/ResourceUploadHeap.hpp>
 #include <Vertix/Pool/TexturePool.hpp>

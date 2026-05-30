@@ -5,24 +5,21 @@
 #include <crtdbg.h>
 
 #include "DemoMainWindow.h"
-#include "Vertix/Hosting/GameApplicationBuilder.hpp"
+#include "Vertix/Hosting/GameApplicationBuilder.h"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, const int nShowCmd) {
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #ifndef NDEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    constexpr Vertix::GraphicsDeviceOptions graphicsDeviceOptions {
-        .enableDebugLayer = true
+    constexpr Vertix::WindowOptions windowOptions = {
+        .windowSize = { 1280, 720 },
+        .windowTitle = L"D3D12GameDemo.MainWindow"
     };
 
-    Vertix::WindowOptions windowOptions{};
-    windowOptions.windowTitle = L"D3D12GameDemo.MainWindow";
-    windowOptions.windowSize = { 1280, 720 };
-
-    return Vertix::GameApplicationBuilder(hInstance, lpCmdLine, nShowCmd)
-        .ConfigureGraphicsDevice(graphicsDeviceOptions)
+    const auto application = Vertix::GameApplicationBuilder()
         .ConfigureWindow<DemoMainWindow>(windowOptions)
-        .Build()
-        .Run();
+        .Build();
+
+    return application->Run();
 }

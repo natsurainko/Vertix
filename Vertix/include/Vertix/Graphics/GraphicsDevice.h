@@ -2,71 +2,72 @@
 // Created by Natsurainko on 2025/12/23.
 //
 
-#ifndef VERTIX_GRAPHICSDEVICE_H
-#define VERTIX_GRAPHICSDEVICE_H
+#pragma once
 
-#include <dxgi1_6.h>
-#include <wrl.h>
-#include <d3d12/d3d12.h>
+#include <d3d12/d3dx12_check_feature_support.h>
 
-#include "Vertix/VERTIX_EXPORT.h"
+#include "Vertix/D3D12Interface.h"
 
 namespace Vertix {
     struct GraphicsDeviceOptions {
-        bool useSoftware = false;
-        bool enableDebugLayer = false;
+        bool              forceSoftwareAdapter = false;
+        D3D_FEATURE_LEVEL minimumFeatureLevel  = D3D_FEATURE_LEVEL_12_0;
+
+        constexpr GraphicsDeviceOptions() = default;
+
+        consteval GraphicsDeviceOptions(
+            const bool              forceSoftwareAdapter,
+            const D3D_FEATURE_LEVEL level) : forceSoftwareAdapter(forceSoftwareAdapter),
+                                             minimumFeatureLevel(level) {
+            if (level < D3D_FEATURE_LEVEL_12_0)
+                throw std::exception("minimumFeatureLevel cannot be below D3D_FEATURE_LEVEL_12_0");
+        }
     };
 
-    class GameWindow;
+    class CommandAllocator;
+    class CommandList;
+    class CommandQueue;
     class SwapChain;
+
     class GraphicsDevice {
+        Microsoft::WRL::ComPtr<D3D12Interface::Device>      device;
+        Microsoft::WRL::ComPtr<D3D12Interface::DXGIFactory> dxgiFactory;
+
+#if defined(_DEBUG) && defined(VERTIX_D3D12_ENABLE_DEBUG_LAYER)
+        Microsoft::WRL::ComPtr<D3D12Interface::Debug>       debug;
+        Microsoft::WRL::ComPtr<D3D12Interface::DXGIDebug>   dxgiDebug;
+        Microsoft::WRL::ComPtr<D3D12Interface::DebugDevice> debugDevice;
+#endif
+
+        GraphicsDeviceOptions initialOptions;
+        CD3DX12FeatureSupport featureSupport = {};
+
     public:
-        VERTIX_API explicit GraphicsDevice(
-            bool useSoftware = false,
-            bool enableDebugLayer = false);
+        VERTIX_API explicit GraphicsDevice(const GraphicsDeviceOptions &options);
+        VERTIX_API          ~GraphicsDevice();
 
-        VERTIX_API ~GraphicsDevice();
+        [[nodiscard]] VERTIX_API std::unique_ptr<CommandQueue>     CreateCommandQueue(const D3D12_COMMAND_QUEUE_DESC &queueDesc) const;
+        [[nodiscard]] VERTIX_API std::unique_ptr<CommandAllocator> CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE type) const;
+        [[nodiscard]] VERTIX_API std::unique_ptr<CommandList>      CreateCommandList(D3D12_COMMAND_LIST_TYPE type) const;
 
-        VERTIX_API void CreateCommandQueue(Microsoft::WRL::ComPtr<ID3D12CommandQueue> &commandQueue, const D3D12_COMMAND_QUEUE_DESC &queueDesc) const;
-        VERTIX_API void WaitForGPU() const;
+        [[nodiscard]] VERTIX_API std::unique_ptr<SwapChain> CreateSwapChain(
+            const CommandQueue*          commandQueue,
+            HWND                         hWnd,
+            const DXGI_SWAP_CHAIN_DESC1 &swapChainDesc) const;
 
-        [[nodiscard]]
-        const Microsoft::WRL::ComPtr<IDXGIFactory6>& GetDxgiFactory() const noexcept {
-            return dxgiFactory;
-        }
+        [[nodiscard]] D3D12Interface::Device*      GetD3D12Device() const noexcept { return device.Get(); }
+        [[nodiscard]] D3D12Interface::DXGIFactory* GetDxgiFactory() const noexcept { return dxgiFactory.Get(); }
 
-        [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12Device10>& GetD3D12Device() const noexcept {
-            return d3d12Device;
-        }
-
-        [[nodiscard]]
-        const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetDefaultD3D12CommandQueue() const noexcept {
-            return d3d12CommandQueue;
-        }
-
-        [[nodiscard]]
-        bool IsTypedUAVLoadAdditionalFormatsSupported() const noexcept {
-            return d3d12FeatureOptions.TypedUAVLoadAdditionalFormats;
-        }
-
-        [[nodiscard]]
-        bool IsStandardSwizzle64KBSupported() const noexcept {
-            return d3d12FeatureOptions.StandardSwizzle64KBSupported;
-        }
+        [[nodiscard]] const CD3DX12FeatureSupport& GetFeatureSupport() const noexcept { return featureSupport; }
+        [[nodiscard]] const GraphicsDeviceOptions& GetInitialOptions() const noexcept { return initialOptions; }
 
     private:
-        bool useSoftwareRendering = false;
+        HRESULT EnumerateAdapters(Microsoft::WRL::ComPtr<D3D12Interface::DXGIAdapter> &adaptor) const;
+        HRESULT CreateDevice(const Microsoft::WRL::ComPtr<D3D12Interface::DXGIAdapter> &adaptor);
 
-        Microsoft::WRL::ComPtr<ID3D12Device10> d3d12Device;
-        Microsoft::WRL::ComPtr<ID3D12Debug5> d3dDebug;
-        Microsoft::WRL::ComPtr<IDXGIFactory6> dxgiFactory;
-        Microsoft::WRL::ComPtr<ID3D12CommandQueue> d3d12CommandQueue;
-
-        D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12FeatureOptions{};
-
-        HRESULT CreateSuitableDevice();
+#if defined(_DEBUG) && defined(VERTIX_D3D12_ENABLE_DEBUG_LAYER)
+        void EnableDebugLayer(uint32_t &dxgiFactoryFlags);
+        void ReportLiveObjects();
+#endif
     };
 }
-
-#endif //VERTIX_GRAPHICSDEVICE_H

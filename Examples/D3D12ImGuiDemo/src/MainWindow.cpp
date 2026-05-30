@@ -7,8 +7,8 @@
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <imgui/backends/imgui_impl_win32.h>
 
-#include "Vertix/Graphics/FrameCommandList.h"
-#include "Vertix/Graphics/SwapChain.h"
+#include "../../../Vertix/include/Vertix/Graphics/Command/FrameCommandList.h"
+#include "../../../Vertix/include/Vertix/Windowing/SwapChain.h"
 
 void MainWindow::OnInitialize() {
     commandList = frameCommandList->GetD3D12GraphicsCommandList();
@@ -92,7 +92,7 @@ void MainWindow::OnDestroy() {
 void MainWindow::OnResized(const Vertix::Vector2D<unsigned> &size) {
     const auto d3d12Device = graphicsDevice->GetD3D12Device();
 
-    frameCommandList->WaitForCommand();
+    frameCommandList->WaitCurrentFrame();
     swapChain->Resize(size);
     for (UINT i = 0; i < swapChain->GetFrameCount(); ++i) {
         renderTargetViews[i].CreateRTV(d3d12Device.Get(), swapChain->GetBuffer(i)->GetResource());

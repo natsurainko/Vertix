@@ -83,7 +83,7 @@ void GeometryPass::Execute(ID3D12GraphicsCommandList5* commandList) {
 
         for (const auto &mesh : sceneObject->SceneModel->Meshes) {
             commandList->IASetVertexBuffers(0, 1, &mesh.VertexBuffer->d3d12VertexBufferView);
-            commandList->IASetIndexBuffer(&mesh.IndexBuffer->d3d12IndexBufferView);
+            commandList->IASetIndexBuffer(&mesh.IndexBuffer->bufferView);
             commandList->DrawIndexedInstanced(mesh.IndexBuffer->indexCount, 1, 0, 0, 0);
         }
     }

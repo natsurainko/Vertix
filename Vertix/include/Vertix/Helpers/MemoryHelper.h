@@ -2,14 +2,13 @@
 // Created by Natsurainko on 2026/5/24.
 //
 
-#ifndef VERTIX_MEMORYHELPER_H
-#define VERTIX_MEMORYHELPER_H
+#pragma once
 
 #include <debugapi.h>
 #include <string>
 
 namespace Vertix {
-    template<typename T>
+    template <typename T>
     void hexdump(const T* obj) {
         const auto* bytes = reinterpret_cast<const uint8_t*>(obj);
         std::string out;
@@ -26,5 +25,3 @@ namespace Vertix {
         OutputDebugStringA(out.c_str());
     }
 }
-
-#endif //VERTIX_MEMORYHELPER_H

@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2026/3/22.
 //
 
-#ifndef VERTIX_DYNAMICRESOURCEPOOL_H
-#define VERTIX_DYNAMICRESOURCEPOOL_H
+#pragma once
 
 #include <cassert>
 #include <functional>
@@ -11,14 +10,14 @@
 #include <set>
 
 namespace Vertix {
-    template<typename TResource, typename THandle>
+    template <typename TResource, typename THandle>
     class DynamicResourcePool {
     public:
-        DynamicResourcePool() noexcept = default;
+        DynamicResourcePool() noexcept          = default;
         virtual ~DynamicResourcePool() noexcept = default;
 
-        DynamicResourcePool(const DynamicResourcePool&) = delete;
-        DynamicResourcePool& operator=(const DynamicResourcePool&) = delete;
+        DynamicResourcePool(const DynamicResourcePool &)            = delete;
+        DynamicResourcePool& operator=(const DynamicResourcePool &) = delete;
 
         [[nodiscard]]
         virtual THandle Allocate(std::unique_ptr<TResource> resource = nullptr) {
@@ -26,7 +25,7 @@ namespace Vertix {
 
             if (!returnedHandles.empty()) {
                 auto iterator = returnedHandles.begin();
-                handle = *iterator;
+                handle        = *iterator;
                 returnedHandles.erase(iterator);
             } else {
                 ++allocatedMaxHandle.slot;
@@ -41,9 +40,8 @@ namespace Vertix {
         }
 
         virtual void Fulfill(
-            const THandle handle,
-            std::unique_ptr<TResource> resource)
-        {
+            const THandle              handle,
+            std::unique_ptr<TResource> resource) {
             assert(handle);
             assert(!slots.contains(handle) || !slots.at(handle) && "Already fulfilled");
             assert(resource);
@@ -70,7 +68,7 @@ namespace Vertix {
 
         void NotifyReady(const THandle handle) noexcept {
             auto &callbacks = readyCallbacks[handle];
-            for (auto& callback : callbacks) {
+            for (auto &callback : callbacks) {
                 if (callback) {
                     callback(handle);
                 }
@@ -99,7 +97,7 @@ namespace Vertix {
             return slots[handle].get();
         }
 
-        template<class T>
+        template <class T>
         T* GetAs(const THandle handle) noexcept {
             return static_cast<T*>(Get(handle));
         }
@@ -115,12 +113,10 @@ namespace Vertix {
         }
 
     protected:
-        std::unordered_map<THandle, std::unique_ptr<TResource>> slots;
-        std::unordered_map<THandle, std::vector<std::function<void(THandle)>>> readyCallbacks{};
+        std::unordered_map<THandle, std::unique_ptr<TResource>>                slots;
+        std::unordered_map<THandle, std::vector<std::function<void(THandle)>>> readyCallbacks {};
 
         std::set<THandle> returnedHandles;
-        THandle allocatedMaxHandle{};
+        THandle           allocatedMaxHandle {};
     };
 }
-
-#endif //VERTIX_DYNAMICRESOURCEPOOL_H

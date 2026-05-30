@@ -8,15 +8,15 @@
 #include <structures.h>
 #include <thread>
 
-#include "Vertix/Graphics/DescriptorHeap.h"
+#include "../../../../Vertix/include/Vertix/Graphics/Descriptor/DescriptorHeap.h"
 #include "Vertix/Graphics/Buffers/ConstantBufferPageArray.hpp"
 #include "Vertix/Graphics/Raytracing/TopLevelAccelerationStructure.h"
-#include "Vertix/Rendering/Buffers/ConstantBuffer.hpp"
+#include "Vertix/Rendering/Buffers/ConstantBuffer.h"
 #include "Vertix.Engine/Camera/PerspectiveCamera.h"
 #include "Vertix.Engine/Helpers/MathHelper.h"
 #include "Vertix.Engine/Helpers/VectorHelper.h"
 #include "Vertix.Engine/Scene/SceneObject3D.hpp"
-#include "Vertix/Graphics/FrameCommandList.h"
+#include "../../../../Vertix/include/Vertix/Graphics/Command/FrameCommandList.h"
 #include "Vertix/Math/Vector2D.hpp"
 #include "Vertix/Pool/ModelPool.hpp"
 
@@ -33,7 +33,7 @@ public:
         frameCommandList->BeginCommand(nullptr);
         fullScreenVertex = std::unique_ptr<Vertix::VertexBuffer>(Vertix::VertexBuffer::CreateFullScreenRect(graphicsDevice, frameCommandList, resourceUploadHeap));
         frameCommandList->EndCommand();
-        frameCommandList->WaitForCommand();
+        frameCommandList->WaitCurrentFrame();
 
         perspectiveCamera.SetFieldOfView(Vertix::Engine::DegreesToRadians(60));
         perspectiveCamera.Move({-2.5, 0.5, 0.0});
@@ -61,7 +61,7 @@ public:
             sceneObjects = sceneObjects,
             tlasOut      = &TLAS
         ]() -> void {
-            Vertix::GraphicsCommandList graphicsCommandList { d3d12Device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE };
+            Vertix::CommandList graphicsCommandList { d3d12Device, computeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE };
             const auto& commandList = graphicsCommandList.GetD3D12GraphicsCommandList();
             graphicsCommandList.BeginCommand(nullptr);
             {
@@ -72,7 +72,7 @@ public:
                     const auto world = sceneObject->GetWorldMatrix();
                     for (const auto &mesh : sceneObject->SceneModel->Meshes) {
                         D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
-                        instanceDesc.AccelerationStructure = mesh.BLAS->BLASResource->GetGPUVirtualAddress();
+                        instanceDesc.AccelerationStructure = mesh.AccelerationStructure->BLASResource->GetGPUVirtualAddress();
                         instanceDesc.InstanceID = instanceId++;
                         instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
                         instanceDesc.InstanceContributionToHitGroupIndex = 0;
