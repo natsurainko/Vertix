@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2026/1/28.
 //
 
-#ifndef VERTIX_SCENEOBJECT3D_H
-#define VERTIX_SCENEOBJECT3D_H
+#pragma once
 
 #include <Vertix/Primitive/Model.h>
 
@@ -27,5 +26,3 @@ namespace Vertix::Engine {
         const Model* SceneModel = nullptr;
     };
 }
-
-#endif //VERTIX_SCENEOBJECT3D_H

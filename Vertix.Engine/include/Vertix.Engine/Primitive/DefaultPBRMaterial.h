@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2026/4/10.
 //
 
-#ifndef VERTIX_DEFAULTPBRMATERIAL_H
-#define VERTIX_DEFAULTPBRMATERIAL_H
+#pragma once
 
 #include <functional>
 #include <assimp/material.h>
@@ -11,8 +10,6 @@
 #include <Vertix/Mixin/IFillConstants.h>
 #include <Vertix/Primitive/Material.h>
 #include <Vertix/Primitive/Texture.h>
-
-#include "Vertix.Engine/VERTIX_ENGINE_EXPORT.h"
 
 namespace Vertix::Engine {
     /// DefaultMaterialConstants is a shader constant structure designed for DefaultPBRMaterial.
@@ -64,7 +61,7 @@ namespace Vertix::Engine {
         float baseColorFactor[4] = { 1.f, 1.f, 1.f, 1.f };
 
         /// 0 -> OPAQUE ; 1 -> MASK ; 2 -> BLEND
-        uint32_t alphaMode   = 0;
+        uint32_t alphaMode = 0;
 
         /// When alphaMode is MASK, clipping will be performed based on alphaCutoff.
         float alphaCutoff = 0.5f;
@@ -72,7 +69,7 @@ namespace Vertix::Engine {
         /// This is a double-sided material and should disable culling.
         bool doubleSided = false;
 
-        void Fill(DefaultMaterialConstants& out) const override {
+        void Fill(DefaultMaterialConstants &out) const override {
             out.baseColorHandle         = baseColorTexture.slot;
             out.metallicRoughnessHandle = metallicRoughnessTexture.slot;
             out.normalHandle            = normalTexture.slot;
@@ -98,14 +95,12 @@ namespace Vertix::Engine {
             out.doubleSided = doubleSided;
         }
 
-        VERTIX_ENGINE_API void ReadPropertiesFromAssimp(const aiMaterial* material);
+        VERTIX_ENGINE_API void ReadPropertiesFromAssimp(const aiMaterial* material) noexcept;
 
         VERTIX_ENGINE_API void ReadTexturesFromAssimp(
-            const aiMaterial* material,
-            const std::function<void(aiString, aiTextureType, TextureHandle*)> &textureCallback);
+            const aiMaterial*                                                   material,
+            const std::function<void(aiString, aiTextureType, TextureHandle*)> &textureCallback) noexcept;
 
-        VERTIX_ENGINE_API static DirectX::WIC_LOADER_FLAGS GetWicLoaderFlags(aiTextureType aiTextureType);
+        VERTIX_ENGINE_API static DirectX::WIC_LOADER_FLAGS GetWicLoaderFlags(aiTextureType aiTextureType) noexcept;
     };
 }
-
-#endif //VERTIX_DEFAULTPBRMATERIAL_H

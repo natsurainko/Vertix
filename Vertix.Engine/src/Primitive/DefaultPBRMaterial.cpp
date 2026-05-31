@@ -9,7 +9,7 @@
 #include <assimp/material.h>
 #include <DirectXTK12/WICTextureLoader.h>
 
-void Vertix::Engine::DefaultPBRMaterial::ReadPropertiesFromAssimp(const aiMaterial* material) {
+void Vertix::Engine::DefaultPBRMaterial::ReadPropertiesFromAssimp(const aiMaterial* material) noexcept {
     material->Get(AI_MATKEY_BASE_COLOR, *reinterpret_cast<aiColor4D*>(this->baseColorFactor));
     material->Get(AI_MATKEY_METALLIC_FACTOR, this->metallicFactor);
     material->Get(AI_MATKEY_ROUGHNESS_FACTOR, this->roughnessFactor);
@@ -42,9 +42,8 @@ void Vertix::Engine::DefaultPBRMaterial::ReadPropertiesFromAssimp(const aiMateri
 }
 
 void Vertix::Engine::DefaultPBRMaterial::ReadTexturesFromAssimp(
-    const aiMaterial* material,
-    const std::function<void(aiString, aiTextureType, TextureHandle*)> &textureCallback)
-{
+    const aiMaterial*                                                   material,
+    const std::function<void(aiString, aiTextureType, TextureHandle*)> &textureCallback) noexcept {
     const std::map<aiTextureType, TextureHandle*> textureTypeToPtr = {
         { aiTextureType_BASE_COLOR, &this->baseColorTexture },
         { aiTextureType_DIFFUSE, &this->baseColorTexture },
@@ -61,13 +60,11 @@ void Vertix::Engine::DefaultPBRMaterial::ReadTexturesFromAssimp(
     }
 }
 
-DirectX::WIC_LOADER_FLAGS Vertix::Engine::DefaultPBRMaterial::GetWicLoaderFlags(const aiTextureType aiTextureType) {
+DirectX::WIC_LOADER_FLAGS Vertix::Engine::DefaultPBRMaterial::GetWicLoaderFlags(const aiTextureType aiTextureType) noexcept {
     switch (aiTextureType) {
         case aiTextureType_BASE_COLOR:
         case aiTextureType_DIFFUSE:
-        case aiTextureType_EMISSIVE:
-            return DirectX::WIC_LOADER_FORCE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
-        default:
-            return DirectX::WIC_LOADER_IGNORE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
+        case aiTextureType_EMISSIVE: return DirectX::WIC_LOADER_FORCE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
+        default: return DirectX::WIC_LOADER_IGNORE_SRGB | DirectX::WIC_LOADER_FORCE_RGBA32;
     }
 }

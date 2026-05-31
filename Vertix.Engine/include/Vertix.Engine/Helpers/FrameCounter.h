@@ -2,8 +2,7 @@
 // Created by Natsurainko on 2025/12/26.
 //
 
-#ifndef VERTIX_FRAMECOUNTER_H
-#define VERTIX_FRAMECOUNTER_H
+#pragma once
 
 #include <iostream>
 #include <ostream>
@@ -12,6 +11,9 @@
 
 namespace Vertix::Engine {
     class FrameCounter {
+        std::vector<double> deltaSamples;
+        int                 sampleCount = 0;
+
     public:
         void IncrementCounter(const double deltaTime) {
             deltaSamples.push_back(deltaTime);
@@ -20,7 +22,7 @@ namespace Vertix::Engine {
             if (sampleCount >= 1000) {
                 double sum = 0, minDelta = 1e9, maxDelta = 0;
                 for (double dt : deltaSamples) {
-                    sum += dt;
+                    sum      += dt;
                     minDelta = (std::min)(minDelta, dt);
                     maxDelta = (std::max)(maxDelta, dt);
                 }
@@ -38,11 +40,5 @@ namespace Vertix::Engine {
                 sampleCount = 0;
             }
         }
-
-    private:
-        std::vector<double> deltaSamples;
-        int sampleCount = 0;
     };
 }
-
-#endif //VERTIX_FRAMECOUNTER_H

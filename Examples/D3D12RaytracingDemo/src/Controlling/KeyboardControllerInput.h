@@ -7,7 +7,7 @@
 
 #include <DirectXTK12/SimpleMath.h>
 
-#include "Vertix.Engine/Controlling/IControllerInput.hpp"
+#include "Vertix.Engine/Controlling/IControllerInput.h"
 
 #ifndef USING_GAMEINPUT
 // Win32 Implementation

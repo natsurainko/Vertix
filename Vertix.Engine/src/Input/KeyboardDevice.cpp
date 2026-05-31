@@ -4,8 +4,6 @@
 
 #include "Vertix.Engine/Input/KeyboardDevice.h"
 
-#include <Vertix/Exceptions/HResultException.h>
-
 using namespace GameInput::v3;
 using Microsoft::WRL::ComPtr;
 
@@ -19,20 +17,22 @@ Vertix::Engine::KeyboardDevice::~KeyboardDevice() {
 }
 
 void Vertix::Engine::KeyboardDevice::InitializeDevice(
-    const ComPtr<IGameInput> &gameInput,
-    const ComPtr<IGameInputDevice> &gameInputDevice)
-{
+    IGameInput*                     gameInput,
+    const ComPtr<IGameInputDevice> &gameInputDevice) {
     const GameInputDeviceInfo* deviceInfo = nullptr;
     ThrowIfFailed(gameInputDevice->GetDeviceInfo(&deviceInfo));
     maxSimultaneousKeys = deviceInfo->keyboardInfo->maxSimultaneousKeys;
-    activeKeysArray = new GameInputKeyState[maxSimultaneousKeys];
+    activeKeysArray     = new GameInputKeyState[maxSimultaneousKeys];
 
-    ThrowIfFailed(gameInput->RegisterReadingCallback(
-        gameInputDevice.Get(),
-        GameInputKindKeyboard,
-        this,
-        OnKeyboardReadingCallback,
-        &callbackToken));
+    ThrowIfFailed(
+        gameInput->RegisterReadingCallback(
+            gameInputDevice.Get(),
+            GameInputKindKeyboard,
+            this,
+            OnKeyboardReadingCallback,
+            &callbackToken
+        )
+    );
 
     InputDevice::InitializeDevice(gameInput, gameInputDevice);
 }
@@ -47,9 +47,34 @@ bool Vertix::Engine::KeyboardDevice::IsKeyPressed(const UINT &virtualKey) const 
 
 void Vertix::Engine::KeyboardDevice::OnKeyboardReadingCallback(
     const GameInputCallbackToken,
-    void *contextPtr,
-    IGameInputReading *reading)
-{
-    const auto keyboard = static_cast<KeyboardDevice*>(contextPtr);
+    void*              contextPtr,
+    IGameInputReading* reading) {
+    const auto keyboard      = static_cast<KeyboardDevice*>(contextPtr);
     keyboard->activeKeyCount = reading->GetKeyState(keyboard->maxSimultaneousKeys, keyboard->activeKeysArray);
+}
+
+Vertix::Engine::GeneralKeyboardDevice::GeneralKeyboardDevice(const GameInputInterface &inputInterface) {
+    GeneralKeyboardDevice::InitializeDevice(inputInterface.GetInterface(), nullptr);
+}
+
+void Vertix::Engine::GeneralKeyboardDevice::InitializeDevice(
+    IGameInput*                     gameInput,
+    const ComPtr<IGameInputDevice> &comPtr) {
+    maxSimultaneousKeys = 32;
+    activeKeysArray     = new GameInputKeyState[maxSimultaneousKeys];
+
+    ThrowIfFailed(
+        gameInput->RegisterReadingCallback(
+            nullptr,
+            GameInputKindKeyboard,
+            this,
+            OnKeyboardReadingCallback,
+            &callbackToken
+        )
+    );
+
+    this->input  = gameInput;
+    this->device = nullptr;
+
+    initialized = true;
 }

@@ -4,35 +4,43 @@
 
 #include "Vertix.Engine/GameObject3D.h"
 
+using DirectX::SimpleMath::Matrix;
+using DirectX::SimpleMath::Vector3;
+
 void Vertix::Engine::GameObject3D::Move(
-    const DirectX::SimpleMath::Vector3 &offset,
-    const bool relative,
-    const bool allowRoll)
-{
+    const Vector3 &offset,
+    const bool     relative,
+    const bool     allowRoll) noexcept {
     if (!relative) {
         position = position + offset;
         return;
     }
 
-    const auto forward = DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Forward, orientation);
-    const auto right = DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Right, orientation);
+    const auto forward = Vector3::Transform(Vector3::Forward, orientation);
+    const auto right   = Vector3::Transform(Vector3::Right, orientation);
 
     position += forward * offset.x;
     position += allowRoll
-        ? DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Up, orientation)
-        : DirectX::SimpleMath::Vector3::Up * offset.y;
+                    ? Vector3::Transform(Vector3::Up, orientation)
+                    : Vector3::Up * offset.y;
     position += right * offset.z;
 }
 
 void Vertix::Engine::GameObject3D::Rotate(
-    const DirectX::SimpleMath::Vector3 &angles,
-    const bool allowRoll)
-{
-    orientation = orientation * DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(allowRoll
-        ? DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Up, orientation)
-        : DirectX::SimpleMath::Vector3::Up, angles.y);
+    const Vector3 &angles,
+    const bool     allowRoll) noexcept {
     orientation = orientation * DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(
-        DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Right, orientation), angles.x);
+        allowRoll
+            ? Vector3::Transform(Vector3::Up, orientation)
+            : Vector3::Up,
+        angles.y
+    );
     orientation = orientation * DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(
-        DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Forward, orientation), angles.z);
+        Vector3::Transform(Vector3::Right, orientation),
+        angles.x
+    );
+    orientation = orientation * DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(
+        Vector3::Transform(Vector3::Forward, orientation),
+        angles.z
+    );
 }

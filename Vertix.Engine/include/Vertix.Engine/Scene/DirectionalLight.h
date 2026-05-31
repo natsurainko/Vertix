@@ -2,7 +2,4 @@
 // Created by Natsurainko on 2026/1/29.
 //
 
-#ifndef VERTIX_DIRECTIONALLIGHT_H
-#define VERTIX_DIRECTIONALLIGHT_H
-
-#endif //VERTIX_DIRECTIONALLIGHT_H
+#pragma once

@@ -11,7 +11,7 @@
 #include "Vertix/Graphics/Descriptor/DescriptorView.h"
 #include "Vertix/Rendering/Buffers/ConstantBuffer.h"
 #include "Vertix.Engine/Camera/PerspectiveCamera.h"
-#include "Vertix.Engine/Helpers/FrameCounter.hpp"
+#include "Vertix.Engine/Helpers/FrameCounter.h"
 #include "Vertix.Engine/Input/GameInputInterface.h"
 #include "Vertix.Engine/Input/GeneralKeyboardDevice.hpp"
 #include "Vertix.Engine/Input/GeneralMouseDevice.hpp"

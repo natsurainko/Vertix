@@ -7,8 +7,8 @@
 
 #include <imgui/imgui.h>
 #include <Vertix/Rendering/Pipeline/RenderPipeline.h>
-#include <Vertix.Engine/Controlling/DefaultPositionController.hpp>
-#include <Vertix.Engine/Controlling/DefaultRotationController.hpp>
+#include <Vertix.Engine/Controlling/PositionController.h>
+#include <Vertix.Engine/Controlling/RotationController.h>
 #include <Vertix/Windowing/GameWindow.h>
 
 #include "Controlling/KeyboardControllerInput.h"
@@ -42,8 +42,8 @@ private:
     KeyboardControllerInput keyboardControllerInput {};
     MouseControllerInput mouseControllerInput {this};
 
-    Vertix::Engine::DefaultPositionController defaultPositionController {&keyboardControllerInput};
-    Vertix::Engine::DefaultRotationController defaultRotationController {&mouseControllerInput};
+    Vertix::Engine::PositionController defaultPositionController {&keyboardControllerInput};
+    Vertix::Engine::RotationController defaultRotationController {&mouseControllerInput};
 
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> copyCommandQueue;
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> computeCommandQueue;
