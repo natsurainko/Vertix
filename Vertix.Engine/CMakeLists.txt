@@ -69,5 +69,5 @@ set_source_files_properties(shaders/GenerateMipmap.hlsl PROPERTIES
 )
 add_hlsl_shaders(Vertix.Engine FILES ${HLSL_SHADER_FILES})
 
-target_include_directories(Vertix.Engine BEFORE PUBLIC ${INCLUDES_DIR})
-target_link_libraries(Vertix.Engine PUBLIC Vertix GameInput assimp)
+target_include_directories(Vertix.Engine BEFORE PUBLIC ${VX_INCLUDES})
+target_link_libraries(Vertix.Engine PUBLIC Vertix GameInput)

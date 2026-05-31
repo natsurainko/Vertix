@@ -119,5 +119,5 @@ target_sources(Vertix
         include/Vertix/D3D12Interface.h
 )
 
-target_include_directories(Vertix BEFORE PUBLIC ${INCLUDES_DIR})
+target_include_directories(Vertix BEFORE PUBLIC ${VX_INCLUDES})
 target_link_libraries(Vertix PUBLIC d3d12 DirectXTK12 d3dcompiler dxcompiler dxgi dxguid dwmapi)
